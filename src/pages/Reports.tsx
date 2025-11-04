@@ -7,10 +7,81 @@ import { useData } from "@/contexts/DataContext";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const Reports = () => {
   const { toast } = useToast();
   const { data, isDataLoaded } = useData();
+
+  const createChartImage = async (
+    type: 'bar' | 'pie' | 'line',
+    labels: string[],
+    datasets: any[],
+    title: string
+  ): Promise<string> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 800;
+      canvas.height = 400;
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx) {
+        resolve('');
+        return;
+      }
+
+      new ChartJS(ctx, {
+        type,
+        data: { labels, datasets },
+        options: {
+          responsive: false,
+          plugins: {
+            title: {
+              display: true,
+              text: title,
+              font: { size: 16 },
+            },
+            legend: {
+              display: true,
+              position: 'bottom',
+            },
+          },
+          scales: type !== 'pie' ? {
+            y: {
+              beginAtZero: true,
+            },
+          } : undefined,
+        },
+      });
+
+      setTimeout(() => {
+        resolve(canvas.toDataURL('image/png'));
+      }, 500);
+    });
+  };
 
   const reports = [
     {
@@ -146,7 +217,7 @@ const Reports = () => {
     });
   };
 
-  const generatePDFReport = (reportTitle: string) => {
+  const generatePDFReport = async (reportTitle: string) => {
     if (!isDataLoaded || data.length === 0) {
       toast({
         title: "Sem dados",
@@ -155,6 +226,11 @@ const Reports = () => {
       });
       return;
     }
+
+    toast({
+      title: "Gerando relatório",
+      description: "Processando dados e criando gráficos...",
+    });
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -167,9 +243,42 @@ const Reports = () => {
 
     let tableData: any[] = [];
     let headers: string[] = [];
+    let chartImage: string = '';
+    let startY = 35;
 
     switch (reportTitle) {
-      case "Relatório Mensal Completo":
+      case "Relatório Mensal Completo": {
+        const monthlyData = data.reduce((acc: any, row) => {
+          const key = row.monthYear;
+          if (!acc[key]) {
+            acc[key] = { month: key, sales: 0, margin: 0 };
+          }
+          acc[key].sales += row.netSales;
+          acc[key].margin += row.margin;
+          return acc;
+        }, {});
+
+        const months = Object.values(monthlyData).slice(0, 12);
+        chartImage = await createChartImage(
+          'line',
+          months.map((m: any) => m.month),
+          [
+            {
+              label: 'Vendas',
+              data: months.map((m: any) => m.sales),
+              borderColor: 'rgb(59, 130, 246)',
+              backgroundColor: 'rgba(59, 130, 246, 0.5)',
+            },
+            {
+              label: 'Margem',
+              data: months.map((m: any) => m.margin),
+              borderColor: 'rgb(34, 197, 94)',
+              backgroundColor: 'rgba(34, 197, 94, 0.5)',
+            },
+          ],
+          'Evolução Mensal - Vendas vs Margem'
+        );
+
         headers = ['Loja', 'Produto', 'Vendas', 'COGS', 'Margem'];
         tableData = data.slice(0, 50).map(row => [
           row.nom,
@@ -179,8 +288,9 @@ const Reports = () => {
           row.margin.toFixed(2),
         ]);
         break;
+      }
 
-      case "Análise por Loja":
+      case "Análise por Loja": {
         const byBranch = data.reduce((acc: any, row) => {
           const key = row.nom;
           if (!acc[key]) {
@@ -191,6 +301,26 @@ const Reports = () => {
           acc[key].Margem += row.margin;
           return acc;
         }, {});
+
+        const branches = Object.values(byBranch).slice(0, 10);
+        chartImage = await createChartImage(
+          'bar',
+          branches.map((b: any) => b.Loja),
+          [
+            {
+              label: 'Vendas',
+              data: branches.map((b: any) => b.Vendas),
+              backgroundColor: 'rgba(59, 130, 246, 0.8)',
+            },
+            {
+              label: 'Margem',
+              data: branches.map((b: any) => b.Margem),
+              backgroundColor: 'rgba(34, 197, 94, 0.8)',
+            },
+          ],
+          'Performance por Loja - Top 10'
+        );
+
         headers = ['Loja', 'Vendas', 'COGS', 'Margem'];
         tableData = Object.values(byBranch).map((b: any) => [
           b.Loja,
@@ -199,36 +329,150 @@ const Reports = () => {
           b.Margem.toFixed(2),
         ]);
         break;
+      }
 
-      case "Dashboard Executivo":
+      case "Despesas Detalhadas": {
+        const expensesByCategory = data.reduce((acc: any, row) => {
+          const key = row.macroFamilyName;
+          if (!acc[key]) {
+            acc[key] = 0;
+          }
+          acc[key] += row.cogs;
+          return acc;
+        }, {});
+
+        const categories = Object.entries(expensesByCategory)
+          .sort((a: any, b: any) => b[1] - a[1])
+          .slice(0, 8);
+
+        chartImage = await createChartImage(
+          'pie',
+          categories.map(([name]) => name),
+          [{
+            label: 'COGS',
+            data: categories.map(([, value]) => value),
+            backgroundColor: [
+              'rgba(59, 130, 246, 0.8)',
+              'rgba(34, 197, 94, 0.8)',
+              'rgba(251, 191, 36, 0.8)',
+              'rgba(239, 68, 68, 0.8)',
+              'rgba(168, 85, 247, 0.8)',
+              'rgba(236, 72, 153, 0.8)',
+              'rgba(20, 184, 166, 0.8)',
+              'rgba(249, 115, 22, 0.8)',
+            ],
+          }],
+          'Distribuição de Despesas por Categoria'
+        );
+
+        headers = ['Loja', 'Produto', 'COGS', 'Vendas', '% COGS'];
+        tableData = data.slice(0, 50).map(row => [
+          row.nom,
+          row.nameSalesReport.substring(0, 30),
+          row.cogs.toFixed(2),
+          row.netSales.toFixed(2),
+          row.netSales ? ((row.cogs / row.netSales) * 100).toFixed(1) + '%' : '0%',
+        ]);
+        break;
+      }
+
+      case "Análise EVA": {
+        const evaByFamily = data.reduce((acc: any, row) => {
+          const key = row.macroFamilyName;
+          if (!acc[key]) {
+            acc[key] = { family: key, sales: 0, margin: 0 };
+          }
+          acc[key].sales += row.netSales;
+          acc[key].margin += row.margin;
+          return acc;
+        }, {});
+
+        const families = Object.values(evaByFamily)
+          .sort((a: any, b: any) => b.margin - a.margin)
+          .slice(0, 10);
+
+        chartImage = await createChartImage(
+          'bar',
+          families.map((f: any) => f.family.substring(0, 20)),
+          [
+            {
+              label: 'Vendas',
+              data: families.map((f: any) => f.sales),
+              backgroundColor: 'rgba(59, 130, 246, 0.8)',
+            },
+            {
+              label: 'Margem',
+              data: families.map((f: any) => f.margin),
+              backgroundColor: 'rgba(34, 197, 94, 0.8)',
+            },
+          ],
+          'Top 10 Macro-Famílias - Vendas vs Margem'
+        );
+
+        headers = ['Macro-Família', 'Vendas', 'COGS', 'Margem', '% Margem'];
+        tableData = families.map((f: any) => [
+          f.family,
+          f.sales.toFixed(2),
+          (f.sales - f.margin).toFixed(2),
+          f.margin.toFixed(2),
+          f.sales ? ((f.margin / f.sales) * 100).toFixed(1) + '%' : '0%',
+        ]);
+        break;
+      }
+
+      case "Dashboard Executivo": {
         const summary = {
           VendasTotais: data.reduce((sum, row) => sum + row.netSales, 0),
           COGSTotais: data.reduce((sum, row) => sum + row.cogs, 0),
           MargemTotal: data.reduce((sum, row) => sum + row.margin, 0),
           NumeroLojas: new Set(data.map(row => row.nom)).size,
         };
+
+        chartImage = await createChartImage(
+          'bar',
+          ['Vendas', 'COGS', 'Margem'],
+          [{
+            label: 'Valores Totais',
+            data: [summary.VendasTotais, summary.COGSTotais, summary.MargemTotal],
+            backgroundColor: [
+              'rgba(59, 130, 246, 0.8)',
+              'rgba(239, 68, 68, 0.8)',
+              'rgba(34, 197, 94, 0.8)',
+            ],
+          }],
+          'Resumo Executivo - Principais Indicadores'
+        );
+
         headers = ['Métrica', 'Valor'];
         tableData = [
           ['Vendas Totais', summary.VendasTotais.toFixed(2)],
           ['COGS Totais', summary.COGSTotais.toFixed(2)],
           ['Margem Total', summary.MargemTotal.toFixed(2)],
+          ['% Margem', ((summary.MargemTotal / summary.VendasTotais) * 100).toFixed(1) + '%'],
           ['Número de Lojas', summary.NumeroLojas.toString()],
         ];
         break;
+      }
 
-      default:
+      default: {
         headers = ['Loja', 'Vendas', 'Margem'];
         tableData = data.slice(0, 50).map(row => [
           row.nom,
           row.netSales.toFixed(2),
           row.margin.toFixed(2),
         ]);
+      }
+    }
+
+    if (chartImage) {
+      doc.addImage(chartImage, 'PNG', 10, startY, pageWidth - 20, 90);
+      startY += 100;
     }
 
     autoTable(doc, {
       head: [headers],
       body: tableData,
-      startY: 35,
+      startY: startY,
       styles: { fontSize: 8 },
       headStyles: { fillColor: [41, 128, 185] },
     });
