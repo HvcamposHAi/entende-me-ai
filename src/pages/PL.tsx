@@ -136,20 +136,21 @@ const PL = () => {
     return months.map((month, idx) => {
       const monthNum = idx + 1;
       
+      const monthKey = monthNum.toString().padStart(2, '0');
       const revenue2024 = data
-        .filter(r => r.calendarYear === 2024 && r.calendarMonth === monthNum.toString().padStart(2, '0'))
+        .filter(r => r.calendarYear === 2024 && r.month === monthKey)
         .reduce((sum, r) => sum + r.netSales, 0) / 1000;
       
       const revenue2025 = data
-        .filter(r => r.calendarYear === 2025 && r.calendarMonth === monthNum.toString().padStart(2, '0'))
+        .filter(r => r.calendarYear === 2025 && r.month === monthKey)
         .reduce((sum, r) => sum + r.netSales, 0) / 1000;
 
-      const margin2024Data = data.filter(r => r.calendarYear === 2024 && r.calendarMonth === monthNum.toString().padStart(2, '0'));
+      const margin2024Data = data.filter(r => r.calendarYear === 2024 && r.month === monthKey);
       const totalRevenue2024 = margin2024Data.reduce((sum, r) => sum + r.netSales, 0);
       const totalMargin2024 = margin2024Data.reduce((sum, r) => sum + r.margin, 0);
       const marginPercent2024 = totalRevenue2024 !== 0 ? (totalMargin2024 / totalRevenue2024) * 100 : 0;
 
-      const margin2025Data = data.filter(r => r.calendarYear === 2025 && r.calendarMonth === monthNum.toString().padStart(2, '0'));
+      const margin2025Data = data.filter(r => r.calendarYear === 2025 && r.month === monthKey);
       const totalRevenue2025 = margin2025Data.reduce((sum, r) => sum + r.netSales, 0);
       const totalMargin2025 = margin2025Data.reduce((sum, r) => sum + r.margin, 0);
       const marginPercent2025 = totalRevenue2025 !== 0 ? (totalMargin2025 / totalRevenue2025) * 100 : 0;
