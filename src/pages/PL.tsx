@@ -333,36 +333,138 @@ const PL = () => {
             <CardContent>
               <ChartContainer
                 config={{
-                  revenue2024: { label: "Revenue 2024", color: "hsl(var(--chart-1))" },
-                  revenue2025: { label: "Revenue 2025", color: "hsl(var(--chart-2))" },
-                  margin2024: { label: "Margin % 2024", color: "hsl(var(--chart-3))" },
-                  margin2025: { label: "Margin % 2025", color: "hsl(var(--chart-4))" },
+                  revenue2024: { label: "Revenue 2024", color: "hsl(200, 70%, 45%)" },
+                  revenue2025: { label: "Revenue 2025", color: "hsl(25, 90%, 65%)" },
+                  margin2024: { label: "Margin % 2024", color: "hsl(150, 60%, 45%)" },
+                  margin2025: { label: "Margin % 2025", color: "hsl(190, 80%, 50%)" },
                 }}
-                className="h-[400px]"
+                className="h-[500px]"
               >
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={monthlyChartData} margin={{ top: 20, right: 20, bottom: 50, left: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                  <ComposedChart data={monthlyChartData} margin={{ top: 40, right: 30, bottom: 20, left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                     <XAxis dataKey="month" />
-                    <YAxis yAxisId="left" tickFormatter={(v) => `${Math.round(v)}`} />
-                    <YAxis yAxisId="right" orientation="right" tickFormatter={(v) => `${Math.round(v)}%`} />
+                    <YAxis yAxisId="left" label={{ value: '', angle: -90, position: 'insideLeft' }} />
+                    <YAxis yAxisId="right" orientation="right" tickFormatter={(v) => `${Math.round(v)}%`} domain={[0, 100]} />
                     <Tooltip 
                       formatter={(value: any, name: string) => {
-                        if (name.startsWith('Revenue')) {
+                        if (name.includes('Revenue')) {
                           return [`${Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`, name];
                         }
                         return [`${Number(value).toFixed(1)}%`, name];
                       }}
                     />
-                    <Legend verticalAlign="bottom" align="center" />
-                    <Bar yAxisId="left" dataKey="revenue2024" fill="hsl(var(--chart-1))" name="Revenue 2024">
-                      <LabelList dataKey="revenue2024" position="top" />
+                    <Legend 
+                      verticalAlign="top" 
+                      align="center" 
+                      wrapperStyle={{ paddingBottom: '20px' }}
+                    />
+                    <Bar yAxisId="left" dataKey="revenue2024" fill="hsl(200, 70%, 45%)" name="Revenue 2024">
+                      <LabelList 
+                        dataKey="revenue2024" 
+                        position="top" 
+                        formatter={(value: number) => value > 0 ? Math.round(value) : ''}
+                        style={{ fontSize: '11px', fontWeight: 'bold' }}
+                      />
                     </Bar>
-                    <Bar yAxisId="left" dataKey="revenue2025" fill="hsl(var(--chart-2))" name="Revenue 2025">
-                      <LabelList dataKey="revenue2025" position="top" />
+                    <Bar yAxisId="left" dataKey="revenue2025" fill="hsl(25, 90%, 65%)" name="Revenue 2025">
+                      <LabelList 
+                        dataKey="revenue2025" 
+                        position="top" 
+                        formatter={(value: number) => value > 0 ? Math.round(value) : ''}
+                        style={{ fontSize: '11px', fontWeight: 'bold' }}
+                      />
                     </Bar>
-                    <Line yAxisId="right" type="monotone" dataKey="margin2024" stroke="hsl(var(--chart-3))" name="Margin % 2024" strokeWidth={2} dot />
-                    <Line yAxisId="right" type="monotone" dataKey="margin2025" stroke="hsl(var(--chart-4))" name="Margin % 2025" strokeWidth={2} dot />
+                    <Line 
+                      yAxisId="right" 
+                      type="monotone" 
+                      dataKey="margin2024" 
+                      stroke="hsl(150, 60%, 45%)" 
+                      name="Margin % 2024" 
+                      strokeWidth={3} 
+                      dot={{ fill: 'hsl(150, 60%, 45%)', r: 4 }}
+                    >
+                      <LabelList 
+                        dataKey="margin2024" 
+                        position="top"
+                        formatter={(value: number) => value > 0 ? `${value.toFixed(1)}%` : ''}
+                        style={{ 
+                          fontSize: '10px', 
+                          fontWeight: 'bold',
+                          fill: 'hsl(150, 60%, 35%)'
+                        }}
+                        content={(props: any) => {
+                          const { x, y, value } = props;
+                          if (!value || value === 0) return null;
+                          return (
+                            <g>
+                              <rect 
+                                x={x - 18} 
+                                y={y - 18} 
+                                width={36} 
+                                height={16} 
+                                fill="hsl(150, 60%, 85%)" 
+                                stroke="hsl(150, 60%, 45%)"
+                                strokeWidth={1}
+                                rx={3}
+                              />
+                              <text 
+                                x={x} 
+                                y={y - 6} 
+                                textAnchor="middle" 
+                                fill="hsl(150, 60%, 25%)"
+                                fontSize="10"
+                                fontWeight="bold"
+                              >
+                                {`${value.toFixed(1)}%`}
+                              </text>
+                            </g>
+                          );
+                        }}
+                      />
+                    </Line>
+                    <Line 
+                      yAxisId="right" 
+                      type="monotone" 
+                      dataKey="margin2025" 
+                      stroke="hsl(190, 80%, 50%)" 
+                      name="Margin % 2025" 
+                      strokeWidth={3} 
+                      dot={{ fill: 'hsl(190, 80%, 50%)', r: 4 }}
+                    >
+                      <LabelList 
+                        dataKey="margin2025"
+                        position="top"
+                        content={(props: any) => {
+                          const { x, y, value } = props;
+                          if (!value || value === 0) return null;
+                          return (
+                            <g>
+                              <rect 
+                                x={x - 18} 
+                                y={y - 36} 
+                                width={36} 
+                                height={16} 
+                                fill="hsl(190, 80%, 85%)" 
+                                stroke="hsl(190, 80%, 50%)"
+                                strokeWidth={1}
+                                rx={3}
+                              />
+                              <text 
+                                x={x} 
+                                y={y - 24} 
+                                textAnchor="middle" 
+                                fill="hsl(190, 80%, 25%)"
+                                fontSize="10"
+                                fontWeight="bold"
+                              >
+                                {`${value.toFixed(1)}%`}
+                              </text>
+                            </g>
+                          );
+                        }}
+                      />
+                    </Line>
                   </ComposedChart>
                 </ResponsiveContainer>
               </ChartContainer>
