@@ -107,15 +107,49 @@ const EVA = () => {
 
     const contributions = macroFamilyData.map((f, idx) => ({
       name: f.family,
-      value: f.volumeKg - f.volumeKgPrev,
+      change: f.volumeKg - f.volumeKgPrev,
       color: colors[idx % colors.length],
-    })).filter(f => Math.abs(f.value) > 0);
+    })).filter(f => Math.abs(f.change) > 0);
 
-    return [
-      { name: '2024', value: evaData.previous.volumeKg, color: '#10b981' },
-      ...contributions,
-      { name: '2025', value: evaData.current.volumeKg, color: '#10b981' },
-    ];
+    const result = [];
+    let cumulative = evaData.previous.volumeKg;
+
+    // Starting bar (2024)
+    result.push({
+      name: '2024',
+      base: 0,
+      value: evaData.previous.volumeKg,
+      total: evaData.previous.volumeKg,
+      color: '#10b981',
+      isStart: true,
+    });
+
+    // Intermediate changes
+    contributions.forEach((item) => {
+      const base = item.change >= 0 ? cumulative : cumulative + item.change;
+      result.push({
+        name: item.name,
+        base: base,
+        value: Math.abs(item.change),
+        total: cumulative + item.change,
+        color: item.color,
+        isPositive: item.change >= 0,
+        isStart: false,
+      });
+      cumulative += item.change;
+    });
+
+    // Ending bar (2025)
+    result.push({
+      name: '2025',
+      base: 0,
+      value: evaData.current.volumeKg,
+      total: evaData.current.volumeKg,
+      color: '#10b981',
+      isStart: true,
+    });
+
+    return result;
   }, [evaData, macroFamilyData]);
 
   const revenueWaterfallData = useMemo(() => {
@@ -128,15 +162,49 @@ const EVA = () => {
 
     const contributions = macroFamilyData.map((f, idx) => ({
       name: f.family,
-      value: f.revenue - f.revenuePrev,
+      change: f.revenue - f.revenuePrev,
       color: colors[idx % colors.length],
-    })).filter(f => Math.abs(f.value) > 0);
+    })).filter(f => Math.abs(f.change) > 0);
 
-    return [
-      { name: '2024', value: evaData.previous.revenue, color: '#3b82f6' },
-      ...contributions,
-      { name: '2025', value: evaData.current.revenue, color: '#3b82f6' },
-    ];
+    const result = [];
+    let cumulative = evaData.previous.revenue;
+
+    // Starting bar (2024)
+    result.push({
+      name: '2024',
+      base: 0,
+      value: evaData.previous.revenue,
+      total: evaData.previous.revenue,
+      color: '#3b82f6',
+      isStart: true,
+    });
+
+    // Intermediate changes
+    contributions.forEach((item) => {
+      const base = item.change >= 0 ? cumulative : cumulative + item.change;
+      result.push({
+        name: item.name,
+        base: base,
+        value: Math.abs(item.change),
+        total: cumulative + item.change,
+        color: item.color,
+        isPositive: item.change >= 0,
+        isStart: false,
+      });
+      cumulative += item.change;
+    });
+
+    // Ending bar (2025)
+    result.push({
+      name: '2025',
+      base: 0,
+      value: evaData.current.revenue,
+      total: evaData.current.revenue,
+      color: '#3b82f6',
+      isStart: true,
+    });
+
+    return result;
   }, [evaData, macroFamilyData]);
 
   if (!isDataLoaded || !evaData) {
@@ -192,7 +260,7 @@ const EVA = () => {
                     className="h-full w-full"
                   >
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={volumeWaterfallData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                      <BarChart data={volumeWaterfallData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                         <XAxis 
                           dataKey="name" 
@@ -202,8 +270,23 @@ const EVA = () => {
                           height={60}
                         />
                         <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip formatter={(value) => formatNumber(Number(value))} />
-                        <Bar dataKey="value">
+                        <Tooltip 
+                          formatter={(value) => formatNumber(Number(value))}
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              const data = payload[0].payload;
+                              return (
+                                <div className="bg-background border border-border p-2 rounded shadow-lg">
+                                  <p className="font-semibold">{data.name}</p>
+                                  <p className="text-sm">Total: {formatNumber(data.total)}</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Bar dataKey="base" stackId="a" fill="transparent" />
+                        <Bar dataKey="value" stackId="a" label={{ position: 'top', fontSize: 10, formatter: (val: number) => formatNumber(val, 0) }}>
                           {volumeWaterfallData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
@@ -228,7 +311,7 @@ const EVA = () => {
                     className="h-full w-full"
                   >
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={revenueWaterfallData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                      <BarChart data={revenueWaterfallData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                         <XAxis 
                           dataKey="name" 
@@ -238,8 +321,23 @@ const EVA = () => {
                           height={60}
                         />
                         <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip formatter={(value) => formatNumber(Number(value))} />
-                        <Bar dataKey="value">
+                        <Tooltip 
+                          formatter={(value) => formatNumber(Number(value))}
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              const data = payload[0].payload;
+                              return (
+                                <div className="bg-background border border-border p-2 rounded shadow-lg">
+                                  <p className="font-semibold">{data.name}</p>
+                                  <p className="text-sm">Total: {formatNumber(data.total)}</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Bar dataKey="base" stackId="a" fill="transparent" />
+                        <Bar dataKey="value" stackId="a" label={{ position: 'top', fontSize: 10, formatter: (val: number) => formatNumber(val, 0) }}>
                           {revenueWaterfallData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
