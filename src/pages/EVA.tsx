@@ -17,7 +17,10 @@ const EVA = () => {
     const previousYear = 2024;
 
     const sumByYear = (year: number) => {
-      const yearData = data.filter(row => row.calendarYear === year);
+      const yearData = data.filter(row => 
+        row.calendarYear === year && 
+        row.macroFamilyName !== 'Barista'
+      );
       return {
         volumeKg: yearData.reduce((sum, r) => sum + (r.volumeKg || 0), 0),
         revenue: yearData.reduce((sum, r) => sum + (r.netSales || 0), 0),
@@ -38,6 +41,8 @@ const EVA = () => {
     const familyMap = new Map();
 
     data.forEach(row => {
+      if (row.macroFamilyName === 'Barista') return; // Exclude Barista
+      
       if (row.calendarYear === evaData.currentYear) {
         const family = row.macroFamilyName;
         if (!familyMap.has(family)) {
@@ -92,18 +97,47 @@ const EVA = () => {
       .sort((a, b) => b.revenue - a.revenue);
   }, [data, isDataLoaded, evaData]);
 
-  const waterfallData = useMemo(() => {
-    if (!evaData) return [];
+  const volumeWaterfallData = useMemo(() => {
+    if (!evaData || macroFamilyData.length === 0) return [];
+
+    const colors = [
+      "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", 
+      "#6366f1", "#ec4899", "#14b8a6", "#f97316", "#06b6d4"
+    ];
+
+    const contributions = macroFamilyData.map((f, idx) => ({
+      name: f.family,
+      value: f.volumeKg - f.volumeKgPrev,
+      color: colors[idx % colors.length],
+    })).filter(f => Math.abs(f.value) > 0);
 
     return [
-      { name: '2024', value: evaData.previous.margin, color: 'hsl(var(--chart-3))' },
-      { name: 'Vol', value: 4001, color: 'hsl(var(--chart-1))' },
-      { name: 'Mix', value: 612, color: 'hsl(var(--chart-5))' },
-      { name: 'Rev', value: evaData.current.revenue / 1000, color: 'hsl(var(--chart-1))' },
-      { name: 'COGS', value: -(evaData.current.cogs / 1000), color: 'hsl(var(--chart-2))' },
-      { name: '2025', value: evaData.current.margin, color: 'hsl(var(--chart-3))' },
+      { name: '2024', value: evaData.previous.volumeKg, color: '#10b981' },
+      ...contributions,
+      { name: '2025', value: evaData.current.volumeKg, color: '#10b981' },
     ];
-  }, [evaData]);
+  }, [evaData, macroFamilyData]);
+
+  const revenueWaterfallData = useMemo(() => {
+    if (!evaData || macroFamilyData.length === 0) return [];
+
+    const colors = [
+      "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", 
+      "#6366f1", "#ec4899", "#14b8a6", "#f97316", "#06b6d4"
+    ];
+
+    const contributions = macroFamilyData.map((f, idx) => ({
+      name: f.family,
+      value: f.revenue - f.revenuePrev,
+      color: colors[idx % colors.length],
+    })).filter(f => Math.abs(f.value) > 0);
+
+    return [
+      { name: '2024', value: evaData.previous.revenue, color: '#3b82f6' },
+      ...contributions,
+      { name: '2025', value: evaData.current.revenue, color: '#3b82f6' },
+    ];
+  }, [evaData, macroFamilyData]);
 
   if (!isDataLoaded || !evaData) {
     return (
@@ -143,34 +177,64 @@ const EVA = () => {
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>EVA MARGIN - TOTAL - YTD 06.Jun</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                config={{
-                  value: { label: "Value", color: "hsl(var(--chart-1))" },
-                }}
-                className="h-[400px]"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={waterfallData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="value">
-                      {waterfallData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+        <div className="grid gap-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>EVA VOLUME (Kg) BY MACRO-FAMILY (w/o Barista)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={{
+                    value: { label: "Volume Kg", color: "hsl(var(--chart-1))" },
+                  }}
+                  className="h-[400px]"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={volumeWaterfallData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip formatter={(value) => formatNumber(Number(value))} />
+                      <Bar dataKey="value">
+                        {volumeWaterfallData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>EVA REVENUE BY MACRO-FAMILY</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={{
+                    value: { label: "Revenue", color: "hsl(var(--chart-1))" },
+                  }}
+                  className="h-[400px]"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={revenueWaterfallData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip formatter={(value) => formatNumber(Number(value))} />
+                      <Bar dataKey="value">
+                        {revenueWaterfallData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          </div>
 
           <Card>
             <CardHeader>
