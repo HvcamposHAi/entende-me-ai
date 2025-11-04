@@ -15,6 +15,24 @@ const Upload = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Helper para normalizar valores numéricos vindos do Excel (moedas, separadores, parênteses)
+  const parseNumber = (val: any): number => {
+    if (val === null || val === undefined) return 0;
+    if (typeof val === 'number') return isFinite(val) ? val : 0;
+    const s = String(val)
+      .replace(/[\u00A0\s]/g, '') // espaços e nbsp
+      .replace(/[€R$\$]/g, '') // símbolos de moeda
+      .replace(/\((.*)\)/, '-$1'); // negativos entre parênteses
+
+    if (s.includes(',') && s.includes('.')) {
+      // Assume ponto como milhar e vírgula como decimal
+      return parseFloat(s.replace(/\./g, '').replace(',', '.')) || 0;
+    }
+    const normalized = s.replace(',', '.');
+    const num = parseFloat(normalized);
+    return isNaN(num) ? 0 : num;
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
@@ -26,10 +44,11 @@ const Upload = () => {
     
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const workbook = XLSX.read(arrayBuffer);
-      const sheetName = workbook.SheetNames[0];
+      const workbook = XLSX.read(arrayBuffer, { cellNF: true, cellText: true });
+      const sheetName = workbook.SheetNames.includes('New_DB') ? 'New_DB' : workbook.SheetNames[0];
+      console.log('Planilhas encontradas:', workbook.SheetNames, ' | Usando:', sheetName);
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: null });
 
       // Log raw data para debug
       console.log('Primeira linha bruta do Excel:', jsonData[0]);
@@ -44,11 +63,11 @@ const Upload = () => {
           familyName: String(row['Family Name'] || ''),
           nameSalesReport: String(row['Name sales report'] || ''),
           frItemCode: String(row['FR Item Code'] || ''),
-          quantitySoldTotal: parseFloat(row['Quantity Sold Total']) || 0,
-          netSales: parseFloat(row['Net Sales (exc. VAT)']) || 0,
-          cogs: parseFloat(row['COGS']) || 0,
-          margin: parseFloat(row['Margin']) || 0,
-          volumeKg: parseFloat(row['Volume (Kg)']) || 0,
+          quantitySoldTotal: parseNumber(row['Quantity Sold Total']),
+          netSales: parseNumber(row['Net Sales (exc. VAT)']),
+          cogs: parseNumber(row['COGS']),
+          margin: parseNumber(row['Margin']),
+          volumeKg: parseNumber(row['Volume (Kg)']),
           yearMonth: String(row['Year&Month'] || ''),
           month: String(row['Month'] || ''),
           monthYear: String(row['Month&Year'] || ''),
