@@ -4,13 +4,22 @@ import { Receipt } from "lucide-react";
 import Layout from "@/components/Layout";
 
 const Expenses = () => {
+  const categoryColors = [
+    "#3b82f6", // blue - Pessoal
+    "#10b981", // green - Aluguel
+    "#f59e0b", // orange - Marketing
+    "#8b5cf6", // purple - Utilidades
+    "#ef4444", // red - Manutenção
+    "#6366f1", // indigo - Outros
+  ];
+
   const expensesData = [
-    { category: "Pessoal", jan: "€45K", fev: "€46K", mar: "€47K", total: "€138K", percent: "44.2%" },
-    { category: "Aluguel", jan: "€18K", fev: "€18K", mar: "€18K", total: "€54K", percent: "17.3%" },
-    { category: "Marketing", jan: "€12K", fev: "€15K", mar: "€18K", total: "€45K", percent: "14.4%" },
-    { category: "Utilidades", jan: "€8K", fev: "€9K", mar: "€8K", total: "€25K", percent: "8.0%" },
-    { category: "Manutenção", jan: "€6K", fev: "€7K", mar: "€8K", total: "€21K", percent: "6.7%" },
-    { category: "Outros", jan: "€9K", fev: "€11K", mar: "€10K", total: "€30K", percent: "9.6%" },
+    { category: "Pessoal", jan: "€45K", fev: "€46K", mar: "€47K", total: "€138K", percent: "44.2%", color: categoryColors[0] },
+    { category: "Aluguel", jan: "€18K", fev: "€18K", mar: "€18K", total: "€54K", percent: "17.3%", color: categoryColors[1] },
+    { category: "Marketing", jan: "€12K", fev: "€15K", mar: "€18K", total: "€45K", percent: "14.4%", color: categoryColors[2] },
+    { category: "Utilidades", jan: "€8K", fev: "€9K", mar: "€8K", total: "€25K", percent: "8.0%", color: categoryColors[3] },
+    { category: "Manutenção", jan: "€6K", fev: "€7K", mar: "€8K", total: "€21K", percent: "6.7%", color: categoryColors[4] },
+    { category: "Outros", jan: "€9K", fev: "€11K", mar: "€10K", total: "€30K", percent: "9.6%", color: categoryColors[5] },
   ];
 
   return (
@@ -75,7 +84,15 @@ const Expenses = () => {
               <TableBody>
                 {expensesData.map((row) => (
                   <TableRow key={row.category}>
-                    <TableCell className="font-medium">{row.category}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: row.color }}
+                        />
+                        {row.category}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right">{row.jan}</TableCell>
                     <TableCell className="text-right">{row.fev}</TableCell>
                     <TableCell className="text-right">{row.mar}</TableCell>
@@ -97,13 +114,19 @@ const Expenses = () => {
               {expensesData.map((expense) => (
                 <div key={expense.category} className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">{expense.category}</span>
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: expense.color }}
+                      />
+                      <span className="font-medium">{expense.category}</span>
+                    </div>
                     <span>{expense.percent}</span>
                   </div>
                   <div className="h-3 rounded-full bg-secondary">
                     <div
-                      className="h-full rounded-full bg-primary"
-                      style={{ width: expense.percent }}
+                      className="h-full rounded-full transition-all"
+                      style={{ width: expense.percent, backgroundColor: expense.color }}
                     />
                   </div>
                 </div>
