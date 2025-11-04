@@ -48,23 +48,26 @@ const Forecast = () => {
     const byStore: Record<string, any[]> = {};
 
     filteredData.forEach(row => {
-      const storeName = row.nom;
-      if (!byStore[storeName]) {
-        byStore[storeName] = [];
+      const displayName = row.nom;
+      if (!displayName) return; // skip invalid names
+      const key = storeKey(displayName);
+      if (!byStore[displayName]) {
+        byStore[displayName] = [];
       }
       
-      const existingMonth = byStore[storeName].find(m => m.monthYear === row.monthYear);
+      const existingMonth = byStore[displayName].find(m => m.monthYear === row.monthYear);
       if (existingMonth) {
         existingMonth.revenue += row.netSales;
         existingMonth.volume += row.volumeKg;
         existingMonth.margin += row.margin;
       } else {
-        byStore[storeName].push({
+        byStore[displayName].push({
           monthYear: row.monthYear,
           revenue: row.netSales,
           volume: row.volumeKg,
           margin: row.margin,
           date: new Date(row.calendarYear, parseInt(row.month) - 1, 1),
+          key,
         });
       }
     });
@@ -106,6 +109,8 @@ const Forecast = () => {
     return forecast;
   };
 
+  // Safe key generator for store names (no spaces/special chars)
+  const storeKey = (name: string) => (name ? name.replace(/[^a-zA-Z0-9]+/g, '_') : 'unknown');
   const projectionsByStore = useMemo(() => {
     const projections: Record<string, any[]> = {};
 
@@ -159,13 +164,14 @@ const Forecast = () => {
 
     // Collect all months from all stores
     Object.entries(monthlyDataByStore).forEach(([storeName, storeData]) => {
+      const key = storeKey(storeName);
       storeData.forEach((d: any) => {
         allMonths.add(d.monthYear);
         if (!dataMap[d.monthYear]) {
           dataMap[d.monthYear] = { monthYear: d.monthYear };
         }
-        dataMap[d.monthYear][`${storeName}_revenue`] = d.revenue;
-        dataMap[d.monthYear][`${storeName}_volume`] = d.volume;
+        dataMap[d.monthYear][`${key}_revenue`] = d.revenue;
+        dataMap[d.monthYear][`${key}_volume`] = d.volume;
       });
 
       // Add projections
@@ -175,15 +181,15 @@ const Forecast = () => {
           if (!dataMap[d.monthYear]) {
             dataMap[d.monthYear] = { monthYear: d.monthYear };
           }
-          dataMap[d.monthYear][`${storeName}_revenueProjection`] = d.revenue;
-          dataMap[d.monthYear][`${storeName}_volumeProjection`] = d.volume;
+          dataMap[d.monthYear][`${key}_revenueProjection`] = d.revenue;
+          dataMap[d.monthYear][`${key}_volumeProjection`] = d.volume;
         });
 
         // Add connection point
         const lastHistorical = storeData[storeData.length - 1];
-        if (lastHistorical && !dataMap[lastHistorical.monthYear][`${storeName}_revenueProjection`]) {
-          dataMap[lastHistorical.monthYear][`${storeName}_revenueProjection`] = lastHistorical.revenue;
-          dataMap[lastHistorical.monthYear][`${storeName}_volumeProjection`] = lastHistorical.volume;
+        if (lastHistorical && !dataMap[lastHistorical.monthYear][`${key}_revenueProjection`]) {
+          dataMap[lastHistorical.monthYear][`${key}_revenueProjection`] = lastHistorical.revenue;
+          dataMap[lastHistorical.monthYear][`${key}_volumeProjection`] = lastHistorical.volume;
         }
       }
     });
@@ -364,12 +370,13 @@ const Forecast = () => {
                       {Object.keys(monthlyDataByStore).map((storeName, idx) => {
                         const colors = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
                         const color = colors[idx % colors.length];
+                        const key = storeKey(storeName);
                         return (
                           <>
                             <Line
-                              key={`${storeName}-revenue`}
+                              key={`${key}-revenue`}
                               type="monotone"
-                              dataKey={`${storeName}_revenue`}
+                              dataKey={`${key}_revenue`}
                               name={`${storeName} (Histórico)`}
                               stroke={color}
                               strokeWidth={2}
@@ -377,9 +384,9 @@ const Forecast = () => {
                               connectNulls={false}
                             />
                             <Line
-                              key={`${storeName}-revenue-proj`}
+                              key={`${key}-revenue-proj`}
                               type="monotone"
-                              dataKey={`${storeName}_revenueProjection`}
+                              dataKey={`${key}_revenueProjection`}
                               name={`${storeName} (Projeção)`}
                               stroke={color}
                               strokeWidth={2}
@@ -417,12 +424,13 @@ const Forecast = () => {
                       {Object.keys(monthlyDataByStore).map((storeName, idx) => {
                         const colors = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
                         const color = colors[idx % colors.length];
+                        const key = storeKey(storeName);
                         return (
                           <>
                             <Line
-                              key={`${storeName}-volume`}
+                              key={`${key}-volume`}
                               type="monotone"
-                              dataKey={`${storeName}_volume`}
+                              dataKey={`${key}_volume`}
                               name={`${storeName} (Histórico)`}
                               stroke={color}
                               strokeWidth={2}
@@ -430,9 +438,9 @@ const Forecast = () => {
                               connectNulls={false}
                             />
                             <Line
-                              key={`${storeName}-volume-proj`}
+                              key={`${key}-volume-proj`}
                               type="monotone"
-                              dataKey={`${storeName}_volumeProjection`}
+                              dataKey={`${key}_volumeProjection`}
                               name={`${storeName} (Projeção)`}
                               stroke={color}
                               strokeWidth={2}
