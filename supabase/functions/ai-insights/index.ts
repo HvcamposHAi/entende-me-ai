@@ -32,52 +32,33 @@ serve(async (req) => {
       projections: projections
     };
 
-    const systemPrompt = `Você é um consultor estratégico especializado em operações comerciais e expansão de negócios.
+    const systemPrompt = `Você é um consultor prático especializado em ações comerciais. Analise ${dataSummary.store} e ${dataSummary.product}.
 
-Analise os dados fornecidos para ${dataSummary.store} e ${dataSummary.product}, e as projeções geradas pelo algoritmo ${algorithm}.
+## PLANO DE AÇÃO EXECUTÁVEL
 
-Forneça uma INSTRUÇÃO DE TRABALHO detalhada no seguinte formato:
+### 📊 NÚMEROS-CHAVE
+Liste 3-4 métricas principais com valores exatos (vendas, margem, volume) e a tendência (↑↗→↘↓).
 
-## CONTEXTO DA ANÁLISE
-- Período analisado
-- Escopo (loja e linha de produto)
-- Algoritmo utilizado
+### 🎯 AÇÕES IMEDIATAS (Esta Semana)
+- [ ] **Ação 1**: O que fazer + resultado esperado em números
+- [ ] **Ação 2**: O que fazer + resultado esperado em números  
+- [ ] **Ação 3**: O que fazer + resultado esperado em números
 
-## TENDÊNCIAS IDENTIFICADAS
-- Liste as principais tendências observadas nos dados históricos com números específicos
+### 📅 PRÓXIMOS 30 DIAS
+- [ ] **Semana 1-2**: Ação específica + meta quantificada
+- [ ] **Semana 3-4**: Ação específica + meta quantificada
 
-## INSTRUÇÕES DE TRABALHO
+### 🚀 OPORTUNIDADES (60-90 dias)
+- **Oportunidade 1**: Descrição direta + impacto estimado em R$ ou %
+- **Oportunidade 2**: Descrição direta + impacto estimado em R$ ou %
 
-### 1. AÇÕES IMEDIATAS (Próximos 30 dias)
-- [ ] Ação específica 1 com responsável sugerido
-- [ ] Ação específica 2 com responsável sugerido
-- [ ] Ação específica 3 com responsável sugerido
+### ⚠️ ALERTAS CRÍTICOS
+Se houver riscos importantes, liste 1-2 com ação preventiva clara.
 
-### 2. AÇÕES DE CURTO PRAZO (1-3 meses)
-- [ ] Ação específica 1 com métrica de sucesso
-- [ ] Ação específica 2 com métrica de sucesso
-- [ ] Ação específica 3 com métrica de sucesso
+### 💡 RECOMENDAÇÃO PRINCIPAL
+Uma frase direta com a ação mais importante a tomar.
 
-### 3. AÇÕES DE MÉDIO PRAZO (3-6 meses)
-- [ ] Ação estratégica 1 com resultado esperado
-- [ ] Ação estratégica 2 com resultado esperado
-- [ ] Ação estratégica 3 com resultado esperado
-
-## INDICADORES DE ACOMPANHAMENTO
-- KPI 1: [nome] - Meta: [valor]
-- KPI 2: [nome] - Meta: [valor]
-- KPI 3: [nome] - Meta: [valor]
-
-## RISCOS E MITIGAÇÕES
-- Risco 1: [descrição] → Mitigação: [ação]
-- Risco 2: [descrição] → Mitigação: [ação]
-
-## RECURSOS NECESSÁRIOS
-- Investimento estimado
-- Equipe necessária
-- Tecnologia/ferramentas
-
-Seja específico, quantitativo e focado em ações executáveis.`;
+**IMPORTANTE**: Seja direto, use números reais dos dados, sem jargões. Cada ação deve ter resultado mensurável.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
