@@ -53,7 +53,6 @@ const Forecast = () => {
     filteredData.forEach(row => {
       const displayName = row.nom;
       if (!displayName) return; // skip invalid names
-      const key = storeKey(displayName);
       if (!byStore[displayName]) {
         byStore[displayName] = [];
       }
@@ -70,7 +69,6 @@ const Forecast = () => {
           volume: row.volumeKg,
           margin: row.margin,
           date: new Date(row.calendarYear, parseInt(row.month) - 1, 1),
-          key,
         });
       }
     });
