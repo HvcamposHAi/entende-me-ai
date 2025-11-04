@@ -19,12 +19,33 @@ const Forecast = () => {
   const [periods, setPeriods] = useState<number>(6);
   const [insights, setInsights] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedStore, setSelectedStore] = useState<string>("all");
+  const [selectedProduct, setSelectedProduct] = useState<string>("all");
 
-  // Aggregate data by month
+  // Get unique stores and products
+  const stores = useMemo(() => {
+    if (!isDataLoaded) return [];
+    const unique = [...new Set(data.map(row => row.nom))].filter(Boolean).sort();
+    return unique;
+  }, [data, isDataLoaded]);
+
+  const products = useMemo(() => {
+    if (!isDataLoaded) return [];
+    const unique = [...new Set(data.map(row => row.macroFamilyName))].filter(Boolean).sort();
+    return unique;
+  }, [data, isDataLoaded]);
+
+  // Aggregate data by month with filters
   const monthlyData = useMemo(() => {
     if (!isDataLoaded) return [];
 
-    const grouped = data.reduce((acc, row) => {
+    const filteredData = data.filter(row => {
+      const storeMatch = selectedStore === "all" || row.nom === selectedStore;
+      const productMatch = selectedProduct === "all" || row.macroFamilyName === selectedProduct;
+      return storeMatch && productMatch;
+    });
+
+    const grouped = filteredData.reduce((acc, row) => {
       const key = row.monthYear;
       if (!acc[key]) {
         acc[key] = {
@@ -42,7 +63,7 @@ const Forecast = () => {
     }, {} as Record<string, any>);
 
     return Object.values(grouped).sort((a: any, b: any) => a.date - b.date);
-  }, [data, isDataLoaded]);
+  }, [data, isDataLoaded, selectedStore, selectedProduct]);
 
   // Linear Regression
   const linearRegression = (values: number[]) => {
@@ -118,20 +139,39 @@ const Forecast = () => {
       monthYear: d.monthYear,
       revenue: d.revenue,
       volume: d.volume,
+      revenueProjection: null,
+      volumeProjection: null,
       isProjection: false,
     }));
 
-    return [...historical, ...projections];
+    const projected = projections.map((d: any) => ({
+      monthYear: d.monthYear,
+      revenue: null,
+      volume: null,
+      revenueProjection: d.revenue,
+      volumeProjection: d.volume,
+      isProjection: true,
+    }));
+
+    return [...historical, ...projected];
   }, [monthlyData, projections]);
 
   const getAIInsights = async () => {
     setIsLoading(true);
     try {
+      const filteredData = data.filter(row => {
+        const storeMatch = selectedStore === "all" || row.nom === selectedStore;
+        const productMatch = selectedProduct === "all" || row.macroFamilyName === selectedProduct;
+        return storeMatch && productMatch;
+      });
+
       const { data: result, error } = await supabase.functions.invoke('ai-insights', {
         body: {
-          data: data.slice(0, 100), // Send sample of data
+          data: filteredData.slice(0, 100),
           projections: projections,
           algorithm: algorithm,
+          store: selectedStore,
+          product: selectedProduct,
         }
       });
 
@@ -194,7 +234,35 @@ const Forecast = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-5">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Loja</label>
+                <Select value={selectedStore} onValueChange={setSelectedStore}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as Lojas</SelectItem>
+                    {stores.map(store => (
+                      <SelectItem key={store} value={store}>{store}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Linha de Produto</label>
+                <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as Linhas</SelectItem>
+                    {products.map(product => (
+                      <SelectItem key={product} value={product}>{product}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Algoritmo</label>
                 <Select value={algorithm} onValueChange={(v) => setAlgorithm(v as Algorithm)}>
@@ -249,7 +317,8 @@ const Forecast = () => {
               <div className="w-full h-[300px] md:h-[400px]">
                 <ChartContainer
                   config={{
-                    revenue: { label: "Receita", color: "hsl(var(--chart-1))" },
+                    revenue: { label: "Receita (Histórico)", color: "hsl(var(--chart-1))" },
+                    revenueProjection: { label: "Receita (Projeção)", color: "hsl(var(--chart-4))" },
                   }}
                   className="h-full w-full"
                 >
@@ -263,21 +332,21 @@ const Forecast = () => {
                       <Line
                         type="monotone"
                         dataKey="revenue"
+                        name="Histórico"
                         stroke="hsl(var(--chart-1))"
                         strokeWidth={2}
-                        dot={(props: any) => {
-                          const { cx, cy, payload } = props;
-                          return (
-                            <circle
-                              cx={cx}
-                              cy={cy}
-                              r={3}
-                              fill={payload.isProjection ? "hsl(var(--chart-2))" : "hsl(var(--chart-1))"}
-                              stroke={payload.isProjection ? "hsl(var(--chart-2))" : "hsl(var(--chart-1))"}
-                              strokeWidth={1}
-                            />
-                          );
-                        }}
+                        dot={{ r: 3, fill: "hsl(var(--chart-1))" }}
+                        connectNulls={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="revenueProjection"
+                        name="Projeção"
+                        stroke="hsl(var(--chart-4))"
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                        dot={{ r: 3, fill: "hsl(var(--chart-4))" }}
+                        connectNulls={false}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -294,7 +363,8 @@ const Forecast = () => {
               <div className="w-full h-[300px] md:h-[400px]">
                 <ChartContainer
                   config={{
-                    volume: { label: "Volume", color: "hsl(var(--chart-2))" },
+                    volume: { label: "Volume (Histórico)", color: "hsl(var(--chart-2))" },
+                    volumeProjection: { label: "Volume (Projeção)", color: "hsl(var(--chart-5))" },
                   }}
                   className="h-full w-full"
                 >
@@ -308,21 +378,21 @@ const Forecast = () => {
                       <Line
                         type="monotone"
                         dataKey="volume"
+                        name="Histórico"
                         stroke="hsl(var(--chart-2))"
                         strokeWidth={2}
-                        dot={(props: any) => {
-                          const { cx, cy, payload } = props;
-                          return (
-                            <circle
-                              cx={cx}
-                              cy={cy}
-                              r={3}
-                              fill={payload.isProjection ? "hsl(var(--chart-3))" : "hsl(var(--chart-2))"}
-                              stroke={payload.isProjection ? "hsl(var(--chart-3))" : "hsl(var(--chart-2))"}
-                              strokeWidth={1}
-                            />
-                          );
-                        }}
+                        dot={{ r: 3, fill: "hsl(var(--chart-2))" }}
+                        connectNulls={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="volumeProjection"
+                        name="Projeção"
+                        stroke="hsl(var(--chart-5))"
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                        dot={{ r: 3, fill: "hsl(var(--chart-5))" }}
+                        connectNulls={false}
                       />
                     </LineChart>
                   </ResponsiveContainer>

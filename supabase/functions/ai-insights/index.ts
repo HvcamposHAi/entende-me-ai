@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { data, projections, algorithm } = await req.json();
+    const { data, projections, algorithm, store, product } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     if (!LOVABLE_API_KEY) {
@@ -21,23 +21,63 @@ serve(async (req) => {
     // Prepare data summary for LLM
     const dataSummary = {
       totalRecords: data.length,
+      store: store === "all" ? "Todas as lojas" : store,
+      product: product === "all" ? "Todas as linhas de produto" : product,
       years: [...new Set(data.map((r: any) => r.calendarYear))],
       macroFamilies: [...new Set(data.map((r: any) => r.macroFamilyName))],
+      stores: [...new Set(data.map((r: any) => r.nom))],
       totalRevenue: data.reduce((sum: number, r: any) => sum + r.netSales, 0),
       totalVolume: data.reduce((sum: number, r: any) => sum + r.volumeKg, 0),
+      avgMargin: data.reduce((sum: number, r: any) => sum + r.margin, 0) / data.length,
       projections: projections
     };
 
-    const systemPrompt = `Você é um consultor estratégico especializado em análise de dados e expansão de negócios.
-Analise os dados fornecidos e as projeções geradas pelo algoritmo ${algorithm}.
-Forneça insights acionáveis sobre:
-1. Tendências identificadas nos dados históricos
-2. Oportunidades de expansão baseadas nas projeções
-3. Riscos e considerações importantes
-4. Recomendações estratégicas específicas
-5. Ações prioritárias para os próximos 3-6 meses
+    const systemPrompt = `Você é um consultor estratégico especializado em operações comerciais e expansão de negócios.
 
-Seja específico, direto e focado em ações práticas.`;
+Analise os dados fornecidos para ${dataSummary.store} e ${dataSummary.product}, e as projeções geradas pelo algoritmo ${algorithm}.
+
+Forneça uma INSTRUÇÃO DE TRABALHO detalhada no seguinte formato:
+
+## CONTEXTO DA ANÁLISE
+- Período analisado
+- Escopo (loja e linha de produto)
+- Algoritmo utilizado
+
+## TENDÊNCIAS IDENTIFICADAS
+- Liste as principais tendências observadas nos dados históricos com números específicos
+
+## INSTRUÇÕES DE TRABALHO
+
+### 1. AÇÕES IMEDIATAS (Próximos 30 dias)
+- [ ] Ação específica 1 com responsável sugerido
+- [ ] Ação específica 2 com responsável sugerido
+- [ ] Ação específica 3 com responsável sugerido
+
+### 2. AÇÕES DE CURTO PRAZO (1-3 meses)
+- [ ] Ação específica 1 com métrica de sucesso
+- [ ] Ação específica 2 com métrica de sucesso
+- [ ] Ação específica 3 com métrica de sucesso
+
+### 3. AÇÕES DE MÉDIO PRAZO (3-6 meses)
+- [ ] Ação estratégica 1 com resultado esperado
+- [ ] Ação estratégica 2 com resultado esperado
+- [ ] Ação estratégica 3 com resultado esperado
+
+## INDICADORES DE ACOMPANHAMENTO
+- KPI 1: [nome] - Meta: [valor]
+- KPI 2: [nome] - Meta: [valor]
+- KPI 3: [nome] - Meta: [valor]
+
+## RISCOS E MITIGAÇÕES
+- Risco 1: [descrição] → Mitigação: [ação]
+- Risco 2: [descrição] → Mitigação: [ação]
+
+## RECURSOS NECESSÁRIOS
+- Investimento estimado
+- Equipe necessária
+- Tecnologia/ferramentas
+
+Seja específico, quantitativo e focado em ações executáveis.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
