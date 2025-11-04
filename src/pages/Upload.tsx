@@ -39,6 +39,27 @@ const Upload = () => {
     }
   };
 
+  // Helpers para normalização de cabeçalhos e leitura segura
+  const normalizeKey = (k: any) => String(k)
+    .toLowerCase()
+    .replace(/\u00A0/g, ' ')
+    .replace(/[^\w]+/g, '') // remove espaços e pontuação
+    .trim();
+
+  const toMap = (obj: any) => {
+    const m = new Map<string, any>();
+    Object.entries(obj).forEach(([k, v]) => m.set(normalizeKey(k), v));
+    return m;
+  };
+
+  const get = (map: Map<string, any>, ...candidates: string[]) => {
+    for (const c of candidates) {
+      const v = map.get(normalizeKey(c));
+      if (v !== undefined) return v;
+    }
+    return undefined;
+  };
+
   const processExcelFile = async (file: File) => {
     setIsProcessing(true);
     
@@ -53,25 +74,30 @@ const Upload = () => {
       // Log raw data para debug
       console.log('Primeira linha bruta do Excel:', jsonData[0]);
       
-      const processedData: DengoDataRow[] = jsonData.map((row: any) => {
-        const processedRow = {
-          calendarYear: Number(row['Calendar Year']) || 0,
-          calendarMonth: String(row['Calendar Month'] || ''),
-          nom: String(row['Nom'] || ''),
-          clientMacroCategory: String(row['[SL] Client macro category'] || ''),
-          macroFamilyName: String(row['Macro-family Name'] || ''),
-          familyName: String(row['Family Name'] || ''),
-          nameSalesReport: String(row['Name sales report'] || ''),
-          frItemCode: String(row['FR Item Code'] || ''),
-          quantitySoldTotal: parseNumber(row['Quantity Sold Total']),
-          netSales: parseNumber(row['Net Sales (exc. VAT)']),
-          cogs: parseNumber(row['COGS']),
-          margin: parseNumber(row['Margin']),
-          volumeKg: parseNumber(row['Volume (Kg)']),
-          yearMonth: String(row['Year&Month'] || ''),
-          month: String(row['Month'] || ''),
-          monthYear: String(row['Month&Year'] || ''),
-          pl: String(row['P&L'] || ''),
+      const processedData: DengoDataRow[] = jsonData.map((row: any, idx: number) => {
+        const m = toMap(row);
+        if (idx === 0) {
+          console.log('Cabeçalhos normalizados (amostra):', Array.from(m.keys()));
+        }
+
+        const processedRow: DengoDataRow = {
+          calendarYear: parseInt(String(get(m, 'Calendar Year') ?? '0')) || 0,
+          calendarMonth: String(get(m, 'Calendar Month') ?? ''),
+          nom: String(get(m, 'Nom') ?? ''),
+          clientMacroCategory: String(get(m, '[SL] Client macro category', 'SL Client macro category') ?? ''),
+          macroFamilyName: String(get(m, 'Macro-family Name', 'Macro Family Name') ?? ''),
+          familyName: String(get(m, 'Family Name') ?? ''),
+          nameSalesReport: String(get(m, 'Name sales report', 'Name Sales Report') ?? ''),
+          frItemCode: String(get(m, 'FR Item Code', 'Item Code') ?? ''),
+          quantitySoldTotal: parseNumber(get(m, 'Quantity Sold Total') ?? 0),
+          netSales: parseNumber(get(m, 'Net Sales (exc. VAT)', 'Net Sales exc. VAT', 'Net Sales') ?? 0),
+          cogs: parseNumber(get(m, 'COGS') ?? 0),
+          margin: parseNumber(get(m, 'Margin') ?? 0),
+          volumeKg: parseNumber(get(m, 'Volume (Kg)', 'Volume Kg') ?? 0),
+          yearMonth: String(get(m, 'Year&Month', 'Year Month', 'YearMonth') ?? ''),
+          month: String(get(m, 'Month') ?? ''),
+          monthYear: String(get(m, 'Month&Year', 'Month Year', 'MonthYear') ?? ''),
+          pl: String(get(m, 'P&L', 'PL') ?? ''),
         };
         return processedRow;
       });

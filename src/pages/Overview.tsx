@@ -39,11 +39,12 @@ const Overview = () => {
     });
   }, [data, selectedStore, selectedMacroFamily]);
 
-  // Calculate KPIs
+  // Years and KPIs
+  const years = useMemo(() => Array.from(new Set(filteredData.map(d => d.calendarYear))).filter(Boolean) as number[], [filteredData]);
+  const currentYear = useMemo(() => years.length ? Math.max(...years) : new Date().getFullYear(), [years]);
+  const previousYear = useMemo(() => currentYear - 1, [currentYear]);
+
   const kpis = useMemo(() => {
-    const currentYear = 2025;
-    const previousYear = 2024;
-    
     const currentData = filteredData.filter(d => d.calendarYear === currentYear);
     const previousData = filteredData.filter(d => d.calendarYear === previousYear);
     
@@ -68,7 +69,7 @@ const Overview = () => {
         previous: sumField(previousData, 'margin')
       }
     };
-  }, [filteredData]);
+  }, [filteredData, currentYear, previousYear]);
 
   // Prepare monthly chart data
   const monthlyChartData = useMemo(() => {
@@ -109,7 +110,7 @@ const Overview = () => {
   const macroFamilyData = useMemo(() => {
     const familyMap = new Map<string, any>();
     
-    filteredData.filter(d => d.calendarYear === 2025).forEach(row => {
+    filteredData.filter(d => d.calendarYear === currentYear).forEach(row => {
       const key = row.macroFamilyName;
       if (!familyMap.has(key)) {
         familyMap.set(key, {
@@ -131,7 +132,7 @@ const Overview = () => {
     return Array.from(familyMap.values())
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10);
-  }, [filteredData]);
+  }, [filteredData, currentYear]);
 
   if (!isDataLoaded) {
     return (
