@@ -35,9 +35,9 @@ const Forecast = () => {
     return unique;
   }, [data, isDataLoaded]);
 
-  // Aggregate data by month with filters
-  const monthlyData = useMemo(() => {
-    if (!isDataLoaded) return [];
+  // Aggregate data by month with filters - BY STORE
+  const monthlyDataByStore = useMemo(() => {
+    if (!isDataLoaded) return {};
 
     const filteredData = data.filter(row => {
       const storeMatch = selectedStore === "all" || row.nom === selectedStore;
@@ -45,24 +45,36 @@ const Forecast = () => {
       return storeMatch && productMatch;
     });
 
-    const grouped = filteredData.reduce((acc, row) => {
-      const key = row.monthYear;
-      if (!acc[key]) {
-        acc[key] = {
-          monthYear: key,
-          revenue: 0,
-          volume: 0,
-          margin: 0,
-          date: new Date(row.calendarYear, parseInt(row.month) - 1, 1),
-        };
-      }
-      acc[key].revenue += row.netSales;
-      acc[key].volume += row.volumeKg;
-      acc[key].margin += row.margin;
-      return acc;
-    }, {} as Record<string, any>);
+    const byStore: Record<string, any[]> = {};
 
-    return Object.values(grouped).sort((a: any, b: any) => a.date - b.date);
+    filteredData.forEach(row => {
+      const storeName = row.nom;
+      if (!byStore[storeName]) {
+        byStore[storeName] = [];
+      }
+      
+      const existingMonth = byStore[storeName].find(m => m.monthYear === row.monthYear);
+      if (existingMonth) {
+        existingMonth.revenue += row.netSales;
+        existingMonth.volume += row.volumeKg;
+        existingMonth.margin += row.margin;
+      } else {
+        byStore[storeName].push({
+          monthYear: row.monthYear,
+          revenue: row.netSales,
+          volume: row.volumeKg,
+          margin: row.margin,
+          date: new Date(row.calendarYear, parseInt(row.month) - 1, 1),
+        });
+      }
+    });
+
+    // Sort each store's data by date
+    Object.keys(byStore).forEach(store => {
+      byStore[store].sort((a, b) => a.date - b.date);
+    });
+
+    return byStore;
   }, [data, isDataLoaded, selectedStore, selectedProduct]);
 
   // Linear Regression
@@ -94,77 +106,90 @@ const Forecast = () => {
     return forecast;
   };
 
-  const projections = useMemo(() => {
-    if (monthlyData.length === 0) return [];
+  const projectionsByStore = useMemo(() => {
+    const projections: Record<string, any[]> = {};
 
-    const revenues = monthlyData.map((d: any) => d.revenue);
-    const volumes = monthlyData.map((d: any) => d.volume);
-    
-    const projectedData = [];
-    
-    for (let i = 0; i < periods; i++) {
-      let projectedRevenue = 0;
-      let projectedVolume = 0;
+    Object.entries(monthlyDataByStore).forEach(([storeName, storeData]) => {
+      if (storeData.length === 0) return;
 
-      if (algorithm === "linear") {
-        const revenueModel = linearRegression(revenues);
-        const volumeModel = linearRegression(volumes);
-        projectedRevenue = revenueModel.slope * (revenues.length + i) + revenueModel.intercept;
-        projectedVolume = volumeModel.slope * (volumes.length + i) + volumeModel.intercept;
-      } else if (algorithm === "moving_average") {
-        projectedRevenue = movingAverage(revenues);
-        projectedVolume = movingAverage(volumes);
-      } else if (algorithm === "exponential") {
-        projectedRevenue = exponentialSmoothing(revenues);
-        projectedVolume = exponentialSmoothing(volumes);
+      const revenues = storeData.map((d: any) => d.revenue);
+      const volumes = storeData.map((d: any) => d.volume);
+      
+      const projectedData = [];
+      
+      for (let i = 0; i < periods; i++) {
+        let projectedRevenue = 0;
+        let projectedVolume = 0;
+
+        if (algorithm === "linear") {
+          const revenueModel = linearRegression(revenues);
+          const volumeModel = linearRegression(volumes);
+          projectedRevenue = revenueModel.slope * (revenues.length + i) + revenueModel.intercept;
+          projectedVolume = volumeModel.slope * (volumes.length + i) + volumeModel.intercept;
+        } else if (algorithm === "moving_average") {
+          projectedRevenue = movingAverage(revenues);
+          projectedVolume = movingAverage(volumes);
+        } else if (algorithm === "exponential") {
+          projectedRevenue = exponentialSmoothing(revenues);
+          projectedVolume = exponentialSmoothing(volumes);
+        }
+
+        const lastDate = storeData[storeData.length - 1].date;
+        const futureDate = new Date(lastDate);
+        futureDate.setMonth(futureDate.getMonth() + i + 1);
+
+        projectedData.push({
+          monthYear: `${futureDate.getFullYear()}-${String(futureDate.getMonth() + 1).padStart(2, '0')}`,
+          revenue: Math.max(0, projectedRevenue),
+          volume: Math.max(0, projectedVolume),
+          store: storeName,
+          isProjection: true,
+        });
       }
 
-      const lastDate = monthlyData[monthlyData.length - 1].date;
-      const futureDate = new Date(lastDate);
-      futureDate.setMonth(futureDate.getMonth() + i + 1);
+      projections[storeName] = projectedData;
+    });
 
-      projectedData.push({
-        monthYear: `${futureDate.getFullYear()}-${String(futureDate.getMonth() + 1).padStart(2, '0')}`,
-        revenue: Math.max(0, projectedRevenue),
-        volume: Math.max(0, projectedVolume),
-        isProjection: true,
-      });
-    }
-
-    return projectedData;
-  }, [monthlyData, algorithm, periods]);
+    return projections;
+  }, [monthlyDataByStore, algorithm, periods]);
 
   const chartData = useMemo(() => {
-    const historical = monthlyData.map((d: any) => ({
-      monthYear: d.monthYear,
-      revenue: d.revenue,
-      volume: d.volume,
-      revenueProjection: null,
-      volumeProjection: null,
-      isProjection: false,
-    }));
+    const allMonths = new Set<string>();
+    const dataMap: Record<string, any> = {};
 
-    // Create connection point (duplicate last historical point as first projection point)
-    const connectionPoint = monthlyData.length > 0 ? [{
-      monthYear: monthlyData[monthlyData.length - 1].monthYear,
-      revenue: null,
-      volume: null,
-      revenueProjection: monthlyData[monthlyData.length - 1].revenue,
-      volumeProjection: monthlyData[monthlyData.length - 1].volume,
-      isProjection: false,
-    }] : [];
+    // Collect all months from all stores
+    Object.entries(monthlyDataByStore).forEach(([storeName, storeData]) => {
+      storeData.forEach((d: any) => {
+        allMonths.add(d.monthYear);
+        if (!dataMap[d.monthYear]) {
+          dataMap[d.monthYear] = { monthYear: d.monthYear };
+        }
+        dataMap[d.monthYear][`${storeName}_revenue`] = d.revenue;
+        dataMap[d.monthYear][`${storeName}_volume`] = d.volume;
+      });
 
-    const projected = projections.map((d: any) => ({
-      monthYear: d.monthYear,
-      revenue: null,
-      volume: null,
-      revenueProjection: d.revenue,
-      volumeProjection: d.volume,
-      isProjection: true,
-    }));
+      // Add projections
+      if (projectionsByStore[storeName]) {
+        projectionsByStore[storeName].forEach((d: any) => {
+          allMonths.add(d.monthYear);
+          if (!dataMap[d.monthYear]) {
+            dataMap[d.monthYear] = { monthYear: d.monthYear };
+          }
+          dataMap[d.monthYear][`${storeName}_revenueProjection`] = d.revenue;
+          dataMap[d.monthYear][`${storeName}_volumeProjection`] = d.volume;
+        });
 
-    return [...historical, ...connectionPoint, ...projected];
-  }, [monthlyData, projections]);
+        // Add connection point
+        const lastHistorical = storeData[storeData.length - 1];
+        if (lastHistorical && !dataMap[lastHistorical.monthYear][`${storeName}_revenueProjection`]) {
+          dataMap[lastHistorical.monthYear][`${storeName}_revenueProjection`] = lastHistorical.revenue;
+          dataMap[lastHistorical.monthYear][`${storeName}_volumeProjection`] = lastHistorical.volume;
+        }
+      }
+    });
+
+    return Array.from(allMonths).sort().map(month => dataMap[month]);
+  }, [monthlyDataByStore, projectionsByStore]);
 
   const getAIInsights = async () => {
     setIsLoading(true);
@@ -178,7 +203,7 @@ const Forecast = () => {
       const { data: result, error } = await supabase.functions.invoke('ai-insights', {
         body: {
           data: filteredData.slice(0, 100),
-          projections: projections,
+          projections: Object.values(projectionsByStore).flat(),
           algorithm: algorithm,
           store: selectedStore,
           product: selectedProduct,
@@ -326,10 +351,7 @@ const Forecast = () => {
             <CardContent>
               <div className="w-full h-[300px] md:h-[400px]">
                 <ChartContainer
-                  config={{
-                    revenue: { label: "Receita (Histórico)", color: "hsl(var(--chart-1))" },
-                    revenueProjection: { label: "Receita (Projeção)", color: "hsl(var(--chart-4))" },
-                  }}
+                  config={{}}
                   className="h-full w-full"
                 >
                   <ResponsiveContainer width="100%" height="100%">
@@ -337,27 +359,37 @@ const Forecast = () => {
                       <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                       <XAxis dataKey="monthYear" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={60} />
                       <YAxis tick={{ fontSize: 11 }} />
-                      <Tooltip formatter={(value: any) => value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} />
+                      <Tooltip formatter={(value: any) => value?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} />
                       <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="revenue"
-                        name="Histórico"
-                        stroke="hsl(var(--chart-1))"
-                        strokeWidth={2}
-                        dot={{ r: 3, fill: "hsl(var(--chart-1))" }}
-                        connectNulls={false}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="revenueProjection"
-                        name="Projeção"
-                        stroke="hsl(var(--chart-4))"
-                        strokeWidth={2}
-                        strokeDasharray="5 5"
-                        dot={{ r: 3, fill: "hsl(var(--chart-4))" }}
-                        connectNulls={false}
-                      />
+                      {Object.keys(monthlyDataByStore).map((storeName, idx) => {
+                        const colors = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
+                        const color = colors[idx % colors.length];
+                        return (
+                          <>
+                            <Line
+                              key={`${storeName}-revenue`}
+                              type="monotone"
+                              dataKey={`${storeName}_revenue`}
+                              name={`${storeName} (Histórico)`}
+                              stroke={color}
+                              strokeWidth={2}
+                              dot={{ r: 3, fill: color }}
+                              connectNulls={false}
+                            />
+                            <Line
+                              key={`${storeName}-revenue-proj`}
+                              type="monotone"
+                              dataKey={`${storeName}_revenueProjection`}
+                              name={`${storeName} (Projeção)`}
+                              stroke={color}
+                              strokeWidth={2}
+                              strokeDasharray="5 5"
+                              dot={{ r: 3, fill: color }}
+                              connectNulls={false}
+                            />
+                          </>
+                        );
+                      })}
                     </LineChart>
                   </ResponsiveContainer>
                 </ChartContainer>
@@ -372,10 +404,7 @@ const Forecast = () => {
             <CardContent>
               <div className="w-full h-[300px] md:h-[400px]">
                 <ChartContainer
-                  config={{
-                    volume: { label: "Volume (Histórico)", color: "hsl(var(--chart-2))" },
-                    volumeProjection: { label: "Volume (Projeção)", color: "hsl(var(--chart-5))" },
-                  }}
+                  config={{}}
                   className="h-full w-full"
                 >
                   <ResponsiveContainer width="100%" height="100%">
@@ -383,27 +412,37 @@ const Forecast = () => {
                       <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                       <XAxis dataKey="monthYear" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={60} />
                       <YAxis tick={{ fontSize: 11 }} />
-                      <Tooltip formatter={(value: any) => value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} />
+                      <Tooltip formatter={(value: any) => value?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} />
                       <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="volume"
-                        name="Histórico"
-                        stroke="hsl(var(--chart-2))"
-                        strokeWidth={2}
-                        dot={{ r: 3, fill: "hsl(var(--chart-2))" }}
-                        connectNulls={false}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="volumeProjection"
-                        name="Projeção"
-                        stroke="hsl(var(--chart-5))"
-                        strokeWidth={2}
-                        strokeDasharray="5 5"
-                        dot={{ r: 3, fill: "hsl(var(--chart-5))" }}
-                        connectNulls={false}
-                      />
+                      {Object.keys(monthlyDataByStore).map((storeName, idx) => {
+                        const colors = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
+                        const color = colors[idx % colors.length];
+                        return (
+                          <>
+                            <Line
+                              key={`${storeName}-volume`}
+                              type="monotone"
+                              dataKey={`${storeName}_volume`}
+                              name={`${storeName} (Histórico)`}
+                              stroke={color}
+                              strokeWidth={2}
+                              dot={{ r: 3, fill: color }}
+                              connectNulls={false}
+                            />
+                            <Line
+                              key={`${storeName}-volume-proj`}
+                              type="monotone"
+                              dataKey={`${storeName}_volumeProjection`}
+                              name={`${storeName} (Projeção)`}
+                              stroke={color}
+                              strokeWidth={2}
+                              strokeDasharray="5 5"
+                              dot={{ r: 3, fill: color }}
+                              connectNulls={false}
+                            />
+                          </>
+                        );
+                      })}
                     </LineChart>
                   </ResponsiveContainer>
                 </ChartContainer>
