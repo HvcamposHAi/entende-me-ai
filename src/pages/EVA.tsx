@@ -178,60 +178,76 @@ const EVA = () => {
         </div>
 
         <div className="grid gap-6">
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-1 xl:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>EVA VOLUME (Kg) BY MACRO-FAMILY (w/o Barista)</CardTitle>
+                <CardTitle className="text-sm md:text-base">EVA VOLUME (Kg) BY MACRO-FAMILY (w/o Barista)</CardTitle>
               </CardHeader>
               <CardContent>
-                <ChartContainer
-                  config={{
-                    value: { label: "Volume Kg", color: "hsl(var(--chart-1))" },
-                  }}
-                  className="h-[400px]"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={volumeWaterfallData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => formatNumber(Number(value))} />
-                      <Bar dataKey="value">
-                        {volumeWaterfallData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
+                <div className="w-full h-[300px] md:h-[400px]">
+                  <ChartContainer
+                    config={{
+                      value: { label: "Volume Kg", color: "hsl(var(--chart-1))" },
+                    }}
+                    className="h-full w-full"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={volumeWaterfallData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis 
+                          dataKey="name" 
+                          tick={{ fontSize: 11 }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={60}
+                        />
+                        <YAxis tick={{ fontSize: 11 }} />
+                        <Tooltip formatter={(value) => formatNumber(Number(value))} />
+                        <Bar dataKey="value">
+                          {volumeWaterfallData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>EVA REVENUE BY MACRO-FAMILY</CardTitle>
+                <CardTitle className="text-sm md:text-base">EVA REVENUE BY MACRO-FAMILY</CardTitle>
               </CardHeader>
               <CardContent>
-                <ChartContainer
-                  config={{
-                    value: { label: "Revenue", color: "hsl(var(--chart-1))" },
-                  }}
-                  className="h-[400px]"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={revenueWaterfallData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => formatNumber(Number(value))} />
-                      <Bar dataKey="value">
-                        {revenueWaterfallData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
+                <div className="w-full h-[300px] md:h-[400px]">
+                  <ChartContainer
+                    config={{
+                      value: { label: "Revenue", color: "hsl(var(--chart-1))" },
+                    }}
+                    className="h-full w-full"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={revenueWaterfallData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis 
+                          dataKey="name" 
+                          tick={{ fontSize: 11 }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={60}
+                        />
+                        <YAxis tick={{ fontSize: 11 }} />
+                        <Tooltip formatter={(value) => formatNumber(Number(value))} />
+                        <Bar dataKey="value">
+                          {revenueWaterfallData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </div>
               </CardContent>
             </Card>
           </div>
