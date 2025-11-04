@@ -10,6 +10,7 @@ import {
   LineChart,
   FileText,
   LogOut,
+  Brain,
 } from "lucide-react";
 import {
   Sidebar,
@@ -34,6 +35,7 @@ const menuItems = [
   { title: "Despesas", url: "/expenses", icon: Receipt },
   { title: "Evolução", url: "/evolution", icon: LineChart },
   { title: "Relatórios", url: "/reports", icon: FileText },
+  { title: "Projeção & IA", url: "/forecast", icon: Brain },
 ];
 
 function AppSidebar() {

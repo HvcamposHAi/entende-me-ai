@@ -13,6 +13,7 @@ import EVA from "./pages/EVA";
 import Expenses from "./pages/Expenses";
 import Evolution from "./pages/Evolution";
 import Reports from "./pages/Reports";
+import Forecast from "./pages/Forecast";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/evolution" element={<Evolution />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/forecast" element={<Forecast />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
