@@ -31,25 +31,31 @@ const Upload = () => {
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-      const processedData: DengoDataRow[] = jsonData.map((row: any) => ({
-        calendarYear: Number(row['Calendar Year']) || 0,
-        calendarMonth: String(row['Calendar Month'] || ''),
-        nom: String(row['Nom'] || ''),
-        clientMacroCategory: String(row['[SL] Client macro category'] || ''),
-        macroFamilyName: String(row['Macro-family Name'] || ''),
-        familyName: String(row['Family Name'] || ''),
-        nameSalesReport: String(row['Name sales report'] || ''),
-        frItemCode: String(row['FR Item Code'] || ''),
-        quantitySoldTotal: Number(row['Quantity Sold Total']) || 0,
-        netSales: Number(row['Net Sales (exc. VAT)']) || 0,
-        cogs: Number(row['COGS']) || 0,
-        margin: Number(row['Margin']) || 0,
-        volumeKg: Number(row['Volume (Kg)']) || 0,
-        yearMonth: String(row['Year&Month'] || ''),
-        month: String(row['Month'] || ''),
-        monthYear: String(row['Month&Year'] || ''),
-        pl: String(row['P&L'] || ''),
-      }));
+      // Log raw data para debug
+      console.log('Primeira linha bruta do Excel:', jsonData[0]);
+      
+      const processedData: DengoDataRow[] = jsonData.map((row: any) => {
+        const processedRow = {
+          calendarYear: Number(row['Calendar Year']) || 0,
+          calendarMonth: String(row['Calendar Month'] || ''),
+          nom: String(row['Nom'] || ''),
+          clientMacroCategory: String(row['[SL] Client macro category'] || ''),
+          macroFamilyName: String(row['Macro-family Name'] || ''),
+          familyName: String(row['Family Name'] || ''),
+          nameSalesReport: String(row['Name sales report'] || ''),
+          frItemCode: String(row['FR Item Code'] || ''),
+          quantitySoldTotal: parseFloat(row['Quantity Sold Total']) || 0,
+          netSales: parseFloat(row['Net Sales (exc. VAT)']) || 0,
+          cogs: parseFloat(row['COGS']) || 0,
+          margin: parseFloat(row['Margin']) || 0,
+          volumeKg: parseFloat(row['Volume (Kg)']) || 0,
+          yearMonth: String(row['Year&Month'] || ''),
+          month: String(row['Month'] || ''),
+          monthYear: String(row['Month&Year'] || ''),
+          pl: String(row['P&L'] || ''),
+        };
+        return processedRow;
+      });
 
       console.log('Dados processados:', processedData.length, 'registros');
       console.log('Amostra dos primeiros 3 registros:', processedData.slice(0, 3));
