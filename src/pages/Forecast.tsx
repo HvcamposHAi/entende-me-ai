@@ -144,6 +144,16 @@ const Forecast = () => {
       isProjection: false,
     }));
 
+    // Create connection point (duplicate last historical point as first projection point)
+    const connectionPoint = monthlyData.length > 0 ? [{
+      monthYear: monthlyData[monthlyData.length - 1].monthYear,
+      revenue: null,
+      volume: null,
+      revenueProjection: monthlyData[monthlyData.length - 1].revenue,
+      volumeProjection: monthlyData[monthlyData.length - 1].volume,
+      isProjection: false,
+    }] : [];
+
     const projected = projections.map((d: any) => ({
       monthYear: d.monthYear,
       revenue: null,
@@ -153,7 +163,7 @@ const Forecast = () => {
       isProjection: true,
     }));
 
-    return [...historical, ...projected];
+    return [...historical, ...connectionPoint, ...projected];
   }, [monthlyData, projections]);
 
   const getAIInsights = async () => {
