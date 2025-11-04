@@ -4,7 +4,7 @@ import Layout from "@/components/Layout";
 import { useData } from "@/contexts/DataContext";
 import { useMemo } from "react";
 import { ArrowUp, ArrowDown } from "lucide-react";
-import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from "recharts";
 import { ChartContainer } from "@/components/ui/chart";
 
 const PL = () => {
@@ -156,10 +156,10 @@ const PL = () => {
 
       return {
         month,
-        revenue2024: revenue2024 > 0 ? revenue2024 : null,
-        revenue2025: revenue2025 > 0 ? revenue2025 : null,
-        margin2024: revenue2024 > 0 ? marginPercent2024 : null,
-        margin2025: revenue2025 > 0 ? marginPercent2025 : null,
+        revenue2024,
+        revenue2025,
+        margin2024: marginPercent2024,
+        margin2025: marginPercent2025,
       };
     });
   }, [data, isDataLoaded]);
@@ -202,7 +202,7 @@ const PL = () => {
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 grid-cols-1">
           <Card>
             <CardHeader>
               <CardTitle>P&L YTD 06.Jun</CardTitle>
@@ -340,17 +340,28 @@ const PL = () => {
                 className="h-[400px]"
               >
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={monthlyChartData}>
+                  <ComposedChart data={monthlyChartData} margin={{ top: 20, right: 20, bottom: 50, left: 10 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
-                    <YAxis yAxisId="left" />
-                    <YAxis yAxisId="right" orientation="right" />
-                    <Tooltip />
-                    <Legend />
-                    <Bar yAxisId="left" dataKey="revenue2024" fill="hsl(var(--chart-1))" name="Revenue 2024" />
-                    <Bar yAxisId="left" dataKey="revenue2025" fill="hsl(var(--chart-2))" name="Revenue 2025" />
-                    <Line yAxisId="right" type="monotone" dataKey="margin2024" stroke="hsl(var(--chart-3))" name="Margin % 2024" strokeWidth={2} />
-                    <Line yAxisId="right" type="monotone" dataKey="margin2025" stroke="hsl(var(--chart-4))" name="Margin % 2025" strokeWidth={2} />
+                    <YAxis yAxisId="left" tickFormatter={(v) => `${Math.round(v)}`} />
+                    <YAxis yAxisId="right" orientation="right" tickFormatter={(v) => `${Math.round(v)}%`} />
+                    <Tooltip 
+                      formatter={(value: any, name: string) => {
+                        if (name.startsWith('Revenue')) {
+                          return [`${Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`, name];
+                        }
+                        return [`${Number(value).toFixed(1)}%`, name];
+                      }}
+                    />
+                    <Legend verticalAlign="bottom" align="center" />
+                    <Bar yAxisId="left" dataKey="revenue2024" fill="hsl(var(--chart-1))" name="Revenue 2024">
+                      <LabelList dataKey="revenue2024" position="top" />
+                    </Bar>
+                    <Bar yAxisId="left" dataKey="revenue2025" fill="hsl(var(--chart-2))" name="Revenue 2025">
+                      <LabelList dataKey="revenue2025" position="top" />
+                    </Bar>
+                    <Line yAxisId="right" type="monotone" dataKey="margin2024" stroke="hsl(var(--chart-3))" name="Margin % 2024" strokeWidth={2} dot />
+                    <Line yAxisId="right" type="monotone" dataKey="margin2025" stroke="hsl(var(--chart-4))" name="Margin % 2025" strokeWidth={2} dot />
                   </ComposedChart>
                 </ResponsiveContainer>
               </ChartContainer>
