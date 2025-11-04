@@ -4,6 +4,13 @@ import { Store } from "lucide-react";
 import Layout from "@/components/Layout";
 
 const ByBranch = () => {
+  const storeColors = [
+    "#3b82f6", // blue
+    "#10b981", // green
+    "#f59e0b", // orange
+    "#ef4444", // red
+  ];
+
   const storesData = [
     {
       name: "Paris Centre",
@@ -11,6 +18,7 @@ const ByBranch = () => {
       margin: "64.2%",
       ebitda: "€62K",
       growth: "+15.3%",
+      color: storeColors[0],
     },
     {
       name: "Lyon",
@@ -18,6 +26,7 @@ const ByBranch = () => {
       margin: "61.8%",
       ebitda: "€45K",
       growth: "+8.7%",
+      color: storeColors[1],
     },
     {
       name: "Marseille",
@@ -25,6 +34,7 @@ const ByBranch = () => {
       margin: "59.5%",
       ebitda: "€31K",
       growth: "+12.1%",
+      color: storeColors[2],
     },
     {
       name: "Bordeaux",
@@ -32,6 +42,7 @@ const ByBranch = () => {
       margin: "62.1%",
       ebitda: "€24K",
       growth: "+6.4%",
+      color: storeColors[3],
     },
   ];
 
@@ -47,10 +58,10 @@ const ByBranch = () => {
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {storesData.map((store) => (
-            <Card key={store.name}>
+            <Card key={store.name} className="border-t-4" style={{ borderTopColor: store.color }}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{store.name}</CardTitle>
-                <Store className="h-4 w-4 text-muted-foreground" />
+                <Store className="h-4 w-4" style={{ color: store.color }} />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{store.revenue}</div>
@@ -109,13 +120,19 @@ const ByBranch = () => {
                 return (
                   <div key={store.name} className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">{store.name}</span>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: store.color }}
+                        />
+                        <span className="font-medium">{store.name}</span>
+                      </div>
                       <span>{percentage}%</span>
                     </div>
                     <div className="h-3 rounded-full bg-secondary">
                       <div
-                        className="h-full rounded-full bg-primary transition-all"
-                        style={{ width: `${percentage}%` }}
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${percentage}%`, backgroundColor: store.color }}
                       />
                     </div>
                   </div>
