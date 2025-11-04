@@ -35,6 +35,9 @@ const Forecast = () => {
     return unique;
   }, [data, isDataLoaded]);
 
+  // Safe key generator for store names (no spaces/special chars)
+  const storeKey = (name: string) => (name ? name.replace(/[^a-zA-Z0-9]+/g, '_') : 'unknown');
+
   // Aggregate data by month with filters - BY STORE
   const monthlyDataByStore = useMemo(() => {
     if (!isDataLoaded) return {};
@@ -109,8 +112,6 @@ const Forecast = () => {
     return forecast;
   };
 
-  // Safe key generator for store names (no spaces/special chars)
-  const storeKey = (name: string) => (name ? name.replace(/[^a-zA-Z0-9]+/g, '_') : 'unknown');
   const projectionsByStore = useMemo(() => {
     const projections: Record<string, any[]> = {};
 
