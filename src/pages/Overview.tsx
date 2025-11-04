@@ -10,6 +10,11 @@ import { AlertCircle } from "lucide-react";
 const Overview = () => {
   const { data, isDataLoaded } = useData();
   
+  console.log('Overview - Data loaded:', isDataLoaded, 'Total registros:', data.length);
+  if (data.length > 0) {
+    console.log('Overview - Amostra dos primeiros 3 registros:', data.slice(0, 3));
+  }
+  
   const [selectedStore, setSelectedStore] = useState("TOTAL");
   const [selectedReport, setSelectedReport] = useState("YTD");
   const [selectedMonth, setSelectedMonth] = useState("06.Jun");
