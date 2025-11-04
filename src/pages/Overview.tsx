@@ -228,10 +228,10 @@ const Overview = () => {
                   }}
                 />
                 <Legend />
-                <Bar yAxisId="left" dataKey="revenue2024" fill="hsl(var(--chart-1))" name="Revenue 2024" />
-                <Bar yAxisId="left" dataKey="revenue2025" fill="hsl(var(--chart-2))" name="Revenue 2025" />
-                <Line yAxisId="right" type="monotone" dataKey="marginPct2024" stroke="hsl(var(--chart-3))" name="Margin % 2024" strokeWidth={2} />
-                <Line yAxisId="right" type="monotone" dataKey="marginPct2025" stroke="hsl(var(--chart-4))" name="Margin % 2025" strokeWidth={2} />
+                <Bar yAxisId="left" dataKey="revenue2024" fill="#3b82f6" name="Revenue 2024" />
+                <Bar yAxisId="left" dataKey="revenue2025" fill="#10b981" name="Revenue 2025" />
+                <Line yAxisId="right" type="monotone" dataKey="marginPct2024" stroke="#f59e0b" name="Margin % 2024" strokeWidth={3} dot={{ r: 4 }} />
+                <Line yAxisId="right" type="monotone" dataKey="marginPct2025" stroke="#ef4444" name="Margin % 2025" strokeWidth={3} dot={{ r: 4 }} />
               </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
@@ -256,8 +256,8 @@ const Overview = () => {
                   }
                 />
                 <Legend />
-                <Bar dataKey="revenue" fill="hsl(var(--chart-1))" name="Revenue" />
-                <Bar dataKey="margin" fill="hsl(var(--chart-2))" name="Margin" />
+                <Bar dataKey="revenue" fill="#3b82f6" name="Revenue" />
+                <Bar dataKey="margin" fill="#10b981" name="Margin" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
