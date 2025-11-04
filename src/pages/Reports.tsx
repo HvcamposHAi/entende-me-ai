@@ -3,9 +3,14 @@ import { Button } from "@/components/ui/button";
 import { FileText, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/Layout";
+import { useData } from "@/contexts/DataContext";
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const Reports = () => {
   const { toast } = useToast();
+  const { data, isDataLoaded } = useData();
 
   const reports = [
     {
@@ -35,10 +40,204 @@ const Reports = () => {
     },
   ];
 
-  const handleDownload = (reportTitle: string) => {
+  const generateExcelReport = (reportTitle: string) => {
+    if (!isDataLoaded || data.length === 0) {
+      toast({
+        title: "Sem dados",
+        description: "Por favor, carregue os dados primeiro na página Upload",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    let reportData: any[] = [];
+    let fileName = "";
+
+    switch (reportTitle) {
+      case "Relatório Mensal Completo":
+        reportData = data.map(row => ({
+          Ano: row.calendarYear,
+          Mês: row.calendarMonth,
+          Loja: row.nom,
+          Categoria: row.clientMacroCategory,
+          MacroFamília: row.macroFamilyName,
+          Família: row.familyName,
+          Produto: row.nameSalesReport,
+          Código: row.frItemCode,
+          Quantidade: row.quantitySoldTotal,
+          VendasLíquidas: row.netSales,
+          COGS: row.cogs,
+          Margem: row.margin,
+          VolumeKg: row.volumeKg,
+        }));
+        fileName = "Relatorio_Mensal_Completo.xlsx";
+        break;
+
+      case "Análise por Loja":
+        const byBranch = data.reduce((acc: any, row) => {
+          const key = row.nom;
+          if (!acc[key]) {
+            acc[key] = {
+              Loja: row.nom,
+              VendasTotais: 0,
+              COGSTotais: 0,
+              MargemTotal: 0,
+              QuantidadeTotal: 0,
+            };
+          }
+          acc[key].VendasTotais += row.netSales;
+          acc[key].COGSTotais += row.cogs;
+          acc[key].MargemTotal += row.margin;
+          acc[key].QuantidadeTotal += row.quantitySoldTotal;
+          return acc;
+        }, {});
+        reportData = Object.values(byBranch);
+        fileName = "Analise_por_Loja.xlsx";
+        break;
+
+      case "Despesas Detalhadas":
+        reportData = data.map(row => ({
+          Loja: row.nom,
+          Produto: row.nameSalesReport,
+          COGS: row.cogs,
+          VendasLíquidas: row.netSales,
+          PercentualCOGS: row.netSales ? ((row.cogs / row.netSales) * 100).toFixed(2) : 0,
+        }));
+        fileName = "Despesas_Detalhadas.xlsx";
+        break;
+
+      case "Análise EVA":
+        reportData = data.map(row => ({
+          Loja: row.nom,
+          MacroFamília: row.macroFamilyName,
+          VendasLíquidas: row.netSales,
+          COGS: row.cogs,
+          Margem: row.margin,
+          MargemPercentual: row.netSales ? ((row.margin / row.netSales) * 100).toFixed(2) : 0,
+        }));
+        fileName = "Analise_EVA.xlsx";
+        break;
+
+      case "Dashboard Executivo":
+        const summary = {
+          VendasTotais: data.reduce((sum, row) => sum + row.netSales, 0),
+          COGSTotais: data.reduce((sum, row) => sum + row.cogs, 0),
+          MargemTotal: data.reduce((sum, row) => sum + row.margin, 0),
+          QuantidadeTotal: data.reduce((sum, row) => sum + row.quantitySoldTotal, 0),
+          NumeroLojas: new Set(data.map(row => row.nom)).size,
+        };
+        reportData = [summary];
+        fileName = "Dashboard_Executivo.xlsx";
+        break;
+
+      default:
+        reportData = data;
+        fileName = "Relatorio.xlsx";
+    }
+
+    const ws = XLSX.utils.json_to_sheet(reportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Relatório");
+    XLSX.writeFile(wb, fileName);
+
     toast({
-      title: "Download iniciado",
-      description: `${reportTitle} será baixado em breve`,
+      title: "Download concluído",
+      description: `${reportTitle} foi baixado com sucesso`,
+    });
+  };
+
+  const generatePDFReport = (reportTitle: string) => {
+    if (!isDataLoaded || data.length === 0) {
+      toast({
+        title: "Sem dados",
+        description: "Por favor, carregue os dados primeiro na página Upload",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    
+    doc.setFontSize(18);
+    doc.text(reportTitle, pageWidth / 2, 20, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, pageWidth / 2, 28, { align: 'center' });
+
+    let tableData: any[] = [];
+    let headers: string[] = [];
+
+    switch (reportTitle) {
+      case "Relatório Mensal Completo":
+        headers = ['Loja', 'Produto', 'Vendas', 'COGS', 'Margem'];
+        tableData = data.slice(0, 50).map(row => [
+          row.nom,
+          row.nameSalesReport.substring(0, 30),
+          row.netSales.toFixed(2),
+          row.cogs.toFixed(2),
+          row.margin.toFixed(2),
+        ]);
+        break;
+
+      case "Análise por Loja":
+        const byBranch = data.reduce((acc: any, row) => {
+          const key = row.nom;
+          if (!acc[key]) {
+            acc[key] = { Loja: row.nom, Vendas: 0, COGS: 0, Margem: 0 };
+          }
+          acc[key].Vendas += row.netSales;
+          acc[key].COGS += row.cogs;
+          acc[key].Margem += row.margin;
+          return acc;
+        }, {});
+        headers = ['Loja', 'Vendas', 'COGS', 'Margem'];
+        tableData = Object.values(byBranch).map((b: any) => [
+          b.Loja,
+          b.Vendas.toFixed(2),
+          b.COGS.toFixed(2),
+          b.Margem.toFixed(2),
+        ]);
+        break;
+
+      case "Dashboard Executivo":
+        const summary = {
+          VendasTotais: data.reduce((sum, row) => sum + row.netSales, 0),
+          COGSTotais: data.reduce((sum, row) => sum + row.cogs, 0),
+          MargemTotal: data.reduce((sum, row) => sum + row.margin, 0),
+          NumeroLojas: new Set(data.map(row => row.nom)).size,
+        };
+        headers = ['Métrica', 'Valor'];
+        tableData = [
+          ['Vendas Totais', summary.VendasTotais.toFixed(2)],
+          ['COGS Totais', summary.COGSTotais.toFixed(2)],
+          ['Margem Total', summary.MargemTotal.toFixed(2)],
+          ['Número de Lojas', summary.NumeroLojas.toString()],
+        ];
+        break;
+
+      default:
+        headers = ['Loja', 'Vendas', 'Margem'];
+        tableData = data.slice(0, 50).map(row => [
+          row.nom,
+          row.netSales.toFixed(2),
+          row.margin.toFixed(2),
+        ]);
+    }
+
+    autoTable(doc, {
+      head: [headers],
+      body: tableData,
+      startY: 35,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [41, 128, 185] },
+    });
+
+    doc.save(`${reportTitle.replace(/\s+/g, '_')}.pdf`);
+
+    toast({
+      title: "Download concluído",
+      description: `${reportTitle} PDF foi baixado com sucesso`,
     });
   };
 
@@ -77,7 +276,8 @@ const Reports = () => {
                     variant="outline"
                     size="sm"
                     className="flex-1"
-                    onClick={() => handleDownload(report.title)}
+                    onClick={() => generatePDFReport(report.title)}
+                    disabled={!isDataLoaded}
                   >
                     <Download className="mr-2 h-4 w-4" />
                     PDF
@@ -86,7 +286,8 @@ const Reports = () => {
                     variant="outline"
                     size="sm"
                     className="flex-1"
-                    onClick={() => handleDownload(report.title)}
+                    onClick={() => generateExcelReport(report.title)}
+                    disabled={!isDataLoaded}
                   >
                     <Download className="mr-2 h-4 w-4" />
                     Excel
