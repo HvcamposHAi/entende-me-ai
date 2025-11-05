@@ -4,6 +4,7 @@ import { FileText, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/Layout";
 import { useData } from "@/contexts/DataContext";
+import { useTracking } from "@/hooks/useTracking";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -33,6 +34,7 @@ ChartJS.register(
 );
 
 const Reports = () => {
+  useTracking();
   const { toast } = useToast();
   const { data, isDataLoaded } = useData();
 

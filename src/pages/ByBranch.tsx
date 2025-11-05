@@ -2,8 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Store } from "lucide-react";
 import Layout from "@/components/Layout";
+import { useTracking } from "@/hooks/useTracking";
 
 const ByBranch = () => {
+  useTracking();
   const storeColors = [
     "#3b82f6", // blue
     "#10b981", // green

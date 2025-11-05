@@ -9,10 +9,12 @@ import { ChartContainer } from "@/components/ui/chart";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, TrendingUp, Brain } from "lucide-react";
+import { useTracking } from "@/hooks/useTracking";
 
 type Algorithm = "linear" | "moving_average" | "exponential";
 
 const Forecast = () => {
+  useTracking();
   const { data, isDataLoaded } = useData();
   const { toast } = useToast();
   const [algorithm, setAlgorithm] = useState<Algorithm>("linear");

@@ -6,8 +6,10 @@ import { useMemo } from "react";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from "recharts";
 import { ChartContainer } from "@/components/ui/chart";
+import { useTracking } from "@/hooks/useTracking";
 
 const PL = () => {
+  useTracking();
   const { data, isDataLoaded } = useData();
 
   const plCalculations = useMemo(() => {

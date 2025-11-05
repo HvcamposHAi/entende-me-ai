@@ -6,8 +6,10 @@ import KPICard from "@/components/KPICard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart } from "recharts";
 import { AlertCircle } from "lucide-react";
+import { useTracking } from "@/hooks/useTracking";
 
 const Overview = () => {
+  useTracking();
   const { data, isDataLoaded } = useData();
   
   console.log('Overview - Data loaded:', isDataLoaded, 'Total registros:', data.length);

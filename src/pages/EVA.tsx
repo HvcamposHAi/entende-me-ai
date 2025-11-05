@@ -6,8 +6,10 @@ import { useMemo } from "react";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 import { ChartContainer } from "@/components/ui/chart";
+import { useTracking } from "@/hooks/useTracking";
 
 const EVA = () => {
+  useTracking();
   const { data, isDataLoaded } = useData();
 
   const evaData = useMemo(() => {

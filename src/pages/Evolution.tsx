@@ -1,8 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, TrendingUp } from "lucide-react";
 import Layout from "@/components/Layout";
+import { useTracking } from "@/hooks/useTracking";
 
 const Evolution = () => {
+  useTracking();
   const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"];
   const revenueData = [112, 125, 132, 145, 138, 152];
   const maxRevenue = Math.max(...revenueData);

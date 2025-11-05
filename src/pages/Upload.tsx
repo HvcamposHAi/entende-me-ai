@@ -7,8 +7,10 @@ import Layout from "@/components/Layout";
 import * as XLSX from 'xlsx';
 import { useData, DengoDataRow } from "@/contexts/DataContext";
 import { useNavigate } from "react-router-dom";
+import { useTracking } from "@/hooks/useTracking";
 
 const Upload = () => {
+  useTracking();
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const { setData, isDataLoaded } = useData();
