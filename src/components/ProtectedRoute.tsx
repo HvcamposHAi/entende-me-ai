@@ -13,14 +13,14 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!isLoading && user && !hasActiveAccess) {
+    if (!isLoading && user && !hasActiveAccess && !isAdmin) {
       toast({
         title: "Acesso expirado",
         description: "Seu período de teste terminou. Entre em contato para renovar.",
         variant: "destructive"
       });
     }
-  }, [isLoading, user, hasActiveAccess]);
+  }, [isLoading, user, hasActiveAccess, isAdmin]);
 
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
