@@ -2,3 +2,6 @@ project_id = "cndfceigdktwpoebgoir"
 
 [functions.ai-insights]
 verify_jwt = false
+
+[functions.interpret-rule]
+verify_jwt = false

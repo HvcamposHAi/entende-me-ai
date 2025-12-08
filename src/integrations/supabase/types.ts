@@ -14,6 +14,95 @@ export type Database = {
   }
   public: {
     Tables: {
+      business_rules: {
+        Row: {
+          applies_to: string[] | null
+          created_at: string
+          created_by: string | null
+          generated_logic: Json | null
+          id: string
+          is_active: boolean
+          rule_description: string | null
+          rule_name: string
+          rule_text: string
+          rule_type: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          applies_to?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          generated_logic?: Json | null
+          id?: string
+          is_active?: boolean
+          rule_description?: string | null
+          rule_name: string
+          rule_text: string
+          rule_type?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          applies_to?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          generated_logic?: Json | null
+          id?: string
+          is_active?: boolean
+          rule_description?: string | null
+          rule_name?: string
+          rule_text?: string
+          rule_type?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      business_rules_history: {
+        Row: {
+          change_type: string
+          changed_at: string
+          changed_by: string | null
+          generated_logic: Json | null
+          id: string
+          rule_id: string
+          rule_name: string
+          rule_text: string
+          version: number
+        }
+        Insert: {
+          change_type: string
+          changed_at?: string
+          changed_by?: string | null
+          generated_logic?: Json | null
+          id?: string
+          rule_id: string
+          rule_name: string
+          rule_text: string
+          version: number
+        }
+        Update: {
+          change_type?: string
+          changed_at?: string
+          changed_by?: string | null
+          generated_logic?: Json | null
+          id?: string
+          rule_id?: string
+          rule_name?: string
+          rule_text?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_rules_history_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "business_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           company: string | null
