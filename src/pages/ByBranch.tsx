@@ -4,6 +4,7 @@ import { Store } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useTracking } from "@/hooks/useTracking";
 import { ExportButtons } from "@/components/ExportButtons";
+import AIAnalysisPanel from "@/components/AIAnalysisPanel";
 
 const ByBranch = () => {
   useTracking();
@@ -157,6 +158,17 @@ const ByBranch = () => {
             </div>
           </CardContent>
         </Card>
+
+        <AIAnalysisPanel
+          data={storesData.map(s => ({
+            nom: s.name,
+            netSales: parseFloat(s.revenue.replace(/[€K]/g, "")) * 1000,
+            margin: parseFloat(s.margin.replace('%', '')),
+            growth: parseFloat(s.growth.replace(/[+%]/g, '')),
+          }))}
+          context="branch"
+          title="Análise IA - Por Loja"
+        />
       </div>
     </Layout>
   );

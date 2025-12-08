@@ -3,6 +3,7 @@ import { TrendingUp } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useTracking } from "@/hooks/useTracking";
 import { ExportButtons } from "@/components/ExportButtons";
+import AIAnalysisPanel from "@/components/AIAnalysisPanel";
 
 const Evolution = () => {
   useTracking();
@@ -155,6 +156,16 @@ const Evolution = () => {
             </CardContent>
           </Card>
         </div>
+
+        <AIAnalysisPanel
+          data={months.map((month, idx) => ({
+            month,
+            revenue: revenueData[idx] * 1000,
+            growth: idx > 0 ? ((revenueData[idx] - revenueData[idx - 1]) / revenueData[idx - 1]) * 100 : 0,
+          }))}
+          context="evolution"
+          title="Análise IA - Evolução"
+        />
       </div>
     </Layout>
   );
