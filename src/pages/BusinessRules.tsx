@@ -14,6 +14,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useData } from "@/contexts/DataContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,9 +32,11 @@ import {
   Database,
   ChevronDown,
   ChevronRight,
-  Info
+  Info,
+  ListOrdered
 } from "lucide-react";
 import { useTracking } from "@/hooks/useTracking";
+import PLFieldOrderManager from "@/components/PLFieldOrderManager";
 
 // Available fields from Layer 1 (Excel import)
 const AVAILABLE_FIELDS = [
@@ -214,7 +217,7 @@ const BusinessRules = () => {
         is_active: true,
       };
 
-      const { data, error } = await supabase
+      const { data: savedRule, error } = await supabase
         .from('business_rules')
         .insert([insertData])
         .select()
@@ -222,9 +225,33 @@ const BusinessRules = () => {
 
       if (error) throw error;
 
+      // If the rule generates a new output field, add it to P&L field order
+      if (generatedLogic.outputField && savedRule) {
+        // Get current max display_order
+        const { data: maxOrderData } = await supabase
+          .from('pl_field_order')
+          .select('display_order')
+          .order('display_order', { ascending: false })
+          .limit(1);
+        
+        const nextOrder = (maxOrderData?.[0]?.display_order || 0) + 1;
+
+        // Insert new field with rule_id reference
+        await supabase
+          .from('pl_field_order')
+          .insert({
+            field_key: generatedLogic.outputField,
+            field_label: ruleName,
+            display_order: nextOrder,
+            is_system_field: false,
+            rule_id: savedRule.id,
+            is_visible: true,
+          });
+      }
+
       toast({
         title: "Regra salva",
-        description: `"${ruleName}" foi criada com sucesso`,
+        description: `"${ruleName}" foi criada com sucesso${generatedLogic.outputField ? ' e adicionada ao P&L' : ''}`,
       });
 
       // Reset form
@@ -328,6 +355,19 @@ const BusinessRules = () => {
           </p>
         </div>
 
+        <Tabs defaultValue="rules" className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="rules" className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              Criar Regras
+            </TabsTrigger>
+            <TabsTrigger value="order" className="flex items-center gap-2">
+              <ListOrdered className="h-4 w-4" />
+              Ordenar P&L
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="rules" className="space-y-6 mt-6">
         {/* Main Grid: Fields + Rule Form */}
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Available Fields - Left Panel */}
@@ -657,6 +697,12 @@ const BusinessRules = () => {
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="order" className="mt-6">
+            <PLFieldOrderManager />
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );

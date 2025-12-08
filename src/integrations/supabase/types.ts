@@ -103,6 +103,50 @@ export type Database = {
           },
         ]
       }
+      pl_field_order: {
+        Row: {
+          created_at: string
+          display_order: number
+          field_key: string
+          field_label: string
+          id: string
+          is_system_field: boolean
+          is_visible: boolean
+          rule_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          field_key: string
+          field_label: string
+          id?: string
+          is_system_field?: boolean
+          is_visible?: boolean
+          rule_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          field_key?: string
+          field_label?: string
+          id?: string
+          is_system_field?: boolean
+          is_visible?: boolean
+          rule_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pl_field_order_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "business_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           company: string | null
