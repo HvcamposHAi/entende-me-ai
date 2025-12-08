@@ -3,12 +3,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import Layout from "@/components/Layout";
 import { useData } from "@/contexts/DataContext";
 import { useMemo, useState, useEffect } from "react";
-import { ArrowUp, ArrowDown, AlertCircle, History } from "lucide-react";
+import { ArrowUp, ArrowDown, History } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { ChartContainer } from "@/components/ui/chart";
 import { useTracking } from "@/hooks/useTracking";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ExportButtons } from "@/components/ExportButtons";
 
 interface RuleChange {
   id: string;
@@ -272,11 +273,28 @@ const EVA = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Análise EVA</h2>
-          <p className="text-muted-foreground">
-            EVA Margin - Total - YTD 06.Jun
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Análise EVA</h2>
+            <p className="text-muted-foreground">
+              EVA Margin - Total - YTD 06.Jun
+            </p>
+          </div>
+          <ExportButtons
+            data={macroFamilyData.map(f => ({
+              MacroFamília: f.family,
+              VolumeKg2025: f.volumeKg,
+              VolumeVariacao: f.volumeChange,
+              Receita2025: f.revenue,
+              ReceitaVariacao: f.revenueChange,
+              COGS2025: f.cogs,
+              COGSVariacao: f.cogsChange,
+              Margem2025: f.margin,
+              MargemVariacao: f.marginChange,
+            }))}
+            title="Análise EVA"
+            fileName="Analise_EVA"
+          />
         </div>
 
         <div className="grid gap-6">

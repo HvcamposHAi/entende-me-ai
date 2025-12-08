@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, TrendingUp, Brain } from "lucide-react";
 import { useTracking } from "@/hooks/useTracking";
+import { ExportButtons } from "@/components/ExportButtons";
 
 type Algorithm = "linear" | "moving_average" | "exponential";
 
@@ -258,11 +259,21 @@ const Forecast = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Projeção & IA</h1>
-          <p className="text-muted-foreground">
-            Algoritmos de Machine Learning e análise estratégica com IA
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Projeção & IA</h1>
+            <p className="text-muted-foreground">
+              Algoritmos de Machine Learning e análise estratégica com IA
+            </p>
+          </div>
+          <ExportButtons
+            data={chartData.map(d => ({
+              Período: d.monthYear,
+              ...Object.keys(d).filter(k => k !== 'monthYear').reduce((acc, key) => ({ ...acc, [key]: d[key] }), {}),
+            }))}
+            title="Projeção"
+            fileName="Projecao_Forecast"
+          />
         </div>
 
         <Card>

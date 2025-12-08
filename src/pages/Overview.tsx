@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart } from "recharts";
 import { AlertCircle } from "lucide-react";
 import { useTracking } from "@/hooks/useTracking";
+import { ExportButtons } from "@/components/ExportButtons";
 
 const Overview = () => {
   useTracking();
@@ -157,11 +158,27 @@ const Overview = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Overview</h2>
-          <p className="text-muted-foreground">
-            Visão geral dos indicadores financeiros
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Overview</h2>
+            <p className="text-muted-foreground">
+              Visão geral dos indicadores financeiros
+            </p>
+          </div>
+          <ExportButtons
+            data={filteredData.map(d => ({
+              Loja: d.nom,
+              Ano: d.calendarYear,
+              Mês: d.month,
+              MacroFamília: d.macroFamilyName,
+              ReceitaLíquida: d.netSales,
+              COGS: d.cogs,
+              Margem: d.margin,
+              VolumeKg: d.volumeKg,
+            }))}
+            title="Overview"
+            fileName="Overview_Export"
+          />
         </div>
 
         <FilterBar

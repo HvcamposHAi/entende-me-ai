@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Receipt } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useTracking } from "@/hooks/useTracking";
+import { ExportButtons } from "@/components/ExportButtons";
 
 const Expenses = () => {
   useTracking();
@@ -27,11 +28,25 @@ const Expenses = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Despesas Operacionais</h2>
-          <p className="text-muted-foreground">
-            Análise detalhada de custos e despesas
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Despesas Operacionais</h2>
+            <p className="text-muted-foreground">
+              Análise detalhada de custos e despesas
+            </p>
+          </div>
+          <ExportButtons
+            data={expensesData.map(e => ({
+              Categoria: e.category,
+              Janeiro: e.jan,
+              Fevereiro: e.fev,
+              Marco: e.mar,
+              Total: e.total,
+              Percentual: e.percent,
+            }))}
+            title="Despesas Operacionais"
+            fileName="Despesas"
+          />
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
