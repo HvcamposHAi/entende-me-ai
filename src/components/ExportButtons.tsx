@@ -14,10 +14,12 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 
+type ColumnDef = { key: string; label: string };
+
 interface ExportButtonsProps {
-  data: any[];
+  data: Record<string, unknown>[];
   title: string;
-  columns?: { key: string; label: string }[];
+  columns?: ColumnDef[];
   fileName?: string;
   chartRef?: RefObject<HTMLDivElement>;
 }
@@ -121,7 +123,7 @@ export const ExportButtons = ({ data, title, columns, fileName = "export", chart
               cell.numFmt = '#,##0.00';
             }
           } else {
-            cell.value = val ?? '';
+            cell.value = val != null ? String(val) : '';
           }
 
           // Alternate row colors
