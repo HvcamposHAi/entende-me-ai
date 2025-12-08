@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import Layout from "@/components/Layout";
 import { useData } from "@/contexts/DataContext";
 import FilterBar from "@/components/FilterBar";
@@ -10,6 +10,7 @@ import { useTracking } from "@/hooks/useTracking";
 import { ExportButtons } from "@/components/ExportButtons";
 
 const Overview = () => {
+  const chartRef = useRef<HTMLDivElement>(null);
   useTracking();
   const { data, isDataLoaded } = useData();
   
@@ -178,6 +179,7 @@ const Overview = () => {
             }))}
             title="Overview"
             fileName="Overview_Export"
+            chartRef={chartRef}
           />
         </div>
 
@@ -224,39 +226,40 @@ const Overview = () => {
           />
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>REVENUE vs. MARGIN</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={400}>
-              <ComposedChart data={monthlyChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip 
-                  formatter={(value: number, name: string) => {
-                    if (name.includes('Pct')) {
-                      return `${value.toFixed(1)}%`;
-                    }
-                    return new Intl.NumberFormat('pt-FR', { 
-                      style: 'currency', 
-                      currency: 'EUR' 
-                    }).format(value);
-                  }}
-                />
-                <Legend />
-                <Bar yAxisId="left" dataKey="revenue2024" fill="#3b82f6" name="Revenue 2024" />
-                <Bar yAxisId="left" dataKey="revenue2025" fill="#10b981" name="Revenue 2025" />
-                <Line yAxisId="right" type="monotone" dataKey="marginPct2024" stroke="#f59e0b" name="Margin % 2024" strokeWidth={3} dot={{ r: 4 }} />
-                <Line yAxisId="right" type="monotone" dataKey="marginPct2025" stroke="#ef4444" name="Margin % 2025" strokeWidth={3} dot={{ r: 4 }} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <div ref={chartRef} className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>REVENUE vs. MARGIN</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={400}>
+                <ComposedChart data={monthlyChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis yAxisId="left" />
+                  <YAxis yAxisId="right" orientation="right" />
+                  <Tooltip 
+                    formatter={(value: number, name: string) => {
+                      if (name.includes('Pct')) {
+                        return `${value.toFixed(1)}%`;
+                      }
+                      return new Intl.NumberFormat('pt-FR', { 
+                        style: 'currency', 
+                        currency: 'EUR' 
+                      }).format(value);
+                    }}
+                  />
+                  <Legend />
+                  <Bar yAxisId="left" dataKey="revenue2024" fill="#3b82f6" name="Revenue 2024" />
+                  <Bar yAxisId="left" dataKey="revenue2025" fill="#10b981" name="Revenue 2025" />
+                  <Line yAxisId="right" type="monotone" dataKey="marginPct2024" stroke="#f59e0b" name="Margin % 2024" strokeWidth={3} dot={{ r: 4 }} />
+                  <Line yAxisId="right" type="monotone" dataKey="marginPct2025" stroke="#ef4444" name="Margin % 2025" strokeWidth={3} dot={{ r: 4 }} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
-        <Card>
+          <Card>
           <CardHeader>
             <CardTitle>TOP 10 MACRO-FAMILY (2025)</CardTitle>
           </CardHeader>
@@ -280,7 +283,8 @@ const Overview = () => {
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+          </Card>
+        </div>
       </div>
     </Layout>
   );
