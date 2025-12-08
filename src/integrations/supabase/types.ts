@@ -105,36 +105,54 @@ export type Database = {
       }
       pl_field_order: {
         Row: {
+          calculation_formula: string | null
           created_at: string
           display_order: number
           field_key: string
           field_label: string
+          field_style: string | null
           id: string
+          indent_level: number | null
+          is_calculated: boolean | null
           is_system_field: boolean
           is_visible: boolean
           rule_id: string | null
+          show_percent_of_revenue: boolean | null
+          show_rpu: boolean | null
           updated_at: string
         }
         Insert: {
+          calculation_formula?: string | null
           created_at?: string
           display_order?: number
           field_key: string
           field_label: string
+          field_style?: string | null
           id?: string
+          indent_level?: number | null
+          is_calculated?: boolean | null
           is_system_field?: boolean
           is_visible?: boolean
           rule_id?: string | null
+          show_percent_of_revenue?: boolean | null
+          show_rpu?: boolean | null
           updated_at?: string
         }
         Update: {
+          calculation_formula?: string | null
           created_at?: string
           display_order?: number
           field_key?: string
           field_label?: string
+          field_style?: string | null
           id?: string
+          indent_level?: number | null
+          is_calculated?: boolean | null
           is_system_field?: boolean
           is_visible?: boolean
           rule_id?: string | null
+          show_percent_of_revenue?: boolean | null
+          show_rpu?: boolean | null
           updated_at?: string
         }
         Relationships: [

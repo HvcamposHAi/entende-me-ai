@@ -36,7 +36,7 @@ import {
   ListOrdered
 } from "lucide-react";
 import { useTracking } from "@/hooks/useTracking";
-import PLFieldOrderManager from "@/components/PLFieldOrderManager";
+import PLBuilder from "@/components/PLBuilder";
 
 // Available fields from Layer 1 (Excel import)
 const AVAILABLE_FIELDS = [
@@ -700,7 +700,7 @@ const BusinessRules = () => {
           </TabsContent>
 
           <TabsContent value="order" className="mt-6">
-            <PLFieldOrderManager />
+            <PLBuilder />
           </TabsContent>
         </Tabs>
       </div>
