@@ -90,6 +90,7 @@ const BusinessRules = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isInterpreting, setIsInterpreting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [fieldsOpen, setFieldsOpen] = useState(true);
   
   // Form state
   const [ruleName, setRuleName] = useState("");
@@ -97,6 +98,18 @@ const BusinessRules = () => {
   const [ruleText, setRuleText] = useState("");
   const [ruleType, setRuleType] = useState<string>("calculation");
   const [generatedLogic, setGeneratedLogic] = useState<GeneratedLogic | null>(null);
+
+  // Insert field into rule text
+  const insertField = (fieldName: string) => {
+    setRuleText((prev) => {
+      const suffix = prev.endsWith(" ") || prev === "" ? "" : " ";
+      return prev + suffix + fieldName + " ";
+    });
+    toast({
+      title: "Campo inserido",
+      description: `"${fieldName}" adicionado à regra`,
+    });
+  };
 
   // Load existing rules
   const loadRules = async () => {
@@ -315,219 +328,253 @@ const BusinessRules = () => {
           </p>
         </div>
 
-        {/* Available Fields Reference */}
-        <Collapsible>
-          <Card>
-            <CollapsibleTrigger className="w-full">
-              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Database className="h-5 w-5" />
-                    Campos Disponíveis da Base de Dados
-                  </div>
-                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
-                </CardTitle>
-                <CardDescription className="text-left">
-                  Referência dos campos que podem ser usados nas regras
-                </CardDescription>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="pt-0">
-                <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-                  {AVAILABLE_FIELDS.map((field) => (
-                    <div 
-                      key={field.name}
-                      className="p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                      onClick={() => {
-                        navigator.clipboard.writeText(field.name);
-                        toast({
-                          title: "Campo copiado",
-                          description: `"${field.name}" copiado para a área de transferência`,
-                        });
-                      }}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <code className="text-sm font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded">
-                          {field.name}
-                        </code>
-                        <Badge variant="outline" className="text-xs">
-                          {field.type}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{field.description}</p>
+        {/* Main Grid: Fields + Rule Form */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Available Fields - Left Panel */}
+          <Card className="lg:col-span-1">
+            <Collapsible open={fieldsOpen} onOpenChange={setFieldsOpen}>
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <CardTitle className="flex items-center justify-between text-lg">
+                    <div className="flex items-center gap-2">
+                      <Database className="h-5 w-5" />
+                      Campos Disponíveis
                     </div>
-                  ))}
-                </div>
-                <div className="mt-4 p-3 bg-muted rounded-lg flex items-start gap-2">
-                  <Info className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-muted-foreground">
-                    Clique em qualquer campo para copiar o nome. Use esses campos nas suas regras em linguagem natural.
-                    Exemplo: "Ticket médio = netSales / quantitySoldTotal"
-                  </p>
-                </div>
-              </CardContent>
-            </CollapsibleContent>
+                    {fieldsOpen ? (
+                      <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </CardTitle>
+                  <CardDescription className="text-left text-xs">
+                    Clique para inserir na regra
+                  </CardDescription>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="pt-0">
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                    {AVAILABLE_FIELDS.map((field) => (
+                      <button
+                        key={field.name}
+                        type="button"
+                        className="w-full p-2 border rounded-lg hover:bg-primary/10 hover:border-primary transition-colors text-left group"
+                        onClick={() => insertField(field.name)}
+                      >
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <code className="text-xs font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                            {field.name}
+                          </code>
+                          <Badge variant="outline" className="text-[10px] h-4">
+                            {field.type}
+                          </Badge>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">{field.description}</p>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-3 p-2 bg-muted rounded-lg flex items-start gap-2">
+                    <Info className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <p className="text-[10px] text-muted-foreground">
+                      Clique nos campos acima para inserir automaticamente no texto da regra
+                    </p>
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
           </Card>
-        </Collapsible>
 
-        {/* Create New Rule */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5" />
-              Nova Regra de Negócio
-            </CardTitle>
-            <CardDescription>
-              Descreva a regra em linguagem natural e o sistema irá gerar a lógica automaticamente
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
+          {/* Create New Rule - Right Panel */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="h-5 w-5" />
+                Nova Regra de Negócio
+              </CardTitle>
+              <CardDescription>
+                Selecione campos à esquerda e descreva a regra em linguagem natural
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="ruleName">Nome da Regra</Label>
+                  <Input
+                    id="ruleName"
+                    placeholder="Ex: Cálculo de EBITDA"
+                    value={ruleName}
+                    onChange={(e) => setRuleName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ruleType">Tipo de Regra</Label>
+                  <Select value={ruleType} onValueChange={setRuleType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="calculation">Cálculo</SelectItem>
+                      <SelectItem value="classification">Classificação</SelectItem>
+                      <SelectItem value="filter">Filtro</SelectItem>
+                      <SelectItem value="aggregation">Agregação</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <Label htmlFor="ruleName">Nome da Regra</Label>
+                <Label htmlFor="ruleDescription">Descrição (opcional)</Label>
                 <Input
-                  id="ruleName"
-                  placeholder="Ex: Cálculo de EBITDA"
-                  value={ruleName}
-                  onChange={(e) => setRuleName(e.target.value)}
+                  id="ruleDescription"
+                  placeholder="Breve descrição do objetivo da regra"
+                  value={ruleDescription}
+                  onChange={(e) => setRuleDescription(e.target.value)}
                 />
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="ruleType">Tipo de Regra</Label>
-                <Select value={ruleType} onValueChange={setRuleType}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="calculation">Cálculo</SelectItem>
-                    <SelectItem value="classification">Classificação</SelectItem>
-                    <SelectItem value="filter">Filtro</SelectItem>
-                    <SelectItem value="aggregation">Agregação</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="ruleText">Regra em Linguagem Natural</Label>
+                <Textarea
+                  id="ruleText"
+                  placeholder="Ex: EBITDA = margin - stPersonal - stOpex (clique nos campos à esquerda para inserir)"
+                  value={ruleText}
+                  onChange={(e) => setRuleText(e.target.value)}
+                  rows={4}
+                  className="font-mono text-sm"
+                />
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <span className="text-xs text-muted-foreground">Exemplos rápidos:</span>
+                  {exampleRules.map((example, idx) => (
+                    <Badge 
+                      key={idx} 
+                      variant="outline" 
+                      className="cursor-pointer hover:bg-accent text-xs"
+                      onClick={() => setRuleText(example)}
+                    >
+                      {example}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="ruleDescription">Descrição (opcional)</Label>
-              <Input
-                id="ruleDescription"
-                placeholder="Breve descrição do objetivo da regra"
-                value={ruleDescription}
-                onChange={(e) => setRuleDescription(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="ruleText">Regra em Linguagem Natural</Label>
-              <Textarea
-                id="ruleText"
-                placeholder="Ex: EBITDA deve ser calculado como Margem menos ST-PERSONAL menos ST-OPEX"
-                value={ruleText}
-                onChange={(e) => setRuleText(e.target.value)}
-                rows={3}
-              />
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="text-xs text-muted-foreground">Exemplos:</span>
-                {exampleRules.map((example, idx) => (
-                  <Badge 
-                    key={idx} 
-                    variant="outline" 
-                    className="cursor-pointer hover:bg-accent text-xs"
-                    onClick={() => setRuleText(example)}
-                  >
-                    {example}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex gap-2">
               <Button 
                 onClick={interpretRule} 
                 disabled={isInterpreting || !ruleText.trim()}
-                className="flex-1"
+                className="w-full"
+                size="lg"
               >
                 {isInterpreting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Interpretando...
+                    Interpretando com IA...
                   </>
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-4 w-4" />
-                    Interpretar com IA
+                    Interpretar Regra com IA
                   </>
                 )}
               </Button>
-            </div>
+            </CardContent>
+          </Card>
+        </div>
 
-            {/* Generated Logic Preview */}
-            {generatedLogic && (
-              <div className="mt-4 p-4 bg-muted rounded-lg space-y-3">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  <span className="font-medium">Lógica Gerada</span>
-                </div>
-                
-                <div className="grid gap-2 text-sm">
+        {/* AI Response Section - Full Width */}
+        {generatedLogic && (
+          <Card className="border-primary/50 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-primary">
+                <Sparkles className="h-5 w-5" />
+                Resposta da IA - Lógica Interpretada
+              </CardTitle>
+              <CardDescription>
+                Revise a interpretação abaixo antes de salvar a regra
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary">{generatedLogic.operation}</Badge>
-                    {generatedLogic.outputField && (
-                      <span>→ <code className="bg-background px-1 rounded">{generatedLogic.outputField}</code></span>
-                    )}
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <span className="font-medium">Operação Identificada</span>
                   </div>
                   
-                  <p className="text-muted-foreground">{generatedLogic.description}</p>
-                  
-                  {generatedLogic.formula && (
-                    <div className="flex items-start gap-2">
-                      <FileText className="h-4 w-4 mt-0.5" />
-                      <span><strong>Fórmula:</strong> {generatedLogic.formula}</span>
+                  <div className="p-3 bg-background rounded-lg border space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge>{generatedLogic.operation}</Badge>
+                      {generatedLogic.outputField && (
+                        <span className="text-sm">
+                          → Novo campo: <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-primary">{generatedLogic.outputField}</code>
+                        </span>
+                      )}
                     </div>
-                  )}
-                  
-                  {generatedLogic.jsExpression && (
-                    <div className="flex items-start gap-2">
-                      <Code className="h-4 w-4 mt-0.5" />
-                      <code className="bg-background px-2 py-1 rounded text-xs break-all">
-                        {generatedLogic.jsExpression}
-                      </code>
-                    </div>
-                  )}
-                  
-                  {generatedLogic.validationMessage && (
-                    <div className="flex items-center gap-2 text-yellow-600">
-                      <XCircle className="h-4 w-4" />
-                      <span>{generatedLogic.validationMessage}</span>
-                    </div>
-                  )}
+                    
+                    <p className="text-sm text-muted-foreground">{generatedLogic.description}</p>
+                  </div>
                 </div>
 
-                <Separator />
-
-                <Button 
-                  onClick={saveRule} 
-                  disabled={isSaving}
-                  className="w-full"
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Salvando...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                      Salvar Regra
-                    </>
-                  )}
-                </Button>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Code className="h-5 w-5 text-blue-500" />
+                    <span className="font-medium">Lógica Gerada</span>
+                  </div>
+                  
+                  <div className="p-3 bg-background rounded-lg border space-y-2">
+                    {generatedLogic.formula && (
+                      <div className="flex items-start gap-2">
+                        <FileText className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                        <div>
+                          <span className="text-xs text-muted-foreground">Fórmula:</span>
+                          <p className="font-mono text-sm">{generatedLogic.formula}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {generatedLogic.jsExpression && (
+                      <div className="flex items-start gap-2">
+                        <Code className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                        <div>
+                          <span className="text-xs text-muted-foreground">Expressão JS:</span>
+                          <code className="block bg-muted px-2 py-1 rounded text-xs font-mono mt-1 break-all">
+                            {generatedLogic.jsExpression}
+                          </code>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+
+              {generatedLogic.validationMessage && (
+                <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-700 dark:text-yellow-400">
+                  <XCircle className="h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm">{generatedLogic.validationMessage}</span>
+                </div>
+              )}
+
+              <Separator />
+
+              <Button 
+                onClick={saveRule} 
+                disabled={isSaving}
+                className="w-full"
+                size="lg"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando Regra...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Confirmar e Salvar Regra
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Existing Rules List */}
         <Card>
