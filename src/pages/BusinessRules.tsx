@@ -9,6 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { useData } from "@/contexts/DataContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,9 +27,34 @@ import {
   Code,
   FileText,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Database,
+  ChevronDown,
+  ChevronRight,
+  Info
 } from "lucide-react";
 import { useTracking } from "@/hooks/useTracking";
+
+// Available fields from Layer 1 (Excel import)
+const AVAILABLE_FIELDS = [
+  { name: "calendarYear", type: "number", description: "Ano (ex: 2024, 2025)" },
+  { name: "calendarMonth", type: "text", description: "Mês do calendário" },
+  { name: "month", type: "text", description: "Nome do mês abreviado (ex: Jan, Feb)" },
+  { name: "yearMonth", type: "text", description: "Ano-Mês formatado" },
+  { name: "monthYear", type: "text", description: "Mês/Ano formatado" },
+  { name: "nom", type: "text", description: "Nome da loja/filial" },
+  { name: "clientMacroCategory", type: "text", description: "Macro categoria do cliente" },
+  { name: "macroFamilyName", type: "text", description: "Família macro do produto (ex: Barras, Trufas)" },
+  { name: "familyName", type: "text", description: "Família do produto" },
+  { name: "nameSalesReport", type: "text", description: "Nome para relatório de vendas" },
+  { name: "frItemCode", type: "text", description: "Código do item" },
+  { name: "pl", type: "text", description: "Linha do P&L / Classificação contábil" },
+  { name: "quantitySoldTotal", type: "number", description: "Quantidade vendida total (unidades)" },
+  { name: "netSales", type: "number", description: "Receita líquida (R$)" },
+  { name: "cogs", type: "number", description: "Custo dos produtos vendidos - COGS (R$)" },
+  { name: "margin", type: "number", description: "Margem bruta (R$)" },
+  { name: "volumeKg", type: "number", description: "Volume em quilogramas (Kg)" },
+];
 
 interface BusinessRule {
   id: string;
@@ -284,6 +314,62 @@ const BusinessRules = () => {
             Defina regras em linguagem natural que o LLM interpretará e aplicará aos dados
           </p>
         </div>
+
+        {/* Available Fields Reference */}
+        <Collapsible>
+          <Card>
+            <CollapsibleTrigger className="w-full">
+              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-5 w-5" />
+                    Campos Disponíveis da Base de Dados
+                  </div>
+                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-200 [[data-state=open]>&]:rotate-180" />
+                </CardTitle>
+                <CardDescription className="text-left">
+                  Referência dos campos que podem ser usados nas regras
+                </CardDescription>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-0">
+                <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+                  {AVAILABLE_FIELDS.map((field) => (
+                    <div 
+                      key={field.name}
+                      className="p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => {
+                        navigator.clipboard.writeText(field.name);
+                        toast({
+                          title: "Campo copiado",
+                          description: `"${field.name}" copiado para a área de transferência`,
+                        });
+                      }}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <code className="text-sm font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                          {field.name}
+                        </code>
+                        <Badge variant="outline" className="text-xs">
+                          {field.type}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{field.description}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 p-3 bg-muted rounded-lg flex items-start gap-2">
+                  <Info className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-muted-foreground">
+                    Clique em qualquer campo para copiar o nome. Use esses campos nas suas regras em linguagem natural.
+                    Exemplo: "Ticket médio = netSales / quantitySoldTotal"
+                  </p>
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         {/* Create New Rule */}
         <Card>
