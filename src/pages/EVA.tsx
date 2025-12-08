@@ -10,6 +10,7 @@ import { useTracking } from "@/hooks/useTracking";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ExportButtons } from "@/components/ExportButtons";
+import AIAnalysisPanel from "@/components/AIAnalysisPanel";
 
 interface RuleChange {
   id: string;
@@ -488,6 +489,12 @@ const EVA = () => {
               </AlertDescription>
             </Alert>
           )}
+
+          <AIAnalysisPanel
+            data={data.filter(r => r.macroFamilyName !== 'Barista')}
+            context="eva"
+            title="Análise IA - EVA"
+          />
         </div>
       </div>
     </Layout>

@@ -4,6 +4,7 @@ import { Receipt } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useTracking } from "@/hooks/useTracking";
 import { ExportButtons } from "@/components/ExportButtons";
+import AIAnalysisPanel from "@/components/AIAnalysisPanel";
 
 const Expenses = () => {
   useTracking();
@@ -151,6 +152,16 @@ const Expenses = () => {
             </div>
           </CardContent>
         </Card>
+
+        <AIAnalysisPanel
+          data={expensesData.map(e => ({
+            category: e.category,
+            total: parseFloat(e.total.replace(/[€K]/g, "")) * 1000,
+            percent: parseFloat(e.percent.replace('%', '')),
+          }))}
+          context="expenses"
+          title="Análise IA - Despesas"
+        />
       </div>
     </Layout>
   );
