@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Brain, AlertTriangle, TrendingUp, FileDown, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, Brain, AlertTriangle, TrendingUp, FileDown, CheckCircle2, XCircle, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -108,6 +108,21 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
     });
   };
 
+  const sendViaOutlook = () => {
+    const content = rawInsights || "Nenhuma análise disponível";
+    const subject = encodeURIComponent(`${title} - ${new Date().toLocaleDateString('pt-BR')}`);
+    const body = encodeURIComponent(content);
+    
+    // Create mailto link - opens Outlook or default email client
+    const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+    window.open(mailtoLink, '_blank');
+    
+    toast({
+      title: "Outlook Aberto",
+      description: "Seu cliente de email foi aberto com a análise",
+    });
+  };
+
   const getLevelColor = (level: string) => {
     switch (level) {
       case 'high': return 'bg-destructive text-destructive-foreground';
@@ -136,10 +151,16 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
           </div>
           <div className="flex gap-2">
             {rawInsights && (
-              <Button variant="outline" size="sm" onClick={exportActionPlan}>
-                <FileDown className="w-4 h-4 mr-2" />
-                Exportar
-              </Button>
+              <>
+                <Button variant="outline" size="sm" onClick={sendViaOutlook}>
+                  <Mail className="w-4 h-4 mr-2" />
+                  Enviar por Email
+                </Button>
+                <Button variant="outline" size="sm" onClick={exportActionPlan}>
+                  <FileDown className="w-4 h-4 mr-2" />
+                  Exportar
+                </Button>
+              </>
             )}
             <Button onClick={runAnalysis} disabled={isLoading}>
               {isLoading ? (
