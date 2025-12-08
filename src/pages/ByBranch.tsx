@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Store } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useTracking } from "@/hooks/useTracking";
+import { ExportButtons } from "@/components/ExportButtons";
 
 const ByBranch = () => {
   useTracking();
@@ -51,11 +52,24 @@ const ByBranch = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Análise por Loja</h2>
-          <p className="text-muted-foreground">
-            Performance individual de cada ponto de venda
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Análise por Loja</h2>
+            <p className="text-muted-foreground">
+              Performance individual de cada ponto de venda
+            </p>
+          </div>
+          <ExportButtons
+            data={storesData.map(s => ({
+              Loja: s.name,
+              Receita: s.revenue,
+              Margem: s.margin,
+              EBITDA: s.ebitda,
+              Crescimento: s.growth,
+            }))}
+            title="Análise por Loja"
+            fileName="Analise_Loja"
+          />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useTracking } from "@/hooks/useTracking";
+import { ExportButtons } from "@/components/ExportButtons";
 
 const Evolution = () => {
   useTracking();
@@ -12,11 +13,22 @@ const Evolution = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Evolução Temporal</h2>
-          <p className="text-muted-foreground">
-            Análise de tendências e crescimento ao longo do tempo
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Evolução Temporal</h2>
+            <p className="text-muted-foreground">
+              Análise de tendências e crescimento ao longo do tempo
+            </p>
+          </div>
+          <ExportButtons
+            data={months.map((month, idx) => ({
+              Mês: month,
+              Receita: revenueData[idx],
+              Crescimento: idx > 0 ? (((revenueData[idx] - revenueData[idx - 1]) / revenueData[idx - 1]) * 100).toFixed(1) + "%" : "N/A",
+            }))}
+            title="Evolução Temporal"
+            fileName="Evolucao"
+          />
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">

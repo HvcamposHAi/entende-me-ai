@@ -7,6 +7,7 @@ import { ArrowUp, ArrowDown } from "lucide-react";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from "recharts";
 import { ChartContainer } from "@/components/ui/chart";
 import { useTracking } from "@/hooks/useTracking";
+import { ExportButtons } from "@/components/ExportButtons";
 
 const PL = () => {
   useTracking();
@@ -198,11 +199,25 @@ const PL = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">P&L YTD 06.Jun</h2>
-          <p className="text-muted-foreground">
-            Demonstração de Resultados Year-to-Date
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">P&L YTD 06.Jun</h2>
+            <p className="text-muted-foreground">
+              Demonstração de Resultados Year-to-Date
+            </p>
+          </div>
+          <ExportButtons
+            data={[
+              { Linha: "VOLUME original", ACT2025: plCalculations.volumeOriginal.current, ACT2024: plCalculations.volumeOriginal.previous, Variacao: plCalculations.volumeOriginal.change },
+              { Linha: "VOLUME Kg", ACT2025: plCalculations.volumeKg.current, ACT2024: plCalculations.volumeKg.previous, Variacao: plCalculations.volumeKg.change },
+              { Linha: "REVENUE", ACT2025: plCalculations.revenue.current, ACT2024: plCalculations.revenue.previous, Variacao: plCalculations.revenue.change },
+              { Linha: "COGS", ACT2025: plCalculations.cogs.current, ACT2024: plCalculations.cogs.previous, Variacao: plCalculations.cogs.change },
+              { Linha: "MARGIN", ACT2025: plCalculations.margin.current, ACT2024: plCalculations.margin.previous, Variacao: plCalculations.margin.change },
+              { Linha: "MARGIN %", ACT2025: plCalculations.marginPercent.current, ACT2024: plCalculations.marginPercent.previous, Variacao: plCalculations.marginPercent.change },
+            ]}
+            title="P&L Statement"
+            fileName="PL_Statement"
+          />
         </div>
 
         <div className="grid gap-6 grid-cols-1">
