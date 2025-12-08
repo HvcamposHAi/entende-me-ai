@@ -180,6 +180,42 @@ const Overview = () => {
             title="Overview"
             fileName="Overview_Export"
             chartRef={chartRef}
+            chartConfigs={[
+              {
+                type: 'column',
+                title: 'REVENUE vs. MARGIN',
+                categoryKey: 'month',
+                data: monthlyChartData.map(d => ({
+                  label: d.month,
+                  month: d.month,
+                  revenue2024: d.revenue2024,
+                  revenue2025: d.revenue2025,
+                  marginPct2024: d.marginPct2024,
+                  marginPct2025: d.marginPct2025,
+                })),
+                series: [
+                  { key: 'revenue2024', name: 'Revenue 2024' },
+                  { key: 'revenue2025', name: 'Revenue 2025' },
+                  { key: 'marginPct2024', name: 'Margin % 2024' },
+                  { key: 'marginPct2025', name: 'Margin % 2025' },
+                ]
+              },
+              {
+                type: 'bar',
+                title: 'TOP 10 MACRO-FAMILY (2025)',
+                categoryKey: 'name',
+                data: macroFamilyData.map(d => ({
+                  label: d.name,
+                  name: d.name,
+                  revenue: d.revenue,
+                  margin: d.margin,
+                })),
+                series: [
+                  { key: 'revenue', name: 'Revenue' },
+                  { key: 'margin', name: 'Margin' },
+                ]
+              }
+            ]}
           />
         </div>
 

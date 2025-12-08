@@ -1,7 +1,6 @@
 import { useState, RefObject } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  // Export dropdown menu
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -16,15 +15,36 @@ import html2canvas from 'html2canvas';
 
 type ColumnDef = { key: string; label: string };
 
+interface ChartDataPoint {
+  label: string;
+  [key: string]: string | number;
+}
+
+interface ChartConfig {
+  type: 'bar' | 'line' | 'column';
+  title: string;
+  data: ChartDataPoint[];
+  series: { key: string; name: string; color?: string }[];
+  categoryKey: string;
+}
+
 interface ExportButtonsProps {
   data: Record<string, unknown>[];
   title: string;
   columns?: ColumnDef[];
   fileName?: string;
   chartRef?: RefObject<HTMLDivElement>;
+  chartConfigs?: ChartConfig[];
 }
 
-export const ExportButtons = ({ data, title, columns, fileName = "export", chartRef }: ExportButtonsProps) => {
+export const ExportButtons = ({ 
+  data, 
+  title, 
+  columns, 
+  fileName = "export", 
+  chartRef,
+  chartConfigs = []
+}: ExportButtonsProps) => {
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
 
@@ -48,6 +68,78 @@ export const ExportButtons = ({ data, title, columns, fileName = "export", chart
     }
   };
 
+  const addNativeExcelChart = (
+    workbook: ExcelJS.Workbook,
+    worksheet: ExcelJS.Worksheet,
+    config: ChartConfig,
+    startRow: number
+  ): number => {
+    const { data: chartData, series, categoryKey, title: chartTitle, type } = config;
+    
+    // Write chart data to worksheet
+    const dataStartRow = startRow;
+    const dataStartCol = 1;
+    
+    // Header row
+    worksheet.getCell(dataStartRow, dataStartCol).value = categoryKey;
+    worksheet.getCell(dataStartRow, dataStartCol).font = { bold: true };
+    series.forEach((s, idx) => {
+      const cell = worksheet.getCell(dataStartRow, dataStartCol + 1 + idx);
+      cell.value = s.name;
+      cell.font = { bold: true };
+    });
+    
+    // Data rows
+    chartData.forEach((row, rowIdx) => {
+      worksheet.getCell(dataStartRow + 1 + rowIdx, dataStartCol).value = String(row[categoryKey]);
+      series.forEach((s, colIdx) => {
+        const val = row[s.key];
+        worksheet.getCell(dataStartRow + 1 + rowIdx, dataStartCol + 1 + colIdx).value = 
+          typeof val === 'number' ? val : 0;
+      });
+    });
+
+    // Calculate data range
+    const dataEndRow = dataStartRow + chartData.length;
+    const dataEndCol = dataStartCol + series.length;
+
+    // Add chart title
+    const chartTitleRow = dataEndRow + 2;
+    worksheet.getCell(chartTitleRow, 1).value = chartTitle;
+    worksheet.getCell(chartTitleRow, 1).font = { bold: true, size: 12 };
+
+    // Note: ExcelJS doesn't fully support native chart creation in the browser
+    // We'll add the data formatted for easy chart creation by the user
+    const instructionRow = chartTitleRow + 1;
+    worksheet.getCell(instructionRow, 1).value = 
+      '→ Selecione os dados acima e insira um gráfico (Inserir > Gráfico)';
+    worksheet.getCell(instructionRow, 1).font = { italic: true, color: { argb: 'FF666666' } };
+
+    // Style the data range
+    for (let r = dataStartRow; r <= dataEndRow; r++) {
+      for (let c = dataStartCol; c <= dataEndCol; c++) {
+        const cell = worksheet.getCell(r, c);
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+        if (r === dataStartRow) {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF3B82F6' }
+          };
+          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        }
+      }
+    }
+
+    // Return the next available row
+    return instructionRow + 3;
+  };
+
   const exportToExcel = async () => {
     if (!data || data.length === 0) {
       toast({
@@ -66,33 +158,28 @@ export const ExportButtons = ({ data, title, columns, fileName = "export", chart
 
       const worksheet = workbook.addWorksheet(title.slice(0, 31));
 
-      // Capture chart if available
-      const chartImage = await captureChart();
-      
       let startRow = 1;
-      
-      if (chartImage) {
-        // Add chart image
-        const imageId = workbook.addImage({
-          base64: chartImage.split(',')[1],
-          extension: 'png',
-        });
-
-        worksheet.addImage(imageId, {
-          tl: { col: 0, row: 0 },
-          ext: { width: 600, height: 350 },
-        });
-
-        // Add spacing after image
-        startRow = 22;
-      }
 
       // Add title
       worksheet.getCell(`A${startRow}`).value = title;
-      worksheet.getCell(`A${startRow}`).font = { bold: true, size: 14 };
+      worksheet.getCell(`A${startRow}`).font = { bold: true, size: 16 };
       worksheet.getCell(`A${startRow + 1}`).value = `Gerado em: ${new Date().toLocaleDateString('pt-BR')}`;
+      worksheet.getCell(`A${startRow + 1}`).font = { color: { argb: 'FF666666' } };
       
       startRow += 3;
+
+      // Add native chart data sections
+      if (chartConfigs.length > 0) {
+        for (const config of chartConfigs) {
+          startRow = addNativeExcelChart(workbook, worksheet, config, startRow);
+        }
+        startRow += 2;
+      }
+
+      // Add main data table section header
+      worksheet.getCell(`A${startRow}`).value = 'DADOS DETALHADOS';
+      worksheet.getCell(`A${startRow}`).font = { bold: true, size: 12 };
+      startRow += 2;
 
       // Add headers
       const cols = columns || Object.keys(data[0] || {}).map(key => ({ key, label: key }));
@@ -139,7 +226,7 @@ export const ExportButtons = ({ data, title, columns, fileName = "export", chart
 
       // Auto-fit columns
       worksheet.columns.forEach(column => {
-        column.width = 15;
+        column.width = 18;
       });
 
       // Generate file
@@ -154,7 +241,9 @@ export const ExportButtons = ({ data, title, columns, fileName = "export", chart
 
       toast({
         title: "Excel exportado",
-        description: chartImage ? "Arquivo com gráfico baixado com sucesso" : "Arquivo baixado com sucesso",
+        description: chartConfigs.length > 0 
+          ? "Arquivo com dados de gráfico baixado. Selecione os dados e insira um gráfico no Excel."
+          : "Arquivo baixado com sucesso",
       });
     } catch (error) {
       console.error('Excel export error:', error);
