@@ -10,6 +10,7 @@ import {
   LineChart,
   FileText,
   Brain,
+  Settings2,
 } from "lucide-react";
 
 import {
@@ -29,6 +30,7 @@ import {
 const menuItems = [
   { title: "Overview", url: "/overview", icon: LayoutDashboard },
   { title: "Upload", url: "/upload", icon: Upload },
+  { title: "Regras de Negócio", url: "/business-rules", icon: Settings2 },
   { title: "P&L", url: "/pl", icon: TrendingUp },
   { title: "Por Loja", url: "/by-branch", icon: Store },
   { title: "Análise EVA", url: "/eva", icon: Calculator },

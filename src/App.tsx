@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { DataProvider } from "./contexts/DataContext";
 import Overview from "./pages/Overview";
 import Upload from "./pages/Upload";
+import BusinessRules from "./pages/BusinessRules";
 import PL from "./pages/PL";
 import ByBranch from "./pages/ByBranch";
 import EVA from "./pages/EVA";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/" element={<Overview />} />
             <Route path="/overview" element={<Overview />} />
             <Route path="/upload" element={<Upload />} />
+            <Route path="/business-rules" element={<BusinessRules />} />
             <Route path="/pl" element={<PL />} />
             <Route path="/by-branch" element={<ByBranch />} />
             <Route path="/eva" element={<EVA />} />
