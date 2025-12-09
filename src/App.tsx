@@ -10,6 +10,7 @@ import BusinessRules from "./pages/BusinessRules";
 import PL from "./pages/PL";
 import ByBranch from "./pages/ByBranch";
 import EVA from "./pages/EVA";
+import EVAReport from "./pages/EVAReport";
 import Expenses from "./pages/Expenses";
 import Evolution from "./pages/Evolution";
 import Reports from "./pages/Reports";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/pl" element={<PL />} />
             <Route path="/by-branch" element={<ByBranch />} />
             <Route path="/eva" element={<EVA />} />
+            <Route path="/eva-report" element={<EVAReport />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/evolution" element={<Evolution />} />
             <Route path="/reports" element={<Reports />} />
