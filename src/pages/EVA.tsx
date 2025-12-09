@@ -3,14 +3,38 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import Layout from "@/components/Layout";
 import { useData } from "@/contexts/DataContext";
 import { useMemo, useState, useEffect } from "react";
-import { ArrowUp, ArrowDown, History } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { Package, Target, TrendingUp, BarChart3 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList } from "recharts";
 import { ChartContainer } from "@/components/ui/chart";
 import { useTracking } from "@/hooks/useTracking";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ExportButtons } from "@/components/ExportButtons";
 import AIAnalysisPanel from "@/components/AIAnalysisPanel";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { History } from "lucide-react";
+
+// Interfaces
+interface EVAData {
+  margin2024: number;
+  margin2025: number;
+  deltaVolume: number;
+  deltaMix: number;
+  deltaRevenue: number;
+  deltaCOGS: number;
+  totalVariation: number;
+}
+
+interface EVADetailRow {
+  product: string;
+  deltaVolume: number;
+  deltaMix: number;
+  deltaRevenue: number;
+  deltaCOGS: number;
+  totalDelta: number;
+  margin2024: number;
+  margin2025: number;
+}
 
 interface RuleChange {
   id: string;
@@ -20,15 +44,56 @@ interface RuleChange {
   rule_text: string;
 }
 
+interface GroupedData {
+  margin: number;
+  volumeKg: number;
+  netSales: number;
+  cogs: number;
+}
+
+// Utility functions
+const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
+
+const groupDataBy = (
+  data: any[],
+  key: string
+): Record<string, GroupedData> => {
+  return data.reduce((acc, row) => {
+    const groupKey = row[key as keyof typeof row] as string;
+
+    if (!acc[groupKey]) {
+      acc[groupKey] = {
+        margin: 0,
+        volumeKg: 0,
+        netSales: 0,
+        cogs: 0,
+      };
+    }
+
+    acc[groupKey].margin += row.margin || 0;
+    acc[groupKey].volumeKg += row.volumeKg || 0;
+    acc[groupKey].netSales += row.netSales || 0;
+    acc[groupKey].cogs += row.cogs || 0;
+
+    return acc;
+  }, {} as Record<string, GroupedData>);
+};
+
 const EVA = () => {
   useTracking();
   const { data, isDataLoaded } = useData();
   const [ruleChanges, setRuleChanges] = useState<RuleChange[]>([]);
+  
+  // Filter states
+  const [year1, setYear1] = useState<number>(2024);
+  const [year2, setYear2] = useState<number>(2025);
+  const [selectedStore, setSelectedStore] = useState<string>("");
+  const [selectedProduct, setSelectedProduct] = useState<string>("");
 
   // Fetch business rule changes for the compared period
   useEffect(() => {
     const fetchRuleChanges = async () => {
-      const startDate = new Date('2024-01-01');
+      const startDate = new Date(`${year1}-01-01`);
       const endDate = new Date();
       
       const { data: changes, error } = await supabase
@@ -44,206 +109,168 @@ const EVA = () => {
     };
 
     fetchRuleChanges();
-  }, []);
+  }, [year1]);
 
-  const evaData = useMemo(() => {
-    if (!isDataLoaded) return null;
+  // Get unique stores and products for filters
+  const filterOptions = useMemo(() => {
+    if (!isDataLoaded) return { stores: [], products: [], years: [] };
 
-    const currentYear = 2025;
-    const previousYear = 2024;
+    const stores = [...new Set(data.map((row) => row.nom))].filter(Boolean).sort();
+    const products = [...new Set(data.map((row) => row.macroFamilyName))].filter(Boolean).sort();
+    const years = [...new Set(data.map((row) => row.calendarYear))].sort((a, b) => a - b);
 
-    const sumByYear = (year: number) => {
-      const yearData = data.filter(row => 
-        row.calendarYear === year && 
-        row.macroFamilyName !== 'Barista'
-      );
-      return {
-        volumeKg: yearData.reduce((sum, r) => sum + (r.volumeKg || 0), 0),
-        revenue: yearData.reduce((sum, r) => sum + (r.netSales || 0), 0),
-        cogs: yearData.reduce((sum, r) => sum + (r.cogs || 0), 0),
-        margin: yearData.reduce((sum, r) => sum + (r.margin || 0), 0),
-      };
-    };
-
-    const current = sumByYear(currentYear);
-    const previous = sumByYear(previousYear);
-
-    return { current, previous, currentYear, previousYear };
+    return { stores, products, years };
   }, [data, isDataLoaded]);
 
-  const macroFamilyData = useMemo(() => {
-    if (!isDataLoaded || !evaData) return [];
+  // Calculate EVA with decomposition into 4 factors
+  const evaResult = useMemo(() => {
+    if (!isDataLoaded) return null;
 
-    const familyMap = new Map();
+    // Filter data by year and optional filters
+    const data1 = data.filter(
+      (row) =>
+        row.calendarYear === year1 &&
+        (!selectedStore || row.nom === selectedStore) &&
+        (!selectedProduct || row.macroFamilyName === selectedProduct) &&
+        row.macroFamilyName !== 'Barista'
+    );
 
-    data.forEach(row => {
-      if (row.macroFamilyName === 'Barista') return; // Exclude Barista
-      
-      if (row.calendarYear === evaData.currentYear) {
-        const family = row.macroFamilyName;
-        if (!familyMap.has(family)) {
-          familyMap.set(family, {
-            family,
-            volumeKg: 0,
-            revenue: 0,
-            cogs: 0,
-            margin: 0,
-            volumeKgPrev: 0,
-            revenuePrev: 0,
-            cogsPrev: 0,
-            marginPrev: 0,
-          });
-        }
-        const entry = familyMap.get(family);
-        entry.volumeKg += row.volumeKg || 0;
-        entry.revenue += row.netSales || 0;
-        entry.cogs += row.cogs || 0;
-        entry.margin += row.margin || 0;
-      } else if (row.calendarYear === evaData.previousYear) {
-        const family = row.macroFamilyName;
-        if (!familyMap.has(family)) {
-          familyMap.set(family, {
-            family,
-            volumeKg: 0,
-            revenue: 0,
-            cogs: 0,
-            margin: 0,
-            volumeKgPrev: 0,
-            revenuePrev: 0,
-            cogsPrev: 0,
-            marginPrev: 0,
-          });
-        }
-        const entry = familyMap.get(family);
-        entry.volumeKgPrev += row.volumeKg || 0;
-        entry.revenuePrev += row.netSales || 0;
-        entry.cogsPrev += row.cogs || 0;
-        entry.marginPrev += row.margin || 0;
-      }
-    });
+    const data2 = data.filter(
+      (row) =>
+        row.calendarYear === year2 &&
+        (!selectedStore || row.nom === selectedStore) &&
+        (!selectedProduct || row.macroFamilyName === selectedProduct) &&
+        row.macroFamilyName !== 'Barista'
+    );
 
-    return Array.from(familyMap.values())
-      .map(f => ({
-        ...f,
-        volumeChange: f.volumeKgPrev !== 0 ? ((f.volumeKg - f.volumeKgPrev) / f.volumeKgPrev) * 100 : 0,
-        revenueChange: f.revenuePrev !== 0 ? ((f.revenue - f.revenuePrev) / f.revenuePrev) * 100 : 0,
-        cogsChange: f.cogsPrev !== 0 ? ((f.cogs - f.cogsPrev) / f.cogsPrev) * 100 : 0,
-        marginChange: f.marginPrev !== 0 ? ((f.margin - f.marginPrev) / f.marginPrev) * 100 : 0,
-      }))
-      .sort((a, b) => b.revenue - a.revenue);
-  }, [data, isDataLoaded, evaData]);
+    // Group by product (macroFamilyName)
+    const groups1 = groupDataBy(data1, "macroFamilyName");
+    const groups2 = groupDataBy(data2, "macroFamilyName");
 
-  const volumeWaterfallData = useMemo(() => {
-    if (!evaData || macroFamilyData.length === 0) return [];
+    // Calculate for each group
+    const details: EVADetailRow[] = [];
+    const allGroups = new Set([...Object.keys(groups1), ...Object.keys(groups2)]);
 
-    const colors = [
-      "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", 
-      "#6366f1", "#ec4899", "#14b8a6", "#f97316", "#06b6d4"
-    ];
+    allGroups.forEach((group) => {
+      const g1: GroupedData = groups1[group] || { margin: 0, volumeKg: 0, netSales: 0, cogs: 0 };
+      const g2: GroupedData = groups2[group] || { margin: 0, volumeKg: 0, netSales: 0, cogs: 0 };
 
-    const contributions = macroFamilyData.map((f, idx) => ({
-      name: f.family,
-      change: f.volumeKg - f.volumeKgPrev,
-      color: colors[idx % colors.length],
-    })).filter(f => Math.abs(f.change) > 0);
+      // Volume variance
+      const volumeVar = g2.volumeKg - g1.volumeKg;
+      const marginUnit_ref = g1.volumeKg > 0 ? g1.margin / g1.volumeKg : 0;
 
-    const result = [];
-    let cumulative = evaData.previous.volumeKg;
+      // Δ Volume: impacto da mudança de volume mantendo margem unitária constante
+      const deltaVolume = volumeVar * marginUnit_ref;
 
-    // Starting bar (2024)
-    result.push({
-      name: '2024',
-      base: 0,
-      value: evaData.previous.volumeKg,
-      total: evaData.previous.volumeKg,
-      color: '#10b981',
-      isStart: true,
-    });
+      // Δ Mix: impacto da mudança no mix de produtos
+      const marginUnit_current = g2.volumeKg > 0 ? g2.margin / g2.volumeKg : 0;
+      const deltaMix = volumeVar * (marginUnit_current - marginUnit_ref);
 
-    // Intermediate changes
-    contributions.forEach((item) => {
-      const base = item.change >= 0 ? cumulative : cumulative + item.change;
-      result.push({
-        name: item.name,
-        base: base,
-        value: Math.abs(item.change),
-        total: cumulative + item.change,
-        color: item.color,
-        isPositive: item.change >= 0,
-        isStart: false,
+      // Δ Revenue: impacto da variação de preço de venda
+      const nsUnit1 = g1.volumeKg > 0 ? g1.netSales / g1.volumeKg : 0;
+      const nsUnit2 = g2.volumeKg > 0 ? g2.netSales / g2.volumeKg : 0;
+      const deltaRevenue = g2.volumeKg * (nsUnit2 - nsUnit1);
+
+      // Δ COGS: impacto da variação de custo unitário
+      const cogsUnit1 = g1.volumeKg > 0 ? g1.cogs / g1.volumeKg : 0;
+      const cogsUnit2 = g2.volumeKg > 0 ? g2.cogs / g2.volumeKg : 0;
+      const deltaCOGS = -1 * g2.volumeKg * (cogsUnit2 - cogsUnit1); // Negative because higher costs reduce margin
+
+      details.push({
+        product: group,
+        deltaVolume,
+        deltaMix,
+        deltaRevenue,
+        deltaCOGS,
+        totalDelta: g2.margin - g1.margin,
+        margin2024: g1.margin,
+        margin2025: g2.margin,
       });
-      cumulative += item.change;
     });
 
-    // Ending bar (2025)
-    result.push({
-      name: '2025',
-      base: 0,
-      value: evaData.current.volumeKg,
-      total: evaData.current.volumeKg,
-      color: '#10b981',
-      isStart: true,
-    });
+    // Sort by absolute total delta
+    details.sort((a, b) => Math.abs(b.totalDelta) - Math.abs(a.totalDelta));
 
-    return result;
-  }, [evaData, macroFamilyData]);
+    // Summary totals
+    const summary: EVAData = {
+      margin2024: sum(details.map((d) => d.margin2024)),
+      margin2025: sum(details.map((d) => d.margin2025)),
+      deltaVolume: sum(details.map((d) => d.deltaVolume)),
+      deltaMix: sum(details.map((d) => d.deltaMix)),
+      deltaRevenue: sum(details.map((d) => d.deltaRevenue)),
+      deltaCOGS: sum(details.map((d) => d.deltaCOGS)),
+      totalVariation: sum(details.map((d) => d.totalDelta)),
+    };
 
-  const revenueWaterfallData = useMemo(() => {
-    if (!evaData || macroFamilyData.length === 0) return [];
+    return { summary, details };
+  }, [data, isDataLoaded, year1, year2, selectedStore, selectedProduct]);
 
-    const colors = [
-      "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", 
-      "#6366f1", "#ec4899", "#14b8a6", "#f97316", "#06b6d4"
+  // Prepare waterfall chart data
+  const waterfallData = useMemo(() => {
+    if (!evaResult) return [];
+
+    const { summary } = evaResult;
+    let cumulative = summary.margin2024;
+
+    return [
+      {
+        name: String(year1),
+        value: summary.margin2024,
+        start: 0,
+        end: summary.margin2024,
+        fill: "#16a34a", // Green for base
+        isBase: true,
+        displayValue: summary.margin2024,
+      },
+      {
+        name: "Vol",
+        value: Math.abs(summary.deltaVolume),
+        start: cumulative,
+        end: (cumulative += summary.deltaVolume),
+        fill: summary.deltaVolume >= 0 ? "#0891b2" : "#ea580c",
+        isBase: false,
+        displayValue: summary.deltaVolume,
+      },
+      {
+        name: "Mix",
+        value: Math.abs(summary.deltaMix),
+        start: cumulative,
+        end: (cumulative += summary.deltaMix),
+        fill: summary.deltaMix >= 0 ? "#0891b2" : "#ea580c",
+        isBase: false,
+        displayValue: summary.deltaMix,
+      },
+      {
+        name: "Rev",
+        value: Math.abs(summary.deltaRevenue),
+        start: cumulative,
+        end: (cumulative += summary.deltaRevenue),
+        fill: summary.deltaRevenue >= 0 ? "#0891b2" : "#ea580c",
+        isBase: false,
+        displayValue: summary.deltaRevenue,
+      },
+      {
+        name: "COGS",
+        value: Math.abs(summary.deltaCOGS),
+        start: cumulative,
+        end: (cumulative += summary.deltaCOGS),
+        fill: summary.deltaCOGS >= 0 ? "#0891b2" : "#ea580c",
+        isBase: false,
+        displayValue: summary.deltaCOGS,
+      },
+      {
+        name: String(year2),
+        value: summary.margin2025,
+        start: 0,
+        end: summary.margin2025,
+        fill: "#16a34a", // Green for base
+        isBase: true,
+        displayValue: summary.margin2025,
+      },
     ];
+  }, [evaResult, year1, year2]);
 
-    const contributions = macroFamilyData.map((f, idx) => ({
-      name: f.family,
-      change: f.revenue - f.revenuePrev,
-      color: colors[idx % colors.length],
-    })).filter(f => Math.abs(f.change) > 0);
-
-    const result = [];
-    let cumulative = evaData.previous.revenue;
-
-    // Starting bar (2024)
-    result.push({
-      name: '2024',
-      base: 0,
-      value: evaData.previous.revenue,
-      total: evaData.previous.revenue,
-      color: '#3b82f6',
-      isStart: true,
-    });
-
-    // Intermediate changes
-    contributions.forEach((item) => {
-      const base = item.change >= 0 ? cumulative : cumulative + item.change;
-      result.push({
-        name: item.name,
-        base: base,
-        value: Math.abs(item.change),
-        total: cumulative + item.change,
-        color: item.color,
-        isPositive: item.change >= 0,
-        isStart: false,
-      });
-      cumulative += item.change;
-    });
-
-    // Ending bar (2025)
-    result.push({
-      name: '2025',
-      base: 0,
-      value: evaData.current.revenue,
-      total: evaData.current.revenue,
-      color: '#3b82f6',
-      isStart: true,
-    });
-
-    return result;
-  }, [evaData, macroFamilyData]);
-
-  if (!isDataLoaded || !evaData) {
+  if (!isDataLoaded || !evaResult) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-96">
@@ -254,248 +281,362 @@ const EVA = () => {
   }
 
   const formatNumber = (num: number, decimals = 0) => {
-    return num.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    return num.toLocaleString("pt-BR", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
   };
 
-  const formatPercent = (num: number, decimals = 0) => {
-    return num.toFixed(decimals) + '%';
+  const formatDelta = (num: number, decimals = 0) => {
+    const prefix = num >= 0 ? "+" : "";
+    return prefix + formatNumber(num, decimals);
   };
 
-  const ChangeIndicator = ({ value }: { value: number }) => {
-    const isPositive = value > 0;
-    return (
-      <div className={`flex items-center gap-1 justify-center ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-        {isPositive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-        <span className="text-sm">{formatPercent(Math.abs(value))}</span>
-      </div>
-    );
-  };
+  const { summary, details } = evaResult;
+
+  // KPI data
+  const kpis = [
+    {
+      title: "Δ Volume",
+      value: summary.deltaVolume,
+      icon: Package,
+      description: "Impacto da variação de volume",
+    },
+    {
+      title: "Δ Mix",
+      value: summary.deltaMix,
+      icon: Target,
+      description: "Impacto do mix de produtos",
+    },
+    {
+      title: "Δ Revenue",
+      value: summary.deltaRevenue,
+      icon: TrendingUp,
+      description: "Impacto da variação de preços",
+    },
+    {
+      title: "Δ COGS",
+      value: summary.deltaCOGS,
+      icon: BarChart3,
+      description: "Impacto da variação de custos",
+    },
+  ];
 
   return (
     <Layout>
       <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Análise de Variação</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Análise EVA - Economic Value Added</h2>
             <p className="text-muted-foreground">
-              Variação Margin - Total - YTD 06.Jun
+              Decomposição da variação de margem entre {year1} e {year2}
             </p>
           </div>
           <ExportButtons
-            data={macroFamilyData.map(f => ({
-              MacroFamília: f.family,
-              VolumeKg2025: f.volumeKg,
-              VolumeVariacao: f.volumeChange,
-              Receita2025: f.revenue,
-              ReceitaVariacao: f.revenueChange,
-              COGS2025: f.cogs,
-              COGSVariacao: f.cogsChange,
-              Margem2025: f.margin,
-              MargemVariacao: f.marginChange,
+            data={details.map((d) => ({
+              Produto: d.product,
+              [`Margem ${year1}`]: d.margin2024,
+              "Δ Volume": d.deltaVolume,
+              "Δ Mix": d.deltaMix,
+              "Δ Revenue": d.deltaRevenue,
+              "Δ COGS": d.deltaCOGS,
+              [`Margem ${year2}`]: d.margin2025,
+              "Variação Total": d.totalDelta,
             }))}
-            title="Análise de Variação"
-            fileName="Analise_Variacao"
+            title="Análise EVA"
+            fileName={`EVA_${year1}_vs_${year2}`}
           />
         </div>
 
-        <div className="grid gap-6">
-          <div className="grid gap-6 md:grid-cols-1 xl:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm md:text-base">VARIAÇÃO VOLUME (Kg) BY MACRO-FAMILY (w/o Barista)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="w-full h-[300px] md:h-[400px]">
-                  <ChartContainer
-                    config={{
-                      value: { label: "Volume Kg", color: "hsl(var(--chart-1))" },
-                    }}
-                    className="h-full w-full"
+        {/* Filters */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Ano Base</label>
+                <Select value={String(year1)} onValueChange={(v) => setYear1(Number(v))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filterOptions.years.map((y) => (
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Ano Comparação</label>
+                <Select value={String(year2)} onValueChange={(v) => setYear2(Number(v))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filterOptions.years.map((y) => (
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Loja</label>
+                <Select value={selectedStore || "all"} onValueChange={(v) => setSelectedStore(v === "all" ? "" : v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {filterOptions.stores.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Produto</label>
+                <Select value={selectedProduct || "all"} onValueChange={(v) => setSelectedProduct(v === "all" ? "" : v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {filterOptions.products.map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {kpis.map((kpi, idx) => (
+            <Card key={idx}>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between mb-2">
+                  <kpi.icon className="h-6 w-6 text-muted-foreground" />
+                  <span
+                    className={`text-2xl font-bold ${
+                      kpi.value >= 0 ? "text-green-600" : "text-red-600"
+                    }`}
                   >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={volumeWaterfallData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                        <XAxis 
-                          dataKey="name" 
-                          tick={{ fontSize: 11 }}
-                          angle={-45}
-                          textAnchor="end"
-                          height={60}
-                        />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip 
-                          formatter={(value) => formatNumber(Number(value))}
-                          content={({ active, payload }) => {
-                            if (active && payload && payload.length) {
-                              const data = payload[0].payload;
-                              return (
-                                <div className="bg-background border border-border p-2 rounded shadow-lg">
-                                  <p className="font-semibold">{data.name}</p>
-                                  <p className="text-sm">Total: {formatNumber(data.total)}</p>
-                                </div>
-                              );
-                            }
-                            return null;
-                          }}
-                        />
-                        <Bar dataKey="base" stackId="a" fill="transparent" />
-                        <Bar dataKey="value" stackId="a" label={{ position: 'top', fontSize: 10, formatter: (val: number) => formatNumber(val, 0) }}>
-                          {volumeWaterfallData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
+                    {formatDelta(kpi.value)}
+                  </span>
                 </div>
+                <h4 className="font-semibold">{kpi.title}</h4>
+                <p className="text-xs text-muted-foreground mt-1">{kpi.description}</p>
               </CardContent>
             </Card>
+          ))}
+        </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm md:text-base">VARIAÇÃO REVENUE BY MACRO-FAMILY</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="w-full h-[300px] md:h-[400px]">
-                  <ChartContainer
-                    config={{
-                      value: { label: "Revenue", color: "hsl(var(--chart-1))" },
-                    }}
-                    className="h-full w-full"
+        {/* Waterfall Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-center">
+              EVA MARGIN - {selectedProduct || "TOTAL"} - {selectedStore || "Todas Lojas"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="w-full h-[400px]">
+              <ChartContainer
+                config={{
+                  value: { label: "Margin", color: "hsl(var(--chart-1))" },
+                }}
+                className="h-full w-full"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={waterfallData}
+                    margin={{ top: 30, right: 30, left: 20, bottom: 20 }}
                   >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={revenueWaterfallData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                        <XAxis 
-                          dataKey="name" 
-                          tick={{ fontSize: 11 }}
-                          angle={-45}
-                          textAnchor="end"
-                          height={60}
-                        />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip 
-                          formatter={(value) => formatNumber(Number(value))}
-                          content={({ active, payload }) => {
-                            if (active && payload && payload.length) {
-                              const data = payload[0].payload;
-                              return (
-                                <div className="bg-background border border-border p-2 rounded shadow-lg">
-                                  <p className="font-semibold">{data.name}</p>
-                                  <p className="text-sm">Total: {formatNumber(data.total)}</p>
-                                </div>
-                              );
-                            }
-                            return null;
-                          }}
-                        />
-                        <Bar dataKey="base" stackId="a" fill="transparent" />
-                        <Bar dataKey="value" stackId="a" label={{ position: 'top', fontSize: 10, formatter: (val: number) => formatNumber(val, 0) }}>
-                          {revenueWaterfallData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                    <YAxis
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip
+                      formatter={(value: number, name: string, props: any) => {
+                        const displayVal = props.payload.displayValue;
+                        return [formatNumber(displayVal), props.payload.isBase ? "Margem" : "Variação"];
+                      }}
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--background))",
+                        border: "1px solid hsl(var(--border))",
+                      }}
+                    />
+                    {/* Invisible base bar for waterfall effect */}
+                    <Bar dataKey="start" stackId="a" fill="transparent" />
+                    {/* Visible value bar */}
+                    <Bar dataKey="value" stackId="a" radius={[4, 4, 0, 0]}>
+                      {waterfallData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                      <LabelList
+                        dataKey="displayValue"
+                        position="top"
+                        formatter={(val: number) => formatDelta(val)}
+                        style={{ fontSize: 11, fill: "hsl(var(--foreground))" }}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>MACRO-FAMILY</CardTitle>
-            </CardHeader>
-            <CardContent className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="font-bold">MACRO-FAMILY</TableHead>
-                    <TableHead colSpan={2} className="text-center font-bold border-l">VOLUME Kg</TableHead>
-                    <TableHead colSpan={2} className="text-center font-bold border-l">REVENUE</TableHead>
-                    <TableHead colSpan={2} className="text-center font-bold border-l">COGS</TableHead>
-                    <TableHead colSpan={2} className="text-center font-bold border-l">MARGIN</TableHead>
+        {/* Detail Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Detalhamento por Produto</CardTitle>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="font-bold">Produto</TableHead>
+                  <TableHead className="text-right font-bold">Margem {year1}</TableHead>
+                  <TableHead className="text-right font-bold">Δ Volume</TableHead>
+                  <TableHead className="text-right font-bold">Δ Mix</TableHead>
+                  <TableHead className="text-right font-bold">Δ Revenue</TableHead>
+                  <TableHead className="text-right font-bold">Δ COGS</TableHead>
+                  <TableHead className="text-right font-bold">Margem {year2}</TableHead>
+                  <TableHead className="text-right font-bold">Variação Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {details.map((row) => (
+                  <TableRow key={row.product} className="text-sm">
+                    <TableCell className="font-medium">{row.product}</TableCell>
+                    <TableCell className="text-right">{formatNumber(row.margin2024)}</TableCell>
+                    <TableCell
+                      className={`text-right ${row.deltaVolume >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {formatDelta(row.deltaVolume)}
+                    </TableCell>
+                    <TableCell
+                      className={`text-right ${row.deltaMix >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {formatDelta(row.deltaMix)}
+                    </TableCell>
+                    <TableCell
+                      className={`text-right ${row.deltaRevenue >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {formatDelta(row.deltaRevenue)}
+                    </TableCell>
+                    <TableCell
+                      className={`text-right ${row.deltaCOGS >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {formatDelta(row.deltaCOGS)}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">{formatNumber(row.margin2025)}</TableCell>
+                    <TableCell
+                      className={`text-right font-semibold ${row.totalDelta >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {formatDelta(row.totalDelta)}
+                    </TableCell>
                   </TableRow>
-                  <TableRow className="bg-muted/30">
-                    <TableHead></TableHead>
-                    <TableHead className="text-right text-xs border-l">ACT 2025</TableHead>
-                    <TableHead className="text-center text-xs">% vs LY</TableHead>
-                    <TableHead className="text-right text-xs border-l">ACT 2025</TableHead>
-                    <TableHead className="text-center text-xs">% vs LY</TableHead>
-                    <TableHead className="text-right text-xs border-l">ACT 2025</TableHead>
-                    <TableHead className="text-center text-xs">% vs LY</TableHead>
-                    <TableHead className="text-right text-xs border-l">ACT 2025</TableHead>
-                    <TableHead className="text-center text-xs">% vs LY</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {macroFamilyData.map((row) => (
-                    <TableRow key={row.family} className="text-sm">
-                      <TableCell className="font-medium">{row.family}</TableCell>
-                      <TableCell className="text-right border-l">{formatNumber(row.volumeKg)}</TableCell>
-                      <TableCell className="text-center">
-                        <ChangeIndicator value={row.volumeChange} />
-                      </TableCell>
-                      <TableCell className="text-right border-l">{formatNumber(row.revenue)}</TableCell>
-                      <TableCell className="text-center">
-                        <ChangeIndicator value={row.revenueChange} />
-                      </TableCell>
-                      <TableCell className="text-right border-l">{formatNumber(row.cogs)}</TableCell>
-                      <TableCell className="text-center">
-                        <ChangeIndicator value={row.cogsChange} />
-                      </TableCell>
-                      <TableCell className="text-right border-l">{formatNumber(row.margin)}</TableCell>
-                      <TableCell className="text-center">
-                        <ChangeIndicator value={row.marginChange} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                ))}
+                {/* Totals row */}
+                <TableRow className="bg-muted/30 font-bold">
+                  <TableCell>TOTAL</TableCell>
+                  <TableCell className="text-right">{formatNumber(summary.margin2024)}</TableCell>
+                  <TableCell
+                    className={`text-right ${summary.deltaVolume >= 0 ? "text-green-600" : "text-red-600"}`}
+                  >
+                    {formatDelta(summary.deltaVolume)}
+                  </TableCell>
+                  <TableCell
+                    className={`text-right ${summary.deltaMix >= 0 ? "text-green-600" : "text-red-600"}`}
+                  >
+                    {formatDelta(summary.deltaMix)}
+                  </TableCell>
+                  <TableCell
+                    className={`text-right ${summary.deltaRevenue >= 0 ? "text-green-600" : "text-red-600"}`}
+                  >
+                    {formatDelta(summary.deltaRevenue)}
+                  </TableCell>
+                  <TableCell
+                    className={`text-right ${summary.deltaCOGS >= 0 ? "text-green-600" : "text-red-600"}`}
+                  >
+                    {formatDelta(summary.deltaCOGS)}
+                  </TableCell>
+                  <TableCell className="text-right">{formatNumber(summary.margin2025)}</TableCell>
+                  <TableCell
+                    className={`text-right ${summary.totalVariation >= 0 ? "text-green-600" : "text-red-600"}`}
+                  >
+                    {formatDelta(summary.totalVariation)}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
 
-          {/* Business Rules Changes Footnote */}
-          {ruleChanges.length > 0 && (
-            <Alert className="border-amber-500/50 bg-amber-500/10">
-              <History className="h-4 w-4 text-amber-600" />
-              <AlertTitle className="text-amber-700 dark:text-amber-400">
-                Alterações de Regras de Negócio no Período
-              </AlertTitle>
-              <AlertDescription className="mt-2">
-                <p className="text-sm text-muted-foreground mb-2">
-                  Durante o período comparado (2024-2025), as seguintes regras de negócio foram alteradas, o que pode impactar a comparação dos dados:
+        {/* Business Rules Changes Alert */}
+        {ruleChanges.length > 0 && (
+          <Alert>
+            <History className="h-4 w-4" />
+            <AlertTitle>Alterações em Regras de Negócio</AlertTitle>
+            <AlertDescription>
+              <p className="mb-2">
+                As seguintes regras foram alteradas durante o período de análise ({year1} - {year2}):
+              </p>
+              <ul className="list-disc ml-4 space-y-1">
+                {ruleChanges.slice(0, 3).map((change) => (
+                  <li key={change.id} className="text-sm">
+                    <strong>{change.rule_name}</strong> ({change.change_type}) em{" "}
+                    {new Date(change.changed_at).toLocaleDateString("pt-BR")}
+                  </li>
+                ))}
+              </ul>
+              {ruleChanges.length > 3 && (
+                <p className="text-sm mt-2 text-muted-foreground">
+                  ... e mais {ruleChanges.length - 3} alteração(ões)
                 </p>
-                <ul className="space-y-1">
-                  {ruleChanges.map((change) => (
-                    <li key={change.id} className="text-sm flex items-start gap-2">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200">
-                        {change.change_type === 'created' ? 'Nova' : 
-                         change.change_type === 'updated' ? 'Atualizada' : 
-                         change.change_type === 'activated' ? 'Ativada' : 
-                         change.change_type === 'deactivated' ? 'Desativada' : change.change_type}
-                      </span>
-                      <span className="font-medium">{change.rule_name}</span>
-                      <span className="text-muted-foreground">
-                        — {change.rule_text}
-                      </span>
-                      <span className="text-xs text-muted-foreground ml-auto whitespace-nowrap">
-                        {new Date(change.changed_at).toLocaleDateString('pt-BR')}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </AlertDescription>
-            </Alert>
-          )}
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
 
-          <AIAnalysisPanel
-            data={data.filter(r => r.macroFamilyName !== 'Barista')}
-            context="eva"
-            title="Análise IA - EVA"
-          />
-        </div>
+        {/* AI Analysis Panel */}
+        <AIAnalysisPanel
+          data={[
+            {
+              type: "summary",
+              margin2024: summary.margin2024,
+              margin2025: summary.margin2025,
+              deltaVolume: summary.deltaVolume,
+              deltaMix: summary.deltaMix,
+              deltaRevenue: summary.deltaRevenue,
+              deltaCOGS: summary.deltaCOGS,
+              totalVariation: summary.totalVariation,
+            },
+            ...details.slice(0, 10).map(d => ({ type: "detail", ...d })),
+          ]}
+          context="eva"
+          filters={{
+            store: selectedStore || undefined,
+            product: selectedProduct || undefined,
+            year: year2,
+          }}
+        />
       </div>
     </Layout>
   );
