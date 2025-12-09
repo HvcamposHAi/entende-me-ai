@@ -25,46 +25,55 @@ const EVAReport = () => {
       );
       return {
         volumeKg: yearData.reduce((sum, r) => sum + (r.volumeKg || 0), 0),
-        revenue: yearData.reduce((sum, r) => sum + (r.netSales || 0), 0),
+        netSales: yearData.reduce((sum, r) => sum + (r.netSales || 0), 0),
         cogs: yearData.reduce((sum, r) => sum + (r.cogs || 0), 0),
         margin: yearData.reduce((sum, r) => sum + (r.margin || 0), 0),
       };
     };
 
-    const current = calculateYearTotals(currentYear);
-    const previous = calculateYearTotals(previousYear);
+    const yr2024 = calculateYearTotals(previousYear);
+    const yr2025 = calculateYearTotals(currentYear);
 
-    // Calculate average prices (revenue/volume)
-    const prevPrice = previous.volumeKg > 0 ? previous.revenue / previous.volumeKg : 0;
-    const currPrice = current.volumeKg > 0 ? current.revenue / current.volumeKg : 0;
+    // Avoid division by zero
+    if (yr2024.volumeKg === 0 || yr2025.volumeKg === 0) {
+      return null;
+    }
 
-    // Calculate average COGS per unit
-    const prevCogsPerUnit = previous.volumeKg > 0 ? previous.cogs / previous.volumeKg : 0;
-    const currCogsPerUnit = current.volumeKg > 0 ? current.cogs / current.volumeKg : 0;
+    // 1. vs. Vol (Variação por Volume)
+    // Quanto a margem mudou APENAS porque vendemos mais ou menos kg
+    const marginPorKg2024 = yr2024.margin / yr2024.volumeKg;
+    const variacaoVolume = yr2025.volumeKg - yr2024.volumeKg;
+    const vsVol = variacaoVolume * marginPorKg2024;
 
-    // EVA decomposition:
-    // Vol effect: (current volume - previous volume) * previous margin per unit
-    const prevMarginPerUnit = previous.volumeKg > 0 ? previous.margin / previous.volumeKg : 0;
-    const volEffect = (current.volumeKg - previous.volumeKg) * prevMarginPerUnit;
+    // 2. Mix (Efeito Mix de Produtos)
+    // Quanto a margem mudou porque a margem por kg ficou diferente
+    const marginPorKg2025 = yr2025.margin / yr2025.volumeKg;
+    const diferencaMargemUnitaria = marginPorKg2025 - marginPorKg2024;
+    const mix = variacaoVolume * diferencaMargemUnitaria;
 
-    // Mix effect: simplified as portion of margin change not explained by vol, price, or cogs
-    // Price effect: volume * (new price - old price)
-    const priceEffect = current.volumeKg * (currPrice - prevPrice);
+    // 3. vs. Net Revenue (Variação por Preço)
+    // Quanto a margem mudou porque o preço de venda mudou
+    const precoPorKg2024 = yr2024.netSales / yr2024.volumeKg;
+    const precoPorKg2025 = yr2025.netSales / yr2025.volumeKg;
+    const diferencaPreco = precoPorKg2025 - precoPorKg2024;
+    const vsRevenue = yr2025.volumeKg * diferencaPreco;
 
-    // COGS effect: -volume * (new cogs/unit - old cogs/unit) [negative because higher COGS reduces margin]
-    const cogsEffect = -current.volumeKg * (currCogsPerUnit - prevCogsPerUnit);
-
-    // Mix effect: residual
-    const totalMarginChange = current.margin - previous.margin;
-    const mixEffect = totalMarginChange - volEffect - priceEffect - cogsEffect;
+    // 4. vs. COGS (Variação por Custo)
+    // Quanto a margem mudou porque o custo mudou
+    // IMPORTANTE: vs. COGS positivo = custo aumentou = margem diminuiu (ruim!)
+    // Por isso invertemos o sinal para o gráfico (valor positivo de custo reduz margem)
+    const custoPorKg2024 = yr2024.cogs / yr2024.volumeKg;
+    const custoPorKg2025 = yr2025.cogs / yr2025.volumeKg;
+    const diferencaCusto = custoPorKg2025 - custoPorKg2024;
+    const vsCOGS = -(yr2025.volumeKg * diferencaCusto); // Negativo porque aumento de custo reduz margem
 
     return {
-      previousMargin: previous.margin,
-      currentMargin: current.margin,
-      volEffect,
-      mixEffect,
-      priceEffect,
-      cogsEffect,
+      previousMargin: yr2024.margin,
+      currentMargin: yr2025.margin,
+      volEffect: vsVol,
+      mixEffect: mix,
+      priceEffect: vsRevenue,
+      cogsEffect: vsCOGS,
       currentYear,
       previousYear,
     };
