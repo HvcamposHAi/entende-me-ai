@@ -216,14 +216,9 @@ interface DataContextType {
 
 ## 📱 Páginas e Funcionalidades
 
-### 1. Login (`/`)
+### Acesso Público
 
-**Objetivo**: Página inicial de autenticação
-
-**Características**:
-- Interface de login simples
-- Redirecionamento para página de upload após autenticação
-- Design responsivo com branding Dengo
+A aplicação é completamente pública, sem necessidade de autenticação ou login. Todos os usuários acessam diretamente as funcionalidades sem credenciais.
 
 ---
 
@@ -817,11 +812,13 @@ O PLBuilder está integrado na página `BusinessRules.tsx` em uma tab separada "
 - P&L
 - Por Loja
 - Análise EVA
+- Relatório EVA
 - Despesas
 - Evolução
 - Relatórios
 - Projeção & IA
-- Sair (logout)
+- Business Rules
+- Admin
 
 ---
 
@@ -1008,9 +1005,9 @@ VITE_SUPABASE_PROJECT_ID=<ID_DO_PROJETO>
 
 ### Fluxo Básico de Uso
 
-1. **Autenticação**:
-   - Acesse a página inicial (`/`)
-   - Faça login (interface simples)
+1. **Acesso Direto**:
+   - Acesse a aplicação diretamente (sem login)
+   - A página inicial é o Overview
 
 2. **Upload de Dados**:
    - Navegue para Upload (`/upload`)
@@ -1024,6 +1021,7 @@ VITE_SUPABASE_PROJECT_ID=<ID_DO_PROJETO>
    - **P&L**: Análise detalhada de lucratividade
    - **Por Loja**: Compare performance entre lojas
    - **EVA**: Analise contribuição por categoria
+   - **Relatório EVA**: Gráficos waterfall detalhados
    - **Despesas**: Entenda custos operacionais
    - **Evolução**: Veja tendências temporais
 
@@ -1035,9 +1033,8 @@ VITE_SUPABASE_PROJECT_ID=<ID_DO_PROJETO>
    - Clique em "Gerar Insights com IA" para plano de ação
 
 5. **Exportação**:
-   - Navegue para Relatórios (`/reports`)
-   - Escolha tipo de relatório
-   - Clique em "Gerar Excel" ou "Gerar PDF"
+   - Use os botões de exportação (Excel/PDF) em cada dashboard
+   - Ou navegue para Relatórios (`/reports`) para o Relatório Contábil Mensal
    - Arquivo será baixado automaticamente
 
 ---
@@ -1215,6 +1212,10 @@ const { insights } = response.data;
 
 ## 🔐 Segurança
 
+### Modelo de Acesso
+
+A aplicação utiliza **acesso público** sem autenticação. Todos os usuários têm acesso direto a todas as funcionalidades.
+
 ### Boas Práticas Implementadas
 
 1. **API Keys em Secrets**: Nunca expor chaves no código
@@ -1222,6 +1223,7 @@ const { insights } = response.data;
 3. **Validação de Dados**: Parsing robusto de Excel
 4. **Error Handling**: Tratamento de erros em todas as operações
 5. **TypeScript**: Tipagem forte previne erros
+6. **RLS Policies**: Políticas de acesso público configuradas no banco de dados
 
 ### Dados Sensíveis
 
@@ -1399,9 +1401,10 @@ Este projeto é propriedade de Dengo Chocolates France.
 
 ## 📊 Status do Projeto
 
-**Versão Atual**: 1.0.0
+**Versão Atual**: 1.1.0
 **Status**: Em Produção
-**Última Atualização**: 2025
+**Última Atualização**: Dezembro 2025
+**Modelo de Acesso**: Público (sem autenticação)
 
 ---
 
