@@ -3,16 +3,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import Layout from "@/components/Layout";
 import { useData } from "@/contexts/DataContext";
 import { useMemo, useState, useEffect } from "react";
-import { Package, Target, TrendingUp, BarChart3 } from "lucide-react";
+import { Package, Target, TrendingUp, BarChart3, History } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList } from "recharts";
-import { ChartContainer } from "@/components/ui/chart";
 import { useTracking } from "@/hooks/useTracking";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ExportButtons } from "@/components/ExportButtons";
 import AIAnalysisPanel from "@/components/AIAnalysisPanel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { History } from "lucide-react";
 
 // Interfaces
 interface EVAData {
@@ -205,70 +203,115 @@ const EVA = () => {
     return { summary, details };
   }, [data, isDataLoaded, year1, year2, selectedStore, selectedProduct]);
 
-  // Prepare waterfall chart data
+  // Prepare waterfall chart data with proper floating bars
   const waterfallData = useMemo(() => {
     if (!evaResult) return [];
 
     const { summary } = evaResult;
     let cumulative = summary.margin2024;
 
-    return [
+    // Colors matching the reference image
+    const greenBase = "#2d5016"; // Dark green for base years
+    const bluePositive = "#0891b2"; // Teal/cyan for positive deltas
+    const blueMix = "#1e3a5f"; // Dark blue for mix (small value)
+    const orangeNegative = "#ea580c"; // Orange for negative (COGS)
+
+    const items = [
       {
         name: String(year1),
-        value: summary.margin2024,
         start: 0,
-        end: summary.margin2024,
-        fill: "#16a34a", // Green for base
+        value: summary.margin2024,
+        fill: greenBase,
         isBase: true,
         displayValue: summary.margin2024,
-      },
-      {
-        name: "Vol",
-        value: Math.abs(summary.deltaVolume),
-        start: cumulative,
-        end: (cumulative += summary.deltaVolume),
-        fill: summary.deltaVolume >= 0 ? "#0891b2" : "#ea580c",
-        isBase: false,
-        displayValue: summary.deltaVolume,
-      },
-      {
-        name: "Mix",
-        value: Math.abs(summary.deltaMix),
-        start: cumulative,
-        end: (cumulative += summary.deltaMix),
-        fill: summary.deltaMix >= 0 ? "#0891b2" : "#ea580c",
-        isBase: false,
-        displayValue: summary.deltaMix,
-      },
-      {
-        name: "Rev",
-        value: Math.abs(summary.deltaRevenue),
-        start: cumulative,
-        end: (cumulative += summary.deltaRevenue),
-        fill: summary.deltaRevenue >= 0 ? "#0891b2" : "#ea580c",
-        isBase: false,
-        displayValue: summary.deltaRevenue,
-      },
-      {
-        name: "COGS",
-        value: Math.abs(summary.deltaCOGS),
-        start: cumulative,
-        end: (cumulative += summary.deltaCOGS),
-        fill: summary.deltaCOGS >= 0 ? "#0891b2" : "#ea580c",
-        isBase: false,
-        displayValue: summary.deltaCOGS,
-      },
-      {
-        name: String(year2),
-        value: summary.margin2025,
-        start: 0,
-        end: summary.margin2025,
-        fill: "#16a34a", // Green for base
-        isBase: true,
-        displayValue: summary.margin2025,
+        isNegative: false,
       },
     ];
+
+    // Vol
+    const volStart = summary.deltaVolume >= 0 ? cumulative : cumulative + summary.deltaVolume;
+    items.push({
+      name: "Vol",
+      start: volStart,
+      value: Math.abs(summary.deltaVolume),
+      fill: bluePositive,
+      isBase: false,
+      displayValue: summary.deltaVolume,
+      isNegative: summary.deltaVolume < 0,
+    });
+    cumulative += summary.deltaVolume;
+
+    // Mix
+    const mixStart = summary.deltaMix >= 0 ? cumulative : cumulative + summary.deltaMix;
+    items.push({
+      name: "Mix",
+      start: mixStart,
+      value: Math.abs(summary.deltaMix),
+      fill: blueMix,
+      isBase: false,
+      displayValue: summary.deltaMix,
+      isNegative: summary.deltaMix < 0,
+    });
+    cumulative += summary.deltaMix;
+
+    // Rev
+    const revStart = summary.deltaRevenue >= 0 ? cumulative : cumulative + summary.deltaRevenue;
+    items.push({
+      name: "Rev",
+      start: revStart,
+      value: Math.abs(summary.deltaRevenue),
+      fill: bluePositive,
+      isBase: false,
+      displayValue: summary.deltaRevenue,
+      isNegative: summary.deltaRevenue < 0,
+    });
+    cumulative += summary.deltaRevenue;
+
+    // COGS
+    const cogsStart = summary.deltaCOGS >= 0 ? cumulative : cumulative + summary.deltaCOGS;
+    items.push({
+      name: "COGS",
+      start: cogsStart,
+      value: Math.abs(summary.deltaCOGS),
+      fill: orangeNegative,
+      isBase: false,
+      displayValue: summary.deltaCOGS,
+      isNegative: summary.deltaCOGS < 0,
+    });
+    cumulative += summary.deltaCOGS;
+
+    // Final year
+    items.push({
+      name: String(year2),
+      start: 0,
+      value: summary.margin2025,
+      fill: greenBase,
+      isBase: true,
+      displayValue: summary.margin2025,
+      isNegative: false,
+    });
+
+    return items;
   }, [evaResult, year1, year2]);
+
+  // Format number for chart labels (like 14.597 or (3.765))
+  const formatChartLabel = (val: number, isNegative: boolean, isBase: boolean) => {
+    const absVal = Math.abs(val);
+    const formatted = absVal.toLocaleString("pt-BR", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+    // Replace thousands separator with dots like in the image
+    const withDots = (absVal / 1000).toLocaleString("pt-BR", {
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3,
+    });
+    
+    if (!isBase && isNegative) {
+      return `(${formatted})`;
+    }
+    return formatted;
+  };
 
   if (!isDataLoaded || !evaResult) {
     return (
@@ -445,58 +488,83 @@ const EVA = () => {
         </div>
 
         {/* Waterfall Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center">
-              EVA MARGIN - {selectedProduct || "TOTAL"} - {selectedStore || "Todas Lojas"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="w-full h-[400px]">
-              <ChartContainer
-                config={{
-                  value: { label: "Margin", color: "hsl(var(--chart-1))" },
-                }}
-                className="h-full w-full"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={waterfallData}
-                    margin={{ top: 30, right: 30, left: 20, bottom: 20 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                    <YAxis
-                      tick={{ fontSize: 12 }}
-                      tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                    />
-                    <Tooltip
-                      formatter={(value: number, name: string, props: any) => {
-                        const displayVal = props.payload.displayValue;
-                        return [formatNumber(displayVal), props.payload.isBase ? "Margem" : "Variação"];
+        <Card className="overflow-hidden">
+          {/* Dark header like in the reference image */}
+          <div className="bg-[#4a5568] text-white py-3 px-4">
+            <h3 className="text-center font-bold text-sm tracking-wide">
+              EVA MARGIN - {selectedProduct || "TOTAL"} - YTD
+            </h3>
+          </div>
+          <CardContent className="pt-6 bg-[#f5f5f5]">
+            <div className="w-full h-[350px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={waterfallData}
+                  margin={{ top: 40, right: 20, left: 20, bottom: 20 }}
+                  barCategoryGap="15%"
+                >
+                  <CartesianGrid 
+                    strokeDasharray="3 3" 
+                    vertical={false}
+                    stroke="#d1d5db"
+                  />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fontSize: 13, fill: "#374151", fontWeight: 600 }}
+                    axisLine={{ stroke: "#9ca3af" }}
+                    tickLine={false}
+                  />
+                  <YAxis hide />
+                  <Tooltip
+                    formatter={(value: number, name: string, props: any) => {
+                      const displayVal = props.payload.displayValue;
+                      const formatted = formatNumber(Math.abs(displayVal));
+                      return [
+                        props.payload.isNegative ? `(${formatted})` : formatted,
+                        props.payload.isBase ? "Margem" : "Variação"
+                      ];
+                    }}
+                    contentStyle={{
+                      backgroundColor: "#fff",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "4px",
+                    }}
+                  />
+                  {/* Invisible base bar for waterfall effect */}
+                  <Bar dataKey="start" stackId="a" fill="transparent" />
+                  {/* Visible value bar */}
+                  <Bar dataKey="value" stackId="a" radius={[2, 2, 0, 0]}>
+                    {waterfallData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                    <LabelList
+                      dataKey="displayValue"
+                      position="top"
+                      content={(props: any) => {
+                        const { x, y, width, value, index } = props;
+                        const item = waterfallData[index];
+                        if (!item) return null;
+                        
+                        const formatted = formatNumber(Math.abs(value));
+                        const label = item.isNegative ? `(${formatted})` : formatted;
+                        
+                        return (
+                          <text
+                            x={x + width / 2}
+                            y={y - 10}
+                            fill="#374151"
+                            textAnchor="middle"
+                            fontSize={12}
+                            fontWeight={600}
+                          >
+                            {label}
+                          </text>
+                        );
                       }}
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--background))",
-                        border: "1px solid hsl(var(--border))",
-                      }}
                     />
-                    {/* Invisible base bar for waterfall effect */}
-                    <Bar dataKey="start" stackId="a" fill="transparent" />
-                    {/* Visible value bar */}
-                    <Bar dataKey="value" stackId="a" radius={[4, 4, 0, 0]}>
-                      {waterfallData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                      <LabelList
-                        dataKey="displayValue"
-                        position="top"
-                        formatter={(val: number) => formatDelta(val)}
-                        style={{ fontSize: 11, fill: "hsl(var(--foreground))" }}
-                      />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
