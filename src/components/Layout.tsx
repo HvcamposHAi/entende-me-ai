@@ -34,6 +34,7 @@ const menuItems = [
   { title: "P&L", url: "/pl", icon: TrendingUp },
   { title: "Por Loja", url: "/by-branch", icon: Store },
   { title: "Análise de Variação", url: "/eva", icon: Calculator },
+  { title: "Relatório EVA", url: "/eva-report", icon: Calculator },
   { title: "Despesas", url: "/expenses", icon: Receipt },
   { title: "Evolução", url: "/evolution", icon: LineChart },
   { title: "Relatórios", url: "/reports", icon: FileText },
