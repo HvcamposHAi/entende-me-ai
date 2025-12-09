@@ -33,7 +33,7 @@ const menuItems = [
   { title: "Regras de Negócio", url: "/business-rules", icon: Settings2 },
   { title: "P&L", url: "/pl", icon: TrendingUp },
   { title: "Por Loja", url: "/by-branch", icon: Store },
-  { title: "Análise EVA", url: "/eva", icon: Calculator },
+  { title: "Análise de Variação", url: "/eva", icon: Calculator },
   { title: "Despesas", url: "/expenses", icon: Receipt },
   { title: "Evolução", url: "/evolution", icon: LineChart },
   { title: "Relatórios", url: "/reports", icon: FileText },
