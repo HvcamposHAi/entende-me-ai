@@ -1,33 +1,96 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { z } from "zod";
+
+const authSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
+});
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, signUp, user } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Temporary mock login - will be replaced with Lovable Cloud auth
-    if (email && password) {
-      toast({
-        title: "Login realizado com sucesso",
-        description: "Bem-vindo ao Dengo Analytics",
-      });
+  useEffect(() => {
+    if (user) {
       navigate("/overview");
-    } else {
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Validate input
+    const validation = authSchema.safeParse({ email, password });
+    if (!validation.success) {
       toast({
-        title: "Erro no login",
-        description: "Por favor, preencha todos os campos",
+        title: "Erro de validação",
+        description: validation.error.errors[0].message,
         variant: "destructive",
       });
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      if (isSignUp) {
+        const { error } = await signUp(email, password);
+        if (error) {
+          let message = error.message;
+          if (error.message.includes("already registered")) {
+            message = "Este email já está cadastrado. Tente fazer login.";
+          }
+          toast({
+            title: "Erro no cadastro",
+            description: message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Cadastro realizado!",
+            description: "Verifique seu email para confirmar o cadastro.",
+          });
+        }
+      } else {
+        const { error } = await signIn(email, password);
+        if (error) {
+          let message = error.message;
+          if (error.message.includes("Invalid login credentials")) {
+            message = "Email ou senha incorretos.";
+          }
+          toast({
+            title: "Erro no login",
+            description: message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Login realizado com sucesso",
+            description: "Bem-vindo ao Dengo Analytics",
+          });
+          navigate("/overview");
+        }
+      }
+    } catch (err) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -41,7 +104,7 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -51,6 +114,7 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -62,11 +126,22 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full">
-              Entrar
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Carregando..." : isSignUp ? "Cadastrar" : "Entrar"}
             </Button>
+            <div className="text-center text-sm">
+              <button
+                type="button"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-primary hover:underline"
+                disabled={isLoading}
+              >
+                {isSignUp ? "Já tem conta? Faça login" : "Não tem conta? Cadastre-se"}
+              </button>
+            </div>
           </form>
         </CardContent>
       </Card>
