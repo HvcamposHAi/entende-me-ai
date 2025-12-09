@@ -71,47 +71,96 @@
 
 ## 🏗 Arquitetura do Projeto
 
+### Arquitetura de 4 Camadas
+
+O projeto é estruturado em 4 camadas arquiteturais distintas:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    LAYER 4 - OUTPUT LAYER                       │
+│  Exportação (Excel, PDF), Relatórios Contábeis, Auditoria      │
+├─────────────────────────────────────────────────────────────────┤
+│                    LAYER 3 - INTERFACE LAYER                    │
+│  Dashboards Interativos + IA Insights (Gemini 2.5 Flash)       │
+├─────────────────────────────────────────────────────────────────┤
+│                 LAYER 2 - BUSINESS RULES LAYER                  │
+│  Regras em Linguagem Natural → LLM → Lógica de Cálculo         │
+│  ⭐ DIFERENCIAL ESTRATÉGICO DA PLATAFORMA                       │
+├─────────────────────────────────────────────────────────────────┤
+│                    LAYER 1 - DATA LAYER                         │
+│  Importação Excel (sheet 'New_DB') → Campos Estruturais DRE    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Layer 1 - Data Layer
+- **Entrada**: Arquivos Excel com sheet `New_DB`
+- **Campos disponíveis**: `nom`, `macroFamilyName`, `calendarYear`, `month`, `netSales`, `cogs`, `margin`, `volumeKg`, `quantitySoldTotal`
+- **Processamento**: Normalização robusta de headers Excel
+
+#### Layer 2 - Business Rules Layer (Diferencial Estratégico)
+- **Entrada**: Regras em linguagem natural (ex: "Margem bruta = Receita – COGS")
+- **Processamento**: LLM (Gemini 2.5 Flash via `interpret-rule`) interpreta e gera lógica estruturada
+- **Saída**: Campos calculados aplicados ao P&L via `pl_field_order`
+- **Componentes**: `BusinessRules.tsx` para criação, `PLBuilder.tsx` para ordenação
+- **Objetivo**: Empoderar time financeiro/operacional sem dependência de TI
+
+#### Layer 3 - Interface Layer
+- **Dashboards**: Overview, P&L, Por Loja, EVA, Despesas, Evolução, Projeção
+- **IA Insights**: Detecção de desvios, alertas de risco, planos de ação (`AIAnalysisPanel`)
+- **Interatividade**: Filtros por ano, mês, loja, linha de produto
+- **Exportação inline**: `ExportButtons` em cada dashboard
+
+#### Layer 4 - Output Layer
+- **Exportação**: Excel (gráficos nativos editáveis), PDF (gráficos embarcados)
+- **Relatórios**: Relatório Contábil Mensal consolidado
+- **Auditoria**: Rastreabilidade de regras aplicadas via `business_rules_history`
+- **Nota de rodapé EVA**: Exibe alterações de regras no período analisado
+
 ### Estrutura de Diretórios
 
 ```
 dengo-analytics/
 ├── src/
-│   ├── components/          # Componentes reutilizáveis
-│   │   ├── ui/             # Componentes UI do shadcn
-│   │   ├── Layout.tsx      # Layout principal com sidebar
-│   │   ├── FilterBar.tsx   # Barra de filtros
-│   │   └── KPICard.tsx     # Cartões de indicadores
-│   ├── contexts/           # Contextos React
-│   │   └── DataContext.tsx # Gerenciamento de dados globais
-│   ├── hooks/              # Hooks customizados
-│   │   └── use-toast.ts    # Hook para notificações
-│   ├── integrations/       # Integrações externas
-│   │   └── supabase/       # Cliente e tipos Supabase
-│   ├── lib/                # Utilitários
-│   │   └── utils.ts        # Funções auxiliares
-│   ├── pages/              # Páginas da aplicação
-│   │   ├── Login.tsx       # Página de login
-│   │   ├── Upload.tsx      # Upload de dados Excel
-│   │   ├── Overview.tsx    # Dashboard principal
-│   │   ├── PL.tsx          # Profit & Loss
-│   │   ├── ByBranch.tsx    # Análise por loja
-│   │   ├── EVA.tsx         # Análise EVA
-│   │   ├── Expenses.tsx    # Despesas operacionais
-│   │   ├── Evolution.tsx   # Evolução temporal
-│   │   ├── Forecast.tsx    # Projeções e IA
-│   │   └── Reports.tsx     # Geração de relatórios
-│   ├── App.tsx             # Componente raiz
-│   ├── index.css           # Estilos globais e design system
-│   └── main.tsx            # Ponto de entrada
+│   ├── components/              # Componentes reutilizáveis
+│   │   ├── ui/                 # Componentes UI do shadcn
+│   │   ├── Layout.tsx          # Layout principal com sidebar
+│   │   ├── FilterBar.tsx       # Barra de filtros
+│   │   ├── KPICard.tsx         # Cartões de indicadores
+│   │   ├── PLBuilder.tsx       # ⭐ Construtor de P&L customizável
+│   │   ├── AIAnalysisPanel.tsx # Painel de insights IA
+│   │   └── ExportButtons.tsx   # Botões de exportação (Excel/PDF)
+│   ├── contexts/               # Contextos React
+│   │   └── DataContext.tsx     # Gerenciamento de dados globais
+│   ├── hooks/                  # Hooks customizados
+│   │   └── use-toast.ts        # Hook para notificações
+│   ├── integrations/           # Integrações externas
+│   │   └── supabase/           # Cliente e tipos Supabase
+│   ├── lib/                    # Utilitários
+│   │   └── utils.ts            # Funções auxiliares
+│   ├── pages/                  # Páginas da aplicação
+│   │   ├── Overview.tsx        # Dashboard principal
+│   │   ├── Upload.tsx          # Upload de dados Excel
+│   │   ├── PL.tsx              # Profit & Loss
+│   │   ├── ByBranch.tsx        # Análise por loja
+│   │   ├── EVA.tsx             # Análise EVA
+│   │   ├── Expenses.tsx        # Despesas operacionais
+│   │   ├── Evolution.tsx       # Evolução temporal
+│   │   ├── Forecast.tsx        # Projeções e IA
+│   │   ├── Reports.tsx         # Relatório Contábil Mensal
+│   │   └── BusinessRules.tsx   # ⭐ Gestão de regras + PLBuilder
+│   ├── App.tsx                 # Componente raiz
+│   ├── index.css               # Estilos globais e design system
+│   └── main.tsx                # Ponto de entrada
 ├── supabase/
-│   ├── functions/          # Edge Functions
-│   │   └── ai-insights/    # Função de insights com IA
-│   └── config.toml         # Configuração Supabase
-├── public/                 # Arquivos estáticos
-├── package.json            # Dependências do projeto
-├── tailwind.config.ts      # Configuração Tailwind
-├── tsconfig.json           # Configuração TypeScript
-└── vite.config.ts          # Configuração Vite
+│   ├── functions/              # Edge Functions
+│   │   ├── ai-insights/        # Função de insights com IA
+│   │   └── interpret-rule/     # ⭐ Função para interpretar regras via LLM
+│   └── config.toml             # Configuração Supabase
+├── public/                     # Arquivos estáticos
+├── package.json                # Dependências do projeto
+├── tailwind.config.ts          # Configuração Tailwind
+├── tsconfig.json               # Configuração TypeScript
+└── vite.config.ts              # Configuração Vite
 ```
 
 ### Padrões de Arquitetura
@@ -121,6 +170,7 @@ dengo-analytics/
 3. **Context API Pattern**: Estado global gerenciado via contextos React
 4. **Server-Side Processing**: Lógica pesada executada em Edge Functions
 5. **Type Safety**: TypeScript para tipagem forte em toda a aplicação
+6. **4-Layer Model**: Separação entre dados, regras, interface e saída
 
 ---
 
@@ -585,6 +635,167 @@ generatePDFReport(reportTitle: string)
 - `jsPDF`: Geração de PDFs
 - `jspdf-autotable`: Tabelas em PDF
 - `chart.js`: Gráficos para exportação
+
+---
+
+## ⭐ Business Rules - Regras Interpretadas por LLM
+
+### Visão Geral
+
+O sistema de Business Rules permite que usuários definam regras financeiras em linguagem natural, que são interpretadas por um LLM (Gemini 2.5 Flash) e convertidas em lógica de cálculo estruturada.
+
+### Fluxo de Criação de Regras
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Usuário clica  │     │   Usuário       │     │   Edge Function │
+│  nos campos     │ ──► │   descreve a    │ ──► │   interpret-rule│
+│  disponíveis    │     │   regra em PT   │     │   (Gemini LLM)  │
+└─────────────────┘     └─────────────────┘     └────────┬────────┘
+                                                         │
+┌─────────────────┐     ┌─────────────────┐     ┌────────▼────────┐
+│  Campo aparece  │     │   Usuário       │     │   Retorna       │
+│  no PLBuilder   │ ◄── │   salva a       │ ◄── │   lógica        │
+│  para ordenação │     │   regra         │     │   estruturada   │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+```
+
+### Campos Disponíveis (Layer 1)
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `nom` | texto | Nome da loja |
+| `macroFamilyName` | texto | Linha de produto |
+| `calendarYear` | número | Ano calendário |
+| `month` | número | Mês (1-12) |
+| `netSales` | número | Receita líquida |
+| `cogs` | número | Custo de produtos |
+| `margin` | número | Margem |
+| `volumeKg` | número | Volume em kg |
+| `quantitySoldTotal` | número | Quantidade vendida |
+
+### Exemplo de Regra
+
+```
+Entrada (linguagem natural):
+"Margem bruta = netSales - cogs"
+
+Saída (lógica gerada pelo LLM):
+{
+  "field_key": "gross_margin",
+  "field_label": "Margem Bruta",
+  "calculation": "netSales - cogs",
+  "type": "calculation"
+}
+```
+
+### Tabela: `business_rules`
+
+```sql
+CREATE TABLE business_rules (
+  id UUID PRIMARY KEY,
+  rule_name TEXT NOT NULL,
+  rule_description TEXT,
+  rule_text TEXT NOT NULL,           -- Regra em linguagem natural
+  rule_type TEXT DEFAULT 'calculation',
+  generated_logic JSONB,             -- Lógica gerada pelo LLM
+  is_active BOOLEAN DEFAULT true,
+  applies_to TEXT[],                 -- Campos afetados
+  version INTEGER DEFAULT 1,
+  created_by UUID,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+);
+```
+
+### Histórico e Auditoria: `business_rules_history`
+
+```sql
+CREATE TABLE business_rules_history (
+  id UUID PRIMARY KEY,
+  rule_id UUID REFERENCES business_rules(id),
+  rule_name TEXT,
+  rule_text TEXT,
+  generated_logic JSONB,
+  version INTEGER,
+  change_type TEXT,                  -- created/updated/activated/deactivated
+  changed_by UUID,
+  changed_at TIMESTAMPTZ
+);
+```
+
+**Uso**: A página EVA exibe uma nota de rodapé com alterações de regras ocorridas no período analisado para garantir transparência e rastreabilidade.
+
+---
+
+## ⭐ PLBuilder - Construtor de P&L Customizável
+
+### Visão Geral
+
+O componente `PLBuilder` permite controle total sobre a estrutura do P&L, integrando campos do sistema com campos gerados por regras de negócio.
+
+### Funcionalidades
+
+| Funcionalidade | Descrição |
+|----------------|-----------|
+| **Ordenar campos** | Mover qualquer campo (sistema + regras LLM) para cima/baixo |
+| **Visibilidade** | Ocultar/exibir campos específicos |
+| **Estilos** | `normal`, `header`, `subitem`, `total`, `subtotal` |
+| **Indentação** | Níveis 0-3 para hierarquia visual |
+| **Campos customizados** | Adicionar/remover campos personalizados |
+| **RPU** | Toggle para exibir Revenue Per Unit |
+| **% Receita** | Toggle para exibir percentual sobre receita |
+| **Preview em tempo real** | Visualização do P&L com dados reais |
+
+### Preview do P&L
+
+O preview exibe três colunas:
+- **ACT 2025**: Valores do ano atual
+- **ACT 2024**: Valores do ano anterior
+- **% vs LY**: Variação percentual
+
+### Tabela: `pl_field_order`
+
+```sql
+CREATE TABLE pl_field_order (
+  id UUID PRIMARY KEY,
+  field_key TEXT NOT NULL,           -- Chave técnica do campo
+  field_label TEXT NOT NULL,         -- Label exibido
+  display_order INTEGER,             -- Ordem de exibição
+  is_visible BOOLEAN DEFAULT true,   -- Visibilidade
+  is_system_field BOOLEAN,           -- Campo do sistema (não deletável)
+  field_style TEXT,                  -- normal/header/subitem/total/subtotal
+  indent_level INTEGER DEFAULT 0,    -- Nível de indentação (0-3)
+  show_rpu BOOLEAN DEFAULT false,    -- Exibir RPU
+  show_percent_of_revenue BOOLEAN,   -- Exibir % da receita
+  is_calculated BOOLEAN,             -- Campo calculado
+  calculation_formula TEXT,          -- Fórmula de cálculo
+  rule_id UUID REFERENCES business_rules(id),  -- Vínculo com regra LLM
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+);
+```
+
+### Campos do Sistema (Pré-configurados)
+
+| Campo | Label | Estilo | Calculado |
+|-------|-------|--------|-----------|
+| `volume` | VOLUME | header | Não |
+| `volumeKg` | VOLUME Kg | normal | Não |
+| `revenue` | REVENUE | header | Não |
+| `cogs` | COGS | normal | Não |
+| `margin` | MARGIN | total | Sim |
+| `stPersonal` | ST-PERSONAL | normal | Não |
+| `stOpex` | ST-OPEX | normal | Não |
+| `commercialMargin` | COMMERCIAL MARGIN | total | Sim |
+
+### Interface do Usuário
+
+O PLBuilder está integrado na página `BusinessRules.tsx` em uma tab separada "Ordenar P&L", permitindo:
+
+1. **Painel esquerdo**: Configuração de campos (ordem, visibilidade, estilo, indentação)
+2. **Painel direito**: Preview em tempo real com dados calculados
+3. **Botão Salvar**: Persiste todas as alterações no banco de dados
 
 ---
 
