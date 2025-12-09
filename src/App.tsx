@@ -4,9 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { DataProvider } from "./contexts/DataContext";
-import { AuthProvider } from "./contexts/AuthContext";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./pages/Login";
 import Overview from "./pages/Overview";
 import Upload from "./pages/Upload";
 import BusinessRules from "./pages/BusinessRules";
@@ -26,31 +23,28 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
-      <AuthProvider>
-        <DataProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/" element={<ProtectedRoute><Overview /></ProtectedRoute>} />
-              <Route path="/overview" element={<ProtectedRoute><Overview /></ProtectedRoute>} />
-              <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
-              <Route path="/business-rules" element={<ProtectedRoute><BusinessRules /></ProtectedRoute>} />
-              <Route path="/pl" element={<ProtectedRoute><PL /></ProtectedRoute>} />
-              <Route path="/by-branch" element={<ProtectedRoute><ByBranch /></ProtectedRoute>} />
-              <Route path="/eva" element={<ProtectedRoute><EVA /></ProtectedRoute>} />
-              <Route path="/eva-report" element={<ProtectedRoute><EVAReport /></ProtectedRoute>} />
-              <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
-              <Route path="/evolution" element={<ProtectedRoute><Evolution /></ProtectedRoute>} />
-              <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-              <Route path="/forecast" element={<ProtectedRoute><Forecast /></ProtectedRoute>} />
-              <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </TooltipProvider>
-        </DataProvider>
-      </AuthProvider>
+      <DataProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route path="/" element={<Overview />} />
+            <Route path="/overview" element={<Overview />} />
+            <Route path="/upload" element={<Upload />} />
+            <Route path="/business-rules" element={<BusinessRules />} />
+            <Route path="/pl" element={<PL />} />
+            <Route path="/by-branch" element={<ByBranch />} />
+            <Route path="/eva" element={<EVA />} />
+            <Route path="/eva-report" element={<EVAReport />} />
+            <Route path="/expenses" element={<Expenses />} />
+            <Route path="/evolution" element={<Evolution />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/forecast" element={<Forecast />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </TooltipProvider>
+      </DataProvider>
     </BrowserRouter>
   </QueryClientProvider>
 );
