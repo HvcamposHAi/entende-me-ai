@@ -276,9 +276,9 @@ const EVA = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Análise EVA</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Análise de Variação</h2>
             <p className="text-muted-foreground">
-              EVA Margin - Total - YTD 06.Jun
+              Variação Margin - Total - YTD 06.Jun
             </p>
           </div>
           <ExportButtons
@@ -293,8 +293,8 @@ const EVA = () => {
               Margem2025: f.margin,
               MargemVariacao: f.marginChange,
             }))}
-            title="Análise EVA"
-            fileName="Analise_EVA"
+            title="Análise de Variação"
+            fileName="Analise_Variacao"
           />
         </div>
 
@@ -302,7 +302,7 @@ const EVA = () => {
           <div className="grid gap-6 md:grid-cols-1 xl:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm md:text-base">EVA VOLUME (Kg) BY MACRO-FAMILY (w/o Barista)</CardTitle>
+                <CardTitle className="text-sm md:text-base">VARIAÇÃO VOLUME (Kg) BY MACRO-FAMILY (w/o Barista)</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="w-full h-[300px] md:h-[400px]">
@@ -353,7 +353,7 @@ const EVA = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm md:text-base">EVA REVENUE BY MACRO-FAMILY</CardTitle>
+                <CardTitle className="text-sm md:text-base">VARIAÇÃO REVENUE BY MACRO-FAMILY</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="w-full h-[300px] md:h-[400px]">
