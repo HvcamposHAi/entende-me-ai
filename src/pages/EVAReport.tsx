@@ -248,7 +248,7 @@ const EVAReport = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center h-96">
-          <p className="text-muted-foreground">Carregue os dados na página Upload primeiro</p>
+          <p className="text-muted-foreground">Chargez les données sur la page Téléchargement d'abord</p>
         </div>
       </Layout>
     );
@@ -265,7 +265,7 @@ const EVAReport = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Relatório EVA</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Rapport EVA</h2>
             <p className="text-muted-foreground">{getReportTitle()}</p>
           </div>
           <ExportButtons
@@ -419,7 +419,7 @@ const EVAReport = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Decomposição da Margem EVA</CardTitle>
+                <CardTitle>Décomposition de la Marge EVA</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">

@@ -34,8 +34,8 @@ const Reports = () => {
   const generateAccountingReport = async (format: 'pdf' | 'excel') => {
     if (!isDataLoaded || data.length === 0) {
       toast({
-        title: "Sem dados",
-        description: "Por favor, carregue os dados primeiro na página Upload",
+        title: "Aucune donnée",
+        description: "Veuillez d'abord charger les données sur la page Téléchargement",
         variant: "destructive",
       });
       return;
@@ -57,7 +57,7 @@ const Reports = () => {
 
       const byStore: Record<string, any> = {};
       filteredData.forEach(row => {
-        const key = row.nom || "Não Identificado";
+        const key = row.nom || "Non Identifié";
         if (!byStore[key]) {
           byStore[key] = {
             store: key,
@@ -79,7 +79,7 @@ const Reports = () => {
 
       const byCategory: Record<string, any> = {};
       filteredData.forEach(row => {
-        const key = row.macroFamilyName || "Não Identificado";
+        const key = row.macroFamilyName || "Non Identifié";
         if (!byCategory[key]) {
           byCategory[key] = {
             category: key,
@@ -114,97 +114,97 @@ const Reports = () => {
         const wb = XLSX.utils.book_new();
 
         const summaryData = [
-          { Descrição: "RELATÓRIO CONTÁBIL MENSAL", Valor: "" },
-          { Descrição: `Período: ${periodLabel}`, Valor: "" },
-          { Descrição: `Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, Valor: "" },
-          { Descrição: "", Valor: "" },
-          { Descrição: "RESUMO CONSOLIDADO", Valor: "" },
-          { Descrição: "Receita Bruta", Valor: totals.grossRevenue.toFixed(2) },
-          { Descrição: "Deduções (Est.)", Valor: (totals.grossRevenue - totals.netSales).toFixed(2) },
-          { Descrição: "Receita Líquida", Valor: totals.netSales.toFixed(2) },
-          { Descrição: "COGS", Valor: totals.cogs.toFixed(2) },
-          { Descrição: "Margem Bruta", Valor: totals.grossMargin.toFixed(2) },
-          { Descrição: "% Margem", Valor: ((totals.grossMargin / totals.netSales) * 100).toFixed(1) + "%" },
+          { Description: "RAPPORT COMPTABLE MENSUEL", Valeur: "" },
+          { Description: `Période : ${periodLabel}`, Valeur: "" },
+          { Description: `Généré le : ${new Date().toLocaleDateString('fr-FR')}`, Valeur: "" },
+          { Description: "", Valeur: "" },
+          { Description: "RÉSUMÉ CONSOLIDÉ", Valeur: "" },
+          { Description: "Chiffre d'Affaires Brut", Valeur: totals.grossRevenue.toFixed(2) },
+          { Description: "Déductions (Est.)", Valeur: (totals.grossRevenue - totals.netSales).toFixed(2) },
+          { Description: "Chiffre d'Affaires Net", Valeur: totals.netSales.toFixed(2) },
+          { Description: "COGS", Valeur: totals.cogs.toFixed(2) },
+          { Description: "Marge Brute", Valeur: totals.grossMargin.toFixed(2) },
+          { Description: "% Marge", Valeur: ((totals.grossMargin / totals.netSales) * 100).toFixed(1) + "%" },
         ];
         const wsSummary = XLSX.utils.json_to_sheet(summaryData);
-        XLSX.utils.book_append_sheet(wb, wsSummary, "Resumo");
+        XLSX.utils.book_append_sheet(wb, wsSummary, "Résumé");
 
         const storeSheetData = storeData.map((s: any) => ({
-          Loja: s.store,
-          "Receita Bruta": s.grossRevenue.toFixed(2),
-          "Receita Líquida": s.netSales.toFixed(2),
+          Boutique: s.store,
+          "CA Brut": s.grossRevenue.toFixed(2),
+          "CA Net": s.netSales.toFixed(2),
           COGS: s.cogs.toFixed(2),
-          "Margem Bruta": s.grossMargin.toFixed(2),
-          "% Margem": s.netSales ? ((s.grossMargin / s.netSales) * 100).toFixed(1) + "%" : "0%",
+          "Marge Brute": s.grossMargin.toFixed(2),
+          "% Marge": s.netSales ? ((s.grossMargin / s.netSales) * 100).toFixed(1) + "%" : "0%",
           "Volume (Kg)": s.volumeKg.toFixed(0),
-          Quantidade: s.quantity,
+          Quantité: s.quantity,
         }));
         const wsStore = XLSX.utils.json_to_sheet(storeSheetData);
-        XLSX.utils.book_append_sheet(wb, wsStore, "Por Loja");
+        XLSX.utils.book_append_sheet(wb, wsStore, "Par Boutique");
 
         const catSheetData = categoryData.map((c: any) => ({
-          Categoria: c.category,
-          "Receita Líquida": c.netSales.toFixed(2),
+          Catégorie: c.category,
+          "CA Net": c.netSales.toFixed(2),
           COGS: c.cogs.toFixed(2),
-          "Margem Bruta": c.grossMargin.toFixed(2),
-          "% Margem": c.marginPercent.toFixed(1) + "%",
+          "Marge Brute": c.grossMargin.toFixed(2),
+          "% Marge": c.marginPercent.toFixed(1) + "%",
         }));
         const wsCat = XLSX.utils.json_to_sheet(catSheetData);
-        XLSX.utils.book_append_sheet(wb, wsCat, "Por Categoria");
+        XLSX.utils.book_append_sheet(wb, wsCat, "Par Catégorie");
 
-        XLSX.writeFile(wb, `Relatorio_Contabil_${periodLabel.replace('/', '_')}.xlsx`);
+        XLSX.writeFile(wb, `Rapport_Comptable_${periodLabel.replace('/', '_')}.xlsx`);
       } else {
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
 
         doc.setFontSize(18);
         doc.setTextColor(30, 64, 175);
-        doc.text("RELATÓRIO CONTÁBIL MENSAL", pageWidth / 2, 20, { align: 'center' });
+        doc.text("RAPPORT COMPTABLE MENSUEL", pageWidth / 2, 20, { align: 'center' });
         
         doc.setFontSize(12);
         doc.setTextColor(100, 100, 100);
-        doc.text(`Período: ${periodLabel}`, pageWidth / 2, 28, { align: 'center' });
-        doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, pageWidth / 2, 34, { align: 'center' });
+        doc.text(`Période : ${periodLabel}`, pageWidth / 2, 28, { align: 'center' });
+        doc.text(`Généré le : ${new Date().toLocaleDateString('fr-FR')}`, pageWidth / 2, 34, { align: 'center' });
 
         doc.setFillColor(241, 245, 249);
         doc.rect(10, 42, pageWidth - 20, 45, 'F');
         
         doc.setFontSize(11);
         doc.setTextColor(30, 64, 175);
-        doc.text("DEMONSTRAÇÃO DE RESULTADO CONSOLIDADA", 15, 50);
+        doc.text("COMPTE DE RÉSULTAT CONSOLIDÉ", 15, 50);
         
         doc.setTextColor(50, 50, 50);
         doc.setFontSize(10);
         
         const formatCurrency = (val: number) => 
-          val.toLocaleString('pt-BR', { style: 'currency', currency: 'EUR' });
+          val.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
 
-        doc.text(`Receita Bruta:`, 15, 58);
+        doc.text(`Chiffre d'Affaires Brut :`, 15, 58);
         doc.text(formatCurrency(totals.grossRevenue), 80, 58);
         
-        doc.text(`(-) Deduções:`, 15, 64);
+        doc.text(`(-) Déductions :`, 15, 64);
         doc.text(formatCurrency(totals.grossRevenue - totals.netSales), 80, 64);
         
-        doc.text(`Receita Líquida:`, 15, 70);
+        doc.text(`Chiffre d'Affaires Net :`, 15, 70);
         doc.setFont("helvetica", "bold");
         doc.text(formatCurrency(totals.netSales), 80, 70);
         doc.setFont("helvetica", "normal");
         
-        doc.text(`(-) COGS:`, 15, 76);
+        doc.text(`(-) COGS :`, 15, 76);
         doc.text(formatCurrency(totals.cogs), 80, 76);
         
-        doc.text(`Margem Bruta:`, 15, 82);
+        doc.text(`Marge Brute :`, 15, 82);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(22, 163, 74);
         doc.text(`${formatCurrency(totals.grossMargin)} (${((totals.grossMargin / totals.netSales) * 100).toFixed(1)}%)`, 80, 82);
 
         doc.setTextColor(30, 64, 175);
         doc.setFontSize(11);
-        doc.text("CONSOLIDAÇÃO POR LOJA", 15, 95);
+        doc.text("CONSOLIDATION PAR BOUTIQUE", 15, 95);
 
         autoTable(doc, {
           startY: 100,
-          head: [['Loja', 'Receita Líquida', 'COGS', 'Margem Bruta', '% Margem']],
+          head: [['Boutique', 'CA Net', 'COGS', 'Marge Brute', '% Marge']],
           body: storeData.slice(0, 15).map((s: any) => [
             s.store,
             formatCurrency(s.netSales),
@@ -220,11 +220,11 @@ const Reports = () => {
         
         doc.setFontSize(11);
         doc.setTextColor(30, 64, 175);
-        doc.text("CONSOLIDAÇÃO POR CATEGORIA", 15, 20);
+        doc.text("CONSOLIDATION PAR CATÉGORIE", 15, 20);
 
         autoTable(doc, {
           startY: 25,
-          head: [['Categoria', 'Receita Líquida', 'COGS', 'Margem Bruta', '% Margem']],
+          head: [['Catégorie', 'CA Net', 'COGS', 'Marge Brute', '% Marge']],
           body: categoryData.map((c: any) => [
             c.category,
             formatCurrency(c.netSales),
@@ -236,18 +236,18 @@ const Reports = () => {
           headStyles: { fillColor: [30, 64, 175] },
         });
 
-        doc.save(`Relatorio_Contabil_${periodLabel.replace('/', '_')}.pdf`);
+        doc.save(`Rapport_Comptable_${periodLabel.replace('/', '_')}.pdf`);
       }
 
       toast({
-        title: "Relatório contábil gerado",
-        description: `Arquivo ${format.toUpperCase()} baixado com sucesso`,
+        title: "Rapport comptable généré",
+        description: `Fichier ${format.toUpperCase()} téléchargé avec succès`,
       });
     } catch (error) {
       console.error("Error generating accounting report:", error);
       toast({
-        title: "Erro ao gerar relatório",
-        description: "Ocorreu um erro ao gerar o arquivo",
+        title: "Erreur lors de la génération du rapport",
+        description: "Une erreur s'est produite lors de la génération du fichier",
         variant: "destructive",
       });
     } finally {
@@ -259,7 +259,7 @@ const Reports = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center h-96">
-          <p className="text-muted-foreground">Carregue os dados na página Upload primeiro</p>
+          <p className="text-muted-foreground">Chargez les données sur la page Téléchargement d'abord</p>
         </div>
       </Layout>
     );
@@ -269,9 +269,9 @@ const Reports = () => {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Relatórios</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Rapports</h2>
           <p className="text-muted-foreground">
-            Relatório Contábil Mensal
+            Rapport Comptable Mensuel
           </p>
         </div>
 
@@ -279,22 +279,22 @@ const Reports = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calculator className="h-5 w-5" />
-              Relatório Contábil Mensal
+              Rapport Comptable Mensuel
             </CardTitle>
             <CardDescription>
-              Consolidação por loja e categoria com demonstração de resultado
+              Consolidation par boutique et catégorie avec compte de résultat
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Label>Ano</Label>
+                <Label>Année</Label>
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos os anos</SelectItem>
+                    <SelectItem value="all">Toutes les années</SelectItem>
                     {filterOptions.years.map(year => (
                       <SelectItem key={year} value={year}>{year}</SelectItem>
                     ))}
@@ -302,13 +302,13 @@ const Reports = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Mês</Label>
+                <Label>Mois</Label>
                 <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos os meses</SelectItem>
+                    <SelectItem value="all">Tous les mois</SelectItem>
                     {filterOptions.months.map(month => (
                       <SelectItem key={month} value={month}>{month}</SelectItem>
                     ))}
@@ -316,13 +316,13 @@ const Reports = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Loja</Label>
+                <Label>Boutique</Label>
                 <Select value={selectedStore} onValueChange={setSelectedStore}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas as lojas</SelectItem>
+                    <SelectItem value="all">Toutes les boutiques</SelectItem>
                     {filterOptions.stores.map(store => (
                       <SelectItem key={store} value={store}>{store}</SelectItem>
                     ))}
@@ -342,7 +342,7 @@ const Reports = () => {
                 ) : (
                   <FileText className="h-4 w-4" />
                 )}
-                Exportar PDF
+                Exporter PDF
               </Button>
               <Button
                 variant="outline"
@@ -355,7 +355,7 @@ const Reports = () => {
                 ) : (
                   <Download className="h-4 w-4" />
                 )}
-                Exportar Excel
+                Exporter Excel
               </Button>
             </div>
           </CardContent>

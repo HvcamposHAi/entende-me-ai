@@ -247,7 +247,7 @@ const EVA = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center h-96">
-          <p className="text-muted-foreground">Carregue os dados na página Upload primeiro</p>
+          <p className="text-muted-foreground">Chargez les données sur la page Téléchargement d'abord</p>
         </div>
       </Layout>
     );
@@ -276,9 +276,9 @@ const EVA = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Análise de Variação</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Analyse de Variance</h2>
             <p className="text-muted-foreground">
-              Variação Margin - Total - YTD 06.Jun
+              Variance Marge - Total - YTD 06.Jun
             </p>
           </div>
           <ExportButtons
@@ -461,27 +461,27 @@ const EVA = () => {
             <Alert className="border-amber-500/50 bg-amber-500/10">
               <History className="h-4 w-4 text-amber-600" />
               <AlertTitle className="text-amber-700 dark:text-amber-400">
-                Alterações de Regras de Negócio no Período
+                Modifications des Règles Métier sur la Période
               </AlertTitle>
               <AlertDescription className="mt-2">
                 <p className="text-sm text-muted-foreground mb-2">
-                  Durante o período comparado (2024-2025), as seguintes regras de negócio foram alteradas, o que pode impactar a comparação dos dados:
+                  Durant la période comparée (2024-2025), les règles métier suivantes ont été modifiées, ce qui peut impacter la comparaison des données :
                 </p>
                 <ul className="space-y-1">
                   {ruleChanges.map((change) => (
                     <li key={change.id} className="text-sm flex items-start gap-2">
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200">
-                        {change.change_type === 'created' ? 'Nova' : 
-                         change.change_type === 'updated' ? 'Atualizada' : 
-                         change.change_type === 'activated' ? 'Ativada' : 
-                         change.change_type === 'deactivated' ? 'Desativada' : change.change_type}
+                        {change.change_type === 'created' ? 'Nouvelle' : 
+                         change.change_type === 'updated' ? 'Mise à jour' : 
+                         change.change_type === 'activated' ? 'Activée' : 
+                         change.change_type === 'deactivated' ? 'Désactivée' : change.change_type}
                       </span>
                       <span className="font-medium">{change.rule_name}</span>
                       <span className="text-muted-foreground">
                         — {change.rule_text}
                       </span>
                       <span className="text-xs text-muted-foreground ml-auto whitespace-nowrap">
-                        {new Date(change.changed_at).toLocaleDateString('pt-BR')}
+                        {new Date(change.changed_at).toLocaleDateString('fr-FR')}
                       </span>
                     </li>
                   ))}
@@ -493,7 +493,7 @@ const EVA = () => {
           <AIAnalysisPanel
             data={data.filter(r => r.macroFamilyName !== 'Barista')}
             context="eva"
-            title="Análise IA - EVA"
+            title="Analyse IA - EVA"
           />
         </div>
       </div>

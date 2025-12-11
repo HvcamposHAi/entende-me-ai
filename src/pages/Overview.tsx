@@ -9,6 +9,7 @@ import { AlertCircle } from "lucide-react";
 import { useTracking } from "@/hooks/useTracking";
 import { ExportButtons } from "@/components/ExportButtons";
 import AIAnalysisPanel from "@/components/AIAnalysisPanel";
+
 const Overview = () => {
   const chartRef = useRef<HTMLDivElement>(null);
   useTracking();
@@ -145,9 +146,9 @@ const Overview = () => {
           <div className="text-center space-y-4">
             <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto" />
             <div>
-              <h3 className="text-lg font-semibold">Nenhum dado carregado</h3>
+              <h3 className="text-lg font-semibold">Aucune donnée chargée</h3>
               <p className="text-muted-foreground">
-                Por favor, faça upload da base de dados na página de Upload
+                Veuillez télécharger la base de données sur la page Téléchargement
               </p>
             </div>
           </div>
@@ -161,29 +162,29 @@ const Overview = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Overview</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Vue d'ensemble</h2>
             <p className="text-muted-foreground">
-              Visão geral dos indicadores financeiros
+              Aperçu général des indicateurs financiers
             </p>
           </div>
           <ExportButtons
             data={filteredData.map(d => ({
-              Loja: d.nom,
-              Ano: d.calendarYear,
-              Mês: d.month,
-              MacroFamília: d.macroFamilyName,
-              ReceitaLíquida: d.netSales,
+              Boutique: d.nom,
+              Année: d.calendarYear,
+              Mois: d.month,
+              MacroFamille: d.macroFamilyName,
+              ChiffreAffaires: d.netSales,
               COGS: d.cogs,
-              Margem: d.margin,
+              Marge: d.margin,
               VolumeKg: d.volumeKg,
             }))}
-            title="Overview"
-            fileName="Overview_Export"
+            title="Vue d'ensemble"
+            fileName="Vue_Ensemble_Export"
             chartRef={chartRef}
             chartConfigs={[
               {
                 type: 'column',
-                title: 'REVENUE vs. MARGIN',
+                title: 'CA vs. MARGE',
                 categoryKey: 'month',
                 data: monthlyChartData.map(d => ({
                   label: d.month,
@@ -194,15 +195,15 @@ const Overview = () => {
                   marginPct2025: d.marginPct2025,
                 })),
                 series: [
-                  { key: 'revenue2024', name: 'Revenue 2024' },
-                  { key: 'revenue2025', name: 'Revenue 2025' },
-                  { key: 'marginPct2024', name: 'Margin % 2024' },
-                  { key: 'marginPct2025', name: 'Margin % 2025' },
+                  { key: 'revenue2024', name: 'CA 2024' },
+                  { key: 'revenue2025', name: 'CA 2025' },
+                  { key: 'marginPct2024', name: 'Marge % 2024' },
+                  { key: 'marginPct2025', name: 'Marge % 2025' },
                 ]
               },
               {
                 type: 'bar',
-                title: 'TOP 10 MACRO-FAMILY (2025)',
+                title: 'TOP 10 MACRO-FAMILLE (2025)',
                 categoryKey: 'name',
                 data: macroFamilyData.map(d => ({
                   label: d.name,
@@ -211,8 +212,8 @@ const Overview = () => {
                   margin: d.margin,
                 })),
                 series: [
-                  { key: 'revenue', name: 'Revenue' },
-                  { key: 'margin', name: 'Margin' },
+                  { key: 'revenue', name: 'CA' },
+                  { key: 'margin', name: 'Marge' },
                 ]
               }
             ]}
@@ -242,7 +243,7 @@ const Overview = () => {
             format="number"
           />
           <KPICard
-            title="REVENUE"
+            title="CHIFFRE D'AFFAIRES"
             currentValue={kpis.revenue.current}
             previousValue={kpis.revenue.previous}
             format="currency"
@@ -254,18 +255,18 @@ const Overview = () => {
             format="currency"
           />
           <KPICard
-            title="MARGIN"
+            title="MARGE"
             currentValue={kpis.margin.current}
             previousValue={kpis.margin.previous}
             format="currency"
-            subtitle={`${((kpis.margin.current / kpis.revenue.current) * 100).toFixed(1)}% of REV`}
+            subtitle={`${((kpis.margin.current / kpis.revenue.current) * 100).toFixed(1)}% du CA`}
           />
         </div>
 
         <div ref={chartRef} className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>REVENUE vs. MARGIN</CardTitle>
+              <CardTitle>CA vs. MARGE</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
@@ -279,17 +280,17 @@ const Overview = () => {
                       if (name.includes('Pct')) {
                         return `${value.toFixed(1)}%`;
                       }
-                      return new Intl.NumberFormat('pt-FR', { 
+                      return new Intl.NumberFormat('fr-FR', { 
                         style: 'currency', 
                         currency: 'EUR' 
                       }).format(value);
                     }}
                   />
                   <Legend />
-                  <Bar yAxisId="left" dataKey="revenue2024" fill="#3b82f6" name="Revenue 2024" />
-                  <Bar yAxisId="left" dataKey="revenue2025" fill="#10b981" name="Revenue 2025" />
-                  <Line yAxisId="right" type="monotone" dataKey="marginPct2024" stroke="#f59e0b" name="Margin % 2024" strokeWidth={3} dot={{ r: 4 }} />
-                  <Line yAxisId="right" type="monotone" dataKey="marginPct2025" stroke="#ef4444" name="Margin % 2025" strokeWidth={3} dot={{ r: 4 }} />
+                  <Bar yAxisId="left" dataKey="revenue2024" fill="#3b82f6" name="CA 2024" />
+                  <Bar yAxisId="left" dataKey="revenue2025" fill="#10b981" name="CA 2025" />
+                  <Line yAxisId="right" type="monotone" dataKey="marginPct2024" stroke="#f59e0b" name="Marge % 2024" strokeWidth={3} dot={{ r: 4 }} />
+                  <Line yAxisId="right" type="monotone" dataKey="marginPct2025" stroke="#ef4444" name="Marge % 2025" strokeWidth={3} dot={{ r: 4 }} />
                 </ComposedChart>
               </ResponsiveContainer>
             </CardContent>
@@ -297,7 +298,7 @@ const Overview = () => {
 
           <Card>
           <CardHeader>
-            <CardTitle>TOP 10 MACRO-FAMILY (2025)</CardTitle>
+            <CardTitle>TOP 10 MACRO-FAMILLE (2025)</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={400}>
@@ -307,15 +308,15 @@ const Overview = () => {
                 <YAxis dataKey="name" type="category" width={150} />
                 <Tooltip 
                   formatter={(value: number) => 
-                    new Intl.NumberFormat('pt-FR', { 
+                    new Intl.NumberFormat('fr-FR', { 
                       style: 'currency', 
                       currency: 'EUR' 
                     }).format(value)
                   }
                 />
                 <Legend />
-                <Bar dataKey="revenue" fill="#3b82f6" name="Revenue" />
-                <Bar dataKey="margin" fill="#10b981" name="Margin" />
+                <Bar dataKey="revenue" fill="#3b82f6" name="CA" />
+                <Bar dataKey="margin" fill="#10b981" name="Marge" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -325,7 +326,7 @@ const Overview = () => {
         <AIAnalysisPanel
           data={filteredData}
           context="overview"
-          title="Análise IA - Overview"
+          title="Analyse IA - Vue d'ensemble"
           filters={{ store: selectedStore, product: selectedMacroFamily }}
         />
       </div>

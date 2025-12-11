@@ -173,7 +173,7 @@ const PL = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center h-96">
-          <p className="text-muted-foreground">Carregue os dados na página Upload primeiro</p>
+          <p className="text-muted-foreground">Chargez les données sur la page Téléchargement d'abord</p>
         </div>
       </Layout>
     );
@@ -204,7 +204,7 @@ const PL = () => {
           <div>
             <h2 className="text-3xl font-bold tracking-tight">P&L YTD 06.Jun</h2>
             <p className="text-muted-foreground">
-              Demonstração de Resultados Year-to-Date
+              Compte de Résultat Year-to-Date
             </p>
           </div>
           <ExportButtons
@@ -493,7 +493,7 @@ const PL = () => {
         <AIAnalysisPanel
           data={data}
           context="pl"
-          title="Análise IA - P&L"
+          title="Analyse IA - P&L"
         />
       </div>
     </Layout>
