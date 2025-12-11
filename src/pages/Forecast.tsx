@@ -222,7 +222,7 @@ const Forecast = () => {
 
       if (result?.error) {
         toast({
-          title: "Erro",
+          title: "Erreur",
           description: result.error,
           variant: "destructive",
         });
@@ -231,14 +231,14 @@ const Forecast = () => {
 
       setInsights(result.insights);
       toast({
-        title: "Insights Gerados",
-        description: "Análise estratégica completa",
+        title: "Insights Générés",
+        description: "Analyse stratégique complète",
       });
     } catch (error) {
       console.error('Error getting AI insights:', error);
       toast({
-        title: "Erro",
-        description: "Falha ao obter insights da IA",
+        title: "Erreur",
+        description: "Échec lors de l'obtention des insights IA",
         variant: "destructive",
       });
     } finally {
@@ -268,11 +268,11 @@ const Forecast = () => {
           </div>
           <ExportButtons
             data={chartData.map(d => ({
-              Período: d.monthYear,
+              Période: d.monthYear,
               ...Object.keys(d).filter(k => k !== 'monthYear').reduce((acc, key) => ({ ...acc, [key]: d[key] }), {}),
             }))}
-            title="Projeção"
-            fileName="Projecao_Forecast"
+            title="Projection"
+            fileName="Projection_Forecast"
           />
         </div>
 
@@ -280,22 +280,22 @@ const Forecast = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
-              Configuração de Projeção
+              Configuration de Projection
             </CardTitle>
             <CardDescription>
-              Selecione o algoritmo e período para projeção
+              Sélectionnez l'algorithme et la période pour la projection
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-5">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Loja</label>
+                <label className="text-sm font-medium">Magasin</label>
                 <Select value={selectedStore} onValueChange={setSelectedStore}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas as Lojas</SelectItem>
+                    <SelectItem value="all">Tous les Magasins</SelectItem>
                     {stores.map(store => (
                       <SelectItem key={store} value={store}>{store}</SelectItem>
                     ))}
@@ -303,13 +303,13 @@ const Forecast = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Linha de Produto</label>
+                <label className="text-sm font-medium">Ligne de Produit</label>
                 <Select value={selectedProduct} onValueChange={setSelectedProduct}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas as Linhas</SelectItem>
+                    <SelectItem value="all">Toutes les Lignes</SelectItem>
                     {products.map(product => (
                       <SelectItem key={product} value={product}>{product}</SelectItem>
                     ))}
@@ -317,28 +317,28 @@ const Forecast = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Algoritmo</label>
+                <label className="text-sm font-medium">Algorithme</label>
                 <Select value={algorithm} onValueChange={(v) => setAlgorithm(v as Algorithm)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="linear">Regressão Linear</SelectItem>
-                    <SelectItem value="moving_average">Média Móvel</SelectItem>
-                    <SelectItem value="exponential">Suavização Exponencial</SelectItem>
+                    <SelectItem value="linear">Régression Linéaire</SelectItem>
+                    <SelectItem value="moving_average">Moyenne Mobile</SelectItem>
+                    <SelectItem value="exponential">Lissage Exponentiel</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Períodos (meses)</label>
+                <label className="text-sm font-medium">Périodes (mois)</label>
                 <Select value={periods.toString()} onValueChange={(v) => setPeriods(parseInt(v))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="3">3 meses</SelectItem>
-                    <SelectItem value="6">6 meses</SelectItem>
-                    <SelectItem value="12">12 meses</SelectItem>
+                    <SelectItem value="3">3 mois</SelectItem>
+                    <SelectItem value="6">6 mois</SelectItem>
+                    <SelectItem value="12">12 mois</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -347,12 +347,12 @@ const Forecast = () => {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Analisando...
+                      Analyse en cours...
                     </>
                   ) : (
                     <>
                       <Brain className="mr-2 h-4 w-4" />
-                      Gerar Insights IA
+                      Générer Insights IA
                     </>
                   )}
                 </Button>
@@ -364,7 +364,7 @@ const Forecast = () => {
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Projeção de Receita</CardTitle>
+              <CardTitle>Projection de Chiffre d'Affaires</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="w-full h-[300px] md:h-[400px]">
@@ -389,9 +389,9 @@ const Forecast = () => {
                               key={`${key}-revenue`}
                               type="monotone"
                               dataKey={`${key}_revenue`}
-                              name={`${storeName} (Histórico)`}
-                              stroke={color}
-                              strokeWidth={2}
+                            name={`${storeName} (Historique)`}
+                            stroke={color}
+                            strokeWidth={2}
                               dot={{ r: 3, fill: color }}
                               connectNulls={false}
                             />
@@ -418,7 +418,7 @@ const Forecast = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Projeção de Volume (Kg)</CardTitle>
+              <CardTitle>Projection de Volume (Kg)</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="w-full h-[300px] md:h-[400px]">
@@ -443,9 +443,9 @@ const Forecast = () => {
                               key={`${key}-volume`}
                               type="monotone"
                               dataKey={`${key}_volume`}
-                              name={`${storeName} (Histórico)`}
-                              stroke={color}
-                              strokeWidth={2}
+                            name={`${storeName} (Historique)`}
+                            stroke={color}
+                            strokeWidth={2}
                               dot={{ r: 3, fill: color }}
                               connectNulls={false}
                             />

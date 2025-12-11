@@ -35,9 +35,9 @@ const EVAReport = () => {
   }, [data, isDataLoaded]);
 
   const monthNames: { [key: number]: string } = {
-    1: '01.Jan', 2: '02.Feb', 3: '03.Mar', 4: '04.Apr',
-    5: '05.May', 6: '06.Jun', 7: '07.Jul', 8: '08.Aug',
-    9: '09.Sep', 10: '10.Oct', 11: '11.Nov', 12: '12.Dec'
+    1: '01.Jan', 2: '02.Fév', 3: '03.Mar', 4: '04.Avr',
+    5: '05.Mai', 6: '06.Juin', 7: '07.Juil', 8: '08.Août',
+    9: '09.Sep', 10: '10.Oct', 11: '11.Nov', 12: '12.Déc'
   };
 
   const evaMarginData = useMemo(() => {
@@ -255,9 +255,9 @@ const EVAReport = () => {
   }
 
   const exportData = waterfallData.map(item => ({
-    Categoria: item.name,
-    Valor: item.displayValue,
-    Tipo: item.isEndpoint ? 'Total' : (item.isPositive ? 'Positivo' : 'Negativo'),
+    Catégorie: item.name,
+    Valeur: item.displayValue,
+    Type: item.isEndpoint ? 'Total' : (item.isPositive ? 'Positif' : 'Négatif'),
   }));
 
   return (
@@ -270,8 +270,8 @@ const EVAReport = () => {
           </div>
           <ExportButtons
             data={exportData}
-            title="EVA Margin Report"
-            fileName="EVA_Margin_Report"
+            title="Rapport EVA Marge"
+            fileName="Rapport_EVA_Marge"
           />
         </div>
 
@@ -280,10 +280,10 @@ const EVAReport = () => {
           <CardContent className="py-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="store-filter" className="text-sm font-medium">Store:</Label>
+                <Label htmlFor="store-filter" className="text-sm font-medium">Magasin:</Label>
                 <Select value={selectedStore} onValueChange={setSelectedStore}>
                   <SelectTrigger id="store-filter">
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue placeholder="Sélectionnez..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="TOTAL">TOTAL</SelectItem>
@@ -295,23 +295,23 @@ const EVAReport = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="report-filter" className="text-sm font-medium">Report:</Label>
+                <Label htmlFor="report-filter" className="text-sm font-medium">Rapport:</Label>
                 <Select value={selectedReport} onValueChange={setSelectedReport}>
                   <SelectTrigger id="report-filter">
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue placeholder="Sélectionnez..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="YTD">YTD</SelectItem>
-                    <SelectItem value="Month">Month</SelectItem>
+                    <SelectItem value="Month">Mois</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="month-filter" className="text-sm font-medium">Month:</Label>
+                <Label htmlFor="month-filter" className="text-sm font-medium">Mois:</Label>
                 <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                   <SelectTrigger id="month-filter">
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue placeholder="Sélectionnez..." />
                   </SelectTrigger>
                   <SelectContent>
                     {filterOptions.months.map(month => (
@@ -324,10 +324,10 @@ const EVAReport = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="macrofamily-filter" className="text-sm font-medium">Macro-Family:</Label>
+                <Label htmlFor="macrofamily-filter" className="text-sm font-medium">Macro-Famille:</Label>
                 <Select value={selectedMacroFamily} onValueChange={setSelectedMacroFamily}>
                   <SelectTrigger id="macrofamily-filter">
-                    <SelectValue placeholder="Selecione..." />
+                    <SelectValue placeholder="Sélectionnez..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="TOTAL">TOTAL</SelectItem>
@@ -347,7 +347,7 @@ const EVAReport = () => {
           <Card className="border-2">
             <CardContent className="py-12">
               <p className="text-center text-muted-foreground">
-                Sem dados disponíveis para os filtros selecionados
+                Aucune donnée disponible pour les filtres sélectionnés
               </p>
             </CardContent>
           </Card>
@@ -363,8 +363,8 @@ const EVAReport = () => {
                 <div className="w-full h-[400px] md:h-[500px]">
                   <ChartContainer
                     config={{
-                      value: { label: "Margin", color: "hsl(var(--chart-1))" },
-                    }}
+                    value: { label: "Marge", color: "hsl(var(--chart-1))" },
+                  }}
                     className="h-full w-full"
                   >
                     <ResponsiveContainer width="100%" height="100%">
@@ -392,7 +392,7 @@ const EVAReport = () => {
                                 <div className="bg-background border border-border p-3 rounded-lg shadow-lg">
                                   <p className="font-bold text-foreground">{data.name}</p>
                                   <p className="text-sm text-muted-foreground">
-                                    Valor: {formatNumber(data.displayValue)}
+                                    Valeur: {formatNumber(data.displayValue)}
                                   </p>
                                 </div>
                               );
