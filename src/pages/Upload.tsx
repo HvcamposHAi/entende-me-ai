@@ -69,17 +69,17 @@ const Upload = () => {
       const arrayBuffer = await file.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { cellNF: true, cellText: true });
       const sheetName = workbook.SheetNames.includes('New_DB') ? 'New_DB' : workbook.SheetNames[0];
-      console.log('Planilhas encontradas:', workbook.SheetNames, ' | Usando:', sheetName);
+      console.log('Feuilles trouvées:', workbook.SheetNames, ' | Utilisation:', sheetName);
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { raw: false, defval: null });
 
       // Log raw data para debug
-      console.log('Primeira linha bruta do Excel:', jsonData[0]);
+      console.log('Première ligne brute Excel:', jsonData[0]);
       
       const processedData: DengoDataRow[] = jsonData.map((row: any, idx: number) => {
         const m = toMap(row);
         if (idx === 0) {
-          console.log('Cabeçalhos normalizados (amostra):', Array.from(m.keys()));
+          console.log('En-têtes normalisés (échantillon):', Array.from(m.keys()));
         }
 
         const processedRow: DengoDataRow = {
@@ -104,21 +104,21 @@ const Upload = () => {
         return processedRow;
       });
 
-      console.log('Dados processados:', processedData.length, 'registros');
-      console.log('Amostra dos primeiros 3 registros:', processedData.slice(0, 3));
+      console.log('Données traitées:', processedData.length, 'enregistrements');
+      console.log('Échantillon des 3 premiers enregistrements:', processedData.slice(0, 3));
 
       setData(processedData);
       
       toast({
-        title: "Arquivo processado com sucesso!",
-        description: `${processedData.length} registros carregados`,
+        title: "Fichier traité avec succès !",
+        description: `${processedData.length} enregistrements chargés`,
       });
 
       setTimeout(() => navigate('/overview'), 1000);
     } catch (error) {
       toast({
-        title: "Erro ao processar arquivo",
-        description: "Verifique se o arquivo está no formato correto",
+        title: "Erreur lors du traitement du fichier",
+        description: "Vérifiez que le fichier est au bon format",
         variant: "destructive",
       });
     } finally {
@@ -129,8 +129,8 @@ const Upload = () => {
   const handleUpload = () => {
     if (!file) {
       toast({
-        title: "Nenhum arquivo selecionado",
-        description: "Por favor, selecione o arquivo para upload",
+        title: "Aucun fichier sélectionné",
+        description: "Veuillez sélectionner un fichier à télécharger",
         variant: "destructive",
       });
       return;
@@ -143,9 +143,9 @@ const Upload = () => {
     <Layout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Upload de Dados</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Téléchargement des Données</h2>
           <p className="text-muted-foreground">
-            Carregue a base de dados Dengo para análise financeira
+            Chargez la base de données Dengo pour l'analyse financière
           </p>
         </div>
 
@@ -154,7 +154,7 @@ const Upload = () => {
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 text-success">
                 <CheckCircle2 className="h-5 w-5" />
-                <span className="font-medium">Base de dados carregada com sucesso!</span>
+                <span className="font-medium">Base de données chargée avec succès !</span>
               </div>
             </CardContent>
           </Card>
@@ -162,15 +162,15 @@ const Upload = () => {
 
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle>Base de Dados Dengo</CardTitle>
-            <CardDescription>Arquivo: Base_Dengo.xlsx</CardDescription>
+            <CardTitle>Base de Données Dengo</CardTitle>
+            <CardDescription>Fichier : Base_Dengo.xlsx</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center hover:border-primary transition-colors">
               <FileSpreadsheet className="h-16 w-16 text-muted-foreground mb-4" />
               <label htmlFor="dengo-file" className="cursor-pointer">
                 <span className="text-sm font-medium text-primary hover:underline">
-                  {file ? file.name : "Clique para selecionar o arquivo"}
+                  {file ? file.name : "Cliquez pour sélectionner le fichier"}
                 </span>
                 <input
                   id="dengo-file"
@@ -181,7 +181,7 @@ const Upload = () => {
                 />
               </label>
               <p className="text-xs text-muted-foreground mt-2">
-                Formatos suportados: .xlsx, .xlsb, .xls
+                Formats supportés : .xlsx, .xlsb, .xls
               </p>
             </div>
 
@@ -197,7 +197,7 @@ const Upload = () => {
                   disabled={isProcessing}
                 >
                   <UploadIcon className="mr-2 h-4 w-4" />
-                  {isProcessing ? "Processando..." : "Processar Arquivo"}
+                  {isProcessing ? "Traitement en cours..." : "Traiter le Fichier"}
                 </Button>
               </div>
             )}

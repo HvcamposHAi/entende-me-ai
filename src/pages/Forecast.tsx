@@ -250,7 +250,7 @@ const Forecast = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center h-full">
-          <p className="text-muted-foreground">Carregue os dados primeiro na página Upload</p>
+          <p className="text-muted-foreground">Chargez les données d'abord sur la page Téléchargement</p>
         </div>
       </Layout>
     );
@@ -261,9 +261,9 @@ const Forecast = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Projeção & IA</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Projection & IA</h1>
             <p className="text-muted-foreground">
-              Algoritmos de Machine Learning e análise estratégica com IA
+              Algorithmes de Machine Learning et analyse stratégique avec IA
             </p>
           </div>
           <ExportButtons
@@ -476,7 +476,7 @@ const Forecast = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Brain className="w-5 h-5" />
-                Insights Estratégicos da IA
+                Insights Stratégiques de l'IA
               </CardTitle>
             </CardHeader>
             <CardContent>

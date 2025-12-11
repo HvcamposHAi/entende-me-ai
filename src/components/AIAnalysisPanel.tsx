@@ -38,7 +38,7 @@ interface AnalysisResult {
   summary: string;
 }
 
-const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAnalysisPanelProps) => {
+const AIAnalysisPanel = ({ data, context, title = "Analyse IA", filters }: AIAnalysisPanelProps) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
@@ -60,7 +60,7 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
 
       if (result?.error) {
         toast({
-          title: "Erro",
+          title: "Erreur",
           description: result.error,
           variant: "destructive",
         });
@@ -75,14 +75,14 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
       }
 
       toast({
-        title: "Análise Concluída",
-        description: "Desvios, alertas e plano de ação gerados com sucesso",
+        title: "Analyse Terminée",
+        description: "Écarts, alertes et plan d'action générés avec succès",
       });
     } catch (error) {
       console.error('Error getting AI analysis:', error);
       toast({
-        title: "Erro",
-        description: "Falha ao obter análise da IA",
+        title: "Erreur",
+        description: "Échec de l'obtention de l'analyse IA",
         variant: "destructive",
       });
     } finally {
@@ -91,26 +91,26 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
   };
 
   const exportActionPlan = () => {
-    const content = rawInsights || "Nenhuma análise disponível";
+    const content = rawInsights || "Aucune analyse disponible";
     const blob = new Blob([content], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `plano_acao_${context}_${new Date().toISOString().split('T')[0]}.md`;
+    a.download = `plan_action_${context}_${new Date().toISOString().split('T')[0]}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
     toast({
-      title: "Exportado",
-      description: "Plano de ação exportado com sucesso",
+      title: "Exporté",
+      description: "Plan d'action exporté avec succès",
     });
   };
 
   const sendViaOutlook = () => {
-    const content = rawInsights || "Nenhuma análise disponível";
-    const subject = encodeURIComponent(`${title} - ${new Date().toLocaleDateString('pt-BR')}`);
+    const content = rawInsights || "Aucune analyse disponible";
+    const subject = encodeURIComponent(`${title} - ${new Date().toLocaleDateString('fr-FR')}`);
     const body = encodeURIComponent(content);
     
     // Create mailto link - opens Outlook or default email client
@@ -118,8 +118,8 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
     window.open(mailtoLink, '_blank');
     
     toast({
-      title: "Outlook Aberto",
-      description: "Seu cliente de email foi aberto com a análise",
+      title: "Outlook Ouvert",
+      description: "Votre client email a été ouvert avec l'analyse",
     });
   };
 
@@ -134,9 +134,9 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
 
   const getPriorityLabel = (priority: string) => {
     switch (priority) {
-      case 'immediate': return 'Esta Semana';
-      case 'short_term': return 'Próximos 30 dias';
-      case 'medium_term': return '60-90 dias';
+      case 'immediate': return 'Cette Semaine';
+      case 'short_term': return 'Prochains 30 jours';
+      case 'medium_term': return '60-90 jours';
       default: return priority;
     }
   };
@@ -154,11 +154,11 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
               <>
                 <Button variant="outline" size="sm" onClick={sendViaOutlook}>
                   <Mail className="w-4 h-4 mr-2" />
-                  Enviar por Email
+                  Envoyer par Email
                 </Button>
                 <Button variant="outline" size="sm" onClick={exportActionPlan}>
                   <FileDown className="w-4 h-4 mr-2" />
-                  Exportar
+                  Exporter
                 </Button>
               </>
             )}
@@ -166,19 +166,19 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Analisando...
+                  Analyse en cours...
                 </>
               ) : (
                 <>
                   <Brain className="mr-2 h-4 w-4" />
-                  Gerar Análise
+                  Générer l'Analyse
                 </>
               )}
             </Button>
           </div>
         </div>
         <CardDescription>
-          Detecção automática de desvios, alertas de risco e plano de ação estruturado
+          Détection automatique des écarts, alertes de risque et plan d'action structuré
         </CardDescription>
       </CardHeader>
       
@@ -186,7 +186,7 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
         {!rawInsights && !isLoading && (
           <div className="text-center py-8 text-muted-foreground">
             <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Clique em "Gerar Análise" para obter insights automáticos</p>
+            <p>Cliquez sur "Générer l'Analyse" pour obtenir des insights automatiques</p>
           </div>
         )}
 
@@ -196,7 +196,7 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-primary" />
-                <h4 className="font-semibold text-sm">Desvios Detectados</h4>
+                <h4 className="font-semibold text-sm">Écarts Détectés</h4>
               </div>
               <div className="grid gap-2 md:grid-cols-2">
                 {analysis?.deviations?.map((dev, idx) => (
@@ -213,7 +213,7 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
                   </div>
                 )) || (
                   <p className="text-sm text-muted-foreground col-span-2">
-                    Análise de desvios incluída no relatório abaixo.
+                    Analyse des écarts incluse dans le rapport ci-dessous.
                   </p>
                 )}
               </div>
@@ -223,7 +223,7 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
-                <h4 className="font-semibold text-sm">Alertas de Risco</h4>
+                <h4 className="font-semibold text-sm">Alertes de Risque</h4>
               </div>
               {analysis?.alerts?.length ? (
                 <div className="space-y-2">
@@ -233,7 +233,7 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
                       <AlertTitle className="flex items-center gap-2">
                         {alert.title}
                         <Badge className={getLevelColor(alert.level)}>
-                          {alert.level === 'high' ? 'Alto' : alert.level === 'medium' ? 'Médio' : 'Baixo'}
+                          {alert.level === 'high' ? 'Élevé' : alert.level === 'medium' ? 'Moyen' : 'Faible'}
                         </Badge>
                       </AlertTitle>
                       <AlertDescription>{alert.description}</AlertDescription>
@@ -242,7 +242,7 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Alertas de risco incluídos no relatório abaixo.
+                  Alertes de risque incluses dans le rapport ci-dessous.
                 </p>
               )}
             </div>
@@ -251,7 +251,7 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-green-600" />
-                <h4 className="font-semibold text-sm">Plano de Ação</h4>
+                <h4 className="font-semibold text-sm">Plan d'Action</h4>
               </div>
               {analysis?.actionPlan?.length ? (
                 <div className="space-y-2">
@@ -262,21 +262,21 @@ const AIAnalysisPanel = ({ data, context, title = "Análise IA", filters }: AIAn
                       </div>
                       <p className="font-medium text-sm">{action.action}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Resultado esperado: {action.expectedResult}
+                        Résultat attendu : {action.expectedResult}
                       </p>
                     </div>
                   ))}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Plano de ação incluído no relatório abaixo.
+                  Plan d'action inclus dans le rapport ci-dessous.
                 </p>
               )}
             </div>
 
             {/* Raw Insights (Markdown) */}
             <div className="p-4 bg-muted/30 rounded-lg">
-              <h4 className="font-semibold text-sm mb-3">Relatório Completo</h4>
+              <h4 className="font-semibold text-sm mb-3">Rapport Complet</h4>
               <div className="prose prose-sm dark:prose-invert max-w-none">
                 <div className="whitespace-pre-wrap text-sm leading-relaxed">
                   {rawInsights}

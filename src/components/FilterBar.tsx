@@ -33,10 +33,10 @@ const FilterBar = ({
     <div className="bg-card border rounded-lg p-6 mb-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Store:</label>
+          <label className="text-sm font-medium">Boutique :</label>
           <Select value={selectedStore} onValueChange={onStoreChange}>
             <SelectTrigger>
-              <SelectValue placeholder="Selecione loja" />
+              <SelectValue placeholder="Sélectionner boutique" />
             </SelectTrigger>
             <SelectContent>
               {stores.map((store) => (
@@ -49,10 +49,10 @@ const FilterBar = ({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Report:</label>
+          <label className="text-sm font-medium">Rapport :</label>
           <Select value={selectedReport} onValueChange={onReportChange}>
             <SelectTrigger>
-              <SelectValue placeholder="Selecione relatório" />
+              <SelectValue placeholder="Sélectionner rapport" />
             </SelectTrigger>
             <SelectContent>
               {reports.map((report) => (
@@ -65,10 +65,10 @@ const FilterBar = ({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Month:</label>
+          <label className="text-sm font-medium">Mois :</label>
           <Select value={selectedMonth} onValueChange={onMonthChange}>
             <SelectTrigger>
-              <SelectValue placeholder="Selecione mês" />
+              <SelectValue placeholder="Sélectionner mois" />
             </SelectTrigger>
             <SelectContent>
               {months.map((month) => (
@@ -81,10 +81,10 @@ const FilterBar = ({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium">Macro-Family:</label>
+          <label className="text-sm font-medium">Macro-Famille :</label>
           <Select value={selectedMacroFamily} onValueChange={onMacroFamilyChange}>
             <SelectTrigger>
-              <SelectValue placeholder="Selecione categoria" />
+              <SelectValue placeholder="Sélectionner catégorie" />
             </SelectTrigger>
             <SelectContent>
               {macroFamilies.map((family) => (

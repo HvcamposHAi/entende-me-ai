@@ -7,7 +7,7 @@ import AIAnalysisPanel from "@/components/AIAnalysisPanel";
 
 const Evolution = () => {
   useTracking();
-  const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun"];
+  const months = ["Jan", "Fév", "Mar", "Avr", "Mai", "Jun"];
   const revenueData = [112, 125, 132, 145, 138, 152];
   const maxRevenue = Math.max(...revenueData);
 
@@ -16,58 +16,58 @@ const Evolution = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Evolução Temporal</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Évolution Temporelle</h2>
             <p className="text-muted-foreground">
-              Análise de tendências e crescimento ao longo do tempo
+              Analyse des tendances et de la croissance dans le temps
             </p>
           </div>
           <ExportButtons
             data={months.map((month, idx) => ({
-              Mês: month,
-              Receita: revenueData[idx],
-              Crescimento: idx > 0 ? (((revenueData[idx] - revenueData[idx - 1]) / revenueData[idx - 1]) * 100).toFixed(1) + "%" : "N/A",
+              Mois: month,
+              CA: revenueData[idx],
+              Croissance: idx > 0 ? (((revenueData[idx] - revenueData[idx - 1]) / revenueData[idx - 1]) * 100).toFixed(1) + "%" : "N/A",
             }))}
-            title="Evolução Temporal"
-            fileName="Evolucao"
+            title="Évolution Temporelle"
+            fileName="Evolution"
           />
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Crescimento Acumulado</CardTitle>
+              <CardTitle className="text-sm font-medium">Croissance Cumulée</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">+35.7%</div>
-              <p className="text-xs text-muted-foreground">vs mesmo período ano anterior</p>
+              <p className="text-xs text-muted-foreground">vs même période année précédente</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">Crescimento Médio Mensal</CardTitle>
+              <CardTitle className="text-sm font-medium">Croissance Moyenne Mensuelle</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">+5.2%</div>
-              <p className="text-xs text-muted-foreground">Média dos últimos 6 meses</p>
+              <p className="text-xs text-muted-foreground">Moyenne des 6 derniers mois</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">Melhor Mês</CardTitle>
+              <CardTitle className="text-sm font-medium">Meilleur Mois</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Junho</div>
-              <p className="text-xs text-muted-foreground">€152K em receita</p>
+              <div className="text-2xl font-bold">Juin</div>
+              <p className="text-xs text-muted-foreground">€152K de chiffre d'affaires</p>
             </CardContent>
           </Card>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Evolução de Receita (€K)</CardTitle>
+            <CardTitle>Évolution du CA (€K)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -95,7 +95,7 @@ const Evolution = () => {
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Taxa de Crescimento Mensal</CardTitle>
+              <CardTitle>Taux de Croissance Mensuel</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -130,26 +130,26 @@ const Evolution = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Projeção Linear</CardTitle>
+              <CardTitle>Projection Linéaire</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="p-4 bg-accent/10 rounded-lg">
                   <div className="text-sm text-muted-foreground mb-2">
-                    Próximo Mês (Julho)
+                    Mois Prochain (Juillet)
                   </div>
                   <div className="text-2xl font-bold">€158K</div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Baseado em tendência linear
+                    Basé sur la tendance linéaire
                   </p>
                 </div>
                 <div className="p-4 bg-accent/10 rounded-lg">
                   <div className="text-sm text-muted-foreground mb-2">
-                    Fim do Ano (Projeção)
+                    Fin d'Année (Projection)
                   </div>
                   <div className="text-2xl font-bold">€1.95M</div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Receita anual estimada
+                    Chiffre d'affaires annuel estimé
                   </p>
                 </div>
               </div>
@@ -164,7 +164,7 @@ const Evolution = () => {
             growth: idx > 0 ? ((revenueData[idx] - revenueData[idx - 1]) / revenueData[idx - 1]) * 100 : 0,
           }))}
           context="evolution"
-          title="Análise IA - Evolução"
+          title="Analyse IA - Évolution"
         />
       </div>
     </Layout>

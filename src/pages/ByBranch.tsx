@@ -55,21 +55,21 @@ const ByBranch = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Análise por Loja</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Analyse par Boutique</h2>
             <p className="text-muted-foreground">
-              Performance individual de cada ponto de venda
+              Performance individuelle de chaque point de vente
             </p>
           </div>
           <ExportButtons
             data={storesData.map(s => ({
-              Loja: s.name,
-              Receita: s.revenue,
-              Margem: s.margin,
+              Boutique: s.name,
+              CA: s.revenue,
+              Marge: s.margin,
               EBITDA: s.ebitda,
-              Crescimento: s.growth,
+              Croissance: s.growth,
             }))}
-            title="Análise por Loja"
-            fileName="Analise_Loja"
+            title="Analyse par Boutique"
+            fileName="Analyse_Boutique"
           />
         </div>
 
@@ -90,17 +90,17 @@ const ByBranch = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Comparativo de Performance</CardTitle>
+            <CardTitle>Comparatif de Performance</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Loja</TableHead>
-                  <TableHead className="text-right">Receita</TableHead>
-                  <TableHead className="text-right">Margem Bruta</TableHead>
+                  <TableHead>Boutique</TableHead>
+                  <TableHead className="text-right">Chiffre d'Affaires</TableHead>
+                  <TableHead className="text-right">Marge Brute</TableHead>
                   <TableHead className="text-right">EBITDA</TableHead>
-                  <TableHead className="text-right">Crescimento</TableHead>
+                  <TableHead className="text-right">Croissance</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -122,7 +122,7 @@ const ByBranch = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Distribuição de Receita</CardTitle>
+            <CardTitle>Répartition du Chiffre d'Affaires</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -167,7 +167,7 @@ const ByBranch = () => {
             growth: parseFloat(s.growth.replace(/[+%]/g, '')),
           }))}
           context="branch"
-          title="Análise IA - Por Loja"
+          title="Analyse IA - Par Boutique"
         />
       </div>
     </Layout>

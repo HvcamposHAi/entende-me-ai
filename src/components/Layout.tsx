@@ -28,17 +28,17 @@ import {
 } from "@/components/ui/sidebar";
 
 const menuItems = [
-  { title: "Overview", url: "/overview", icon: LayoutDashboard },
-  { title: "Upload", url: "/upload", icon: Upload },
-  { title: "Regras de Negócio", url: "/business-rules", icon: Settings2 },
+  { title: "Vue d'ensemble", url: "/overview", icon: LayoutDashboard },
+  { title: "Téléchargement", url: "/upload", icon: Upload },
+  { title: "Règles Métier", url: "/business-rules", icon: Settings2 },
   { title: "P&L", url: "/pl", icon: TrendingUp },
-  { title: "Por Loja", url: "/by-branch", icon: Store },
-  { title: "Análise de Variação", url: "/eva", icon: Calculator },
-  { title: "Relatório EVA", url: "/eva-report", icon: Calculator },
-  { title: "Despesas", url: "/expenses", icon: Receipt },
-  { title: "Evolução", url: "/evolution", icon: LineChart },
-  { title: "Relatórios", url: "/reports", icon: FileText },
-  { title: "Projeção & IA", url: "/forecast", icon: Brain },
+  { title: "Par Boutique", url: "/by-branch", icon: Store },
+  { title: "Analyse de Variance", url: "/eva", icon: Calculator },
+  { title: "Rapport EVA", url: "/eva-report", icon: Calculator },
+  { title: "Dépenses", url: "/expenses", icon: Receipt },
+  { title: "Évolution", url: "/evolution", icon: LineChart },
+  { title: "Rapports", url: "/reports", icon: FileText },
+  { title: "Projection & IA", url: "/forecast", icon: Brain },
 ];
 
 function AppSidebar() {
