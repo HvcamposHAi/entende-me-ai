@@ -38,25 +38,25 @@ import {
 import { useTracking } from "@/hooks/useTracking";
 import PLBuilder from "@/components/PLBuilder";
 
-// Available fields from Layer 1 (Excel import)
+// Champs disponibles depuis Layer 1 (import Excel)
 const AVAILABLE_FIELDS = [
-  { name: "calendarYear", type: "number", description: "Ano (ex: 2024, 2025)" },
-  { name: "calendarMonth", type: "text", description: "Mês do calendário" },
-  { name: "month", type: "text", description: "Nome do mês abreviado (ex: Jan, Feb)" },
-  { name: "yearMonth", type: "text", description: "Ano-Mês formatado" },
-  { name: "monthYear", type: "text", description: "Mês/Ano formatado" },
-  { name: "nom", type: "text", description: "Nome da loja/filial" },
-  { name: "clientMacroCategory", type: "text", description: "Macro categoria do cliente" },
-  { name: "macroFamilyName", type: "text", description: "Família macro do produto (ex: Barras, Trufas)" },
-  { name: "familyName", type: "text", description: "Família do produto" },
-  { name: "nameSalesReport", type: "text", description: "Nome para relatório de vendas" },
-  { name: "frItemCode", type: "text", description: "Código do item" },
-  { name: "pl", type: "text", description: "Linha do P&L / Classificação contábil" },
-  { name: "quantitySoldTotal", type: "number", description: "Quantidade vendida total (unidades)" },
-  { name: "netSales", type: "number", description: "Receita líquida (R$)" },
-  { name: "cogs", type: "number", description: "Custo dos produtos vendidos - COGS (R$)" },
-  { name: "margin", type: "number", description: "Margem bruta (R$)" },
-  { name: "volumeKg", type: "number", description: "Volume em quilogramas (Kg)" },
+  { name: "calendarYear", type: "number", description: "Année (ex: 2024, 2025)" },
+  { name: "calendarMonth", type: "text", description: "Mois du calendrier" },
+  { name: "month", type: "text", description: "Nom du mois abrégé (ex: Jan, Fév)" },
+  { name: "yearMonth", type: "text", description: "Année-Mois formaté" },
+  { name: "monthYear", type: "text", description: "Mois/Année formaté" },
+  { name: "nom", type: "text", description: "Nom du magasin/succursale" },
+  { name: "clientMacroCategory", type: "text", description: "Macro catégorie du client" },
+  { name: "macroFamilyName", type: "text", description: "Famille macro du produit (ex: Barres, Truffes)" },
+  { name: "familyName", type: "text", description: "Famille du produit" },
+  { name: "nameSalesReport", type: "text", description: "Nom pour rapport de ventes" },
+  { name: "frItemCode", type: "text", description: "Code de l'article" },
+  { name: "pl", type: "text", description: "Ligne du P&L / Classification comptable" },
+  { name: "quantitySoldTotal", type: "number", description: "Quantité vendue totale (unités)" },
+  { name: "netSales", type: "number", description: "Chiffre d'affaires net (€)" },
+  { name: "cogs", type: "number", description: "Coût des marchandises vendues - COGS (€)" },
+  { name: "margin", type: "number", description: "Marge brute (€)" },
+  { name: "volumeKg", type: "number", description: "Volume en kilogrammes (Kg)" },
 ];
 
 interface BusinessRule {
@@ -109,8 +109,8 @@ const BusinessRules = () => {
       return prev + suffix + fieldName + " ";
     });
     toast({
-      title: "Campo inserido",
-      description: `"${fieldName}" adicionado à regra`,
+      title: "Champ inséré",
+      description: `"${fieldName}" ajouté à la règle`,
     });
   };
 
@@ -128,7 +128,7 @@ const BusinessRules = () => {
     } catch (error: any) {
       console.error('Error loading rules:', error);
       toast({
-        title: "Erro ao carregar regras",
+        title: "Erreur lors du chargement des règles",
         description: error.message,
         variant: "destructive",
       });
@@ -145,8 +145,8 @@ const BusinessRules = () => {
   const interpretRule = async () => {
     if (!ruleText.trim()) {
       toast({
-        title: "Regra vazia",
-        description: "Digite uma regra em linguagem natural",
+        title: "Règle vide",
+        description: "Saisissez une règle en langage naturel",
         variant: "destructive",
       });
       return;
@@ -169,7 +169,7 @@ const BusinessRules = () => {
 
       if (data.error) {
         toast({
-          title: "Erro ao interpretar regra",
+          title: "Erreur lors de l'interprétation de la règle",
           description: data.error,
           variant: "destructive",
         });
@@ -178,13 +178,13 @@ const BusinessRules = () => {
 
       setGeneratedLogic(data.generatedLogic);
       toast({
-        title: "Regra interpretada",
-        description: "A lógica foi gerada com sucesso. Revise antes de salvar.",
+        title: "Règle interprétée",
+        description: "La logique a été générée avec succès. Vérifiez avant de sauvegarder.",
       });
     } catch (error: any) {
       console.error('Error interpreting rule:', error);
       toast({
-        title: "Erro ao interpretar regra",
+        title: "Erreur lors de l'interprétation de la règle",
         description: error.message,
         variant: "destructive",
       });
@@ -197,8 +197,8 @@ const BusinessRules = () => {
   const saveRule = async () => {
     if (!ruleName.trim() || !ruleText.trim() || !generatedLogic) {
       toast({
-        title: "Dados incompletos",
-        description: "Preencha o nome, regra e interprete antes de salvar",
+        title: "Données incomplètes",
+        description: "Remplissez le nom, la règle et interprétez avant de sauvegarder",
         variant: "destructive",
       });
       return;
@@ -250,8 +250,8 @@ const BusinessRules = () => {
       }
 
       toast({
-        title: "Regra salva",
-        description: `"${ruleName}" foi criada com sucesso${generatedLogic.outputField ? ' e adicionada ao P&L' : ''}`,
+        title: "Règle sauvegardée",
+        description: `"${ruleName}" a été créée avec succès${generatedLogic.outputField ? ' et ajoutée au P&L' : ''}`,
       });
 
       // Reset form
@@ -266,7 +266,7 @@ const BusinessRules = () => {
     } catch (error: any) {
       console.error('Error saving rule:', error);
       toast({
-        title: "Erro ao salvar regra",
+        title: "Erreur lors de la sauvegarde de la règle",
         description: error.message,
         variant: "destructive",
       });
@@ -289,15 +289,15 @@ const BusinessRules = () => {
       if (error) throw error;
 
       toast({
-        title: rule.is_active ? "Regra desativada" : "Regra ativada",
-        description: `"${rule.rule_name}" foi ${rule.is_active ? 'desativada' : 'ativada'}`,
+        title: rule.is_active ? "Règle désactivée" : "Règle activée",
+        description: `"${rule.rule_name}" a été ${rule.is_active ? 'désactivée' : 'activée'}`,
       });
 
       loadRules();
     } catch (error: any) {
       console.error('Error toggling rule:', error);
       toast({
-        title: "Erro ao atualizar regra",
+        title: "Erreur lors de la mise à jour de la règle",
         description: error.message,
         variant: "destructive",
       });
@@ -315,15 +315,15 @@ const BusinessRules = () => {
       if (error) throw error;
 
       toast({
-        title: "Regra excluída",
-        description: `"${rule.rule_name}" foi removida`,
+        title: "Règle supprimée",
+        description: `"${rule.rule_name}" a été supprimée`,
       });
 
       loadRules();
     } catch (error: any) {
       console.error('Error deleting rule:', error);
       toast({
-        title: "Erro ao excluir regra",
+        title: "Erreur lors de la suppression de la règle",
         description: error.message,
         variant: "destructive",
       });
@@ -331,27 +331,27 @@ const BusinessRules = () => {
   };
 
   const ruleTypeLabels: Record<string, string> = {
-    calculation: "Cálculo",
-    classification: "Classificação",
-    filter: "Filtro",
-    aggregation: "Agregação",
+    calculation: "Calcul",
+    classification: "Classification",
+    filter: "Filtre",
+    aggregation: "Agrégation",
   };
 
   const exampleRules = [
-    "Margem bruta = Receita Líquida - COGS",
-    "Classifique lojas com margem > 40% como 'Premium'",
-    "Custo por Kg = COGS / volumeKg",
-    "EBITDA = Margem - ST-PERSONAL - ST-OPEX",
-    "Ticket médio = netSales / quantitySoldTotal",
+    "Marge brute = Chiffre d'affaires net - COGS",
+    "Classifiez les magasins avec marge > 40% comme 'Premium'",
+    "Coût par Kg = COGS / volumeKg",
+    "EBITDA = Marge - ST-PERSONAL - ST-OPEX",
+    "Ticket moyen = netSales / quantitySoldTotal",
   ];
 
   return (
     <Layout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Regras de Negócio</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Règles Métier</h2>
           <p className="text-muted-foreground">
-            Defina regras em linguagem natural que o LLM interpretará e aplicará aos dados
+            Définissez des règles en langage naturel que le LLM interprétera et appliquera aux données
           </p>
         </div>
 
@@ -359,11 +359,11 @@ const BusinessRules = () => {
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="rules" className="flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
-              Criar Regras
+              Créer des Règles
             </TabsTrigger>
             <TabsTrigger value="order" className="flex items-center gap-2">
               <ListOrdered className="h-4 w-4" />
-              Ordenar P&L
+              Ordonner P&L
             </TabsTrigger>
           </TabsList>
 
@@ -378,7 +378,7 @@ const BusinessRules = () => {
                   <CardTitle className="flex items-center justify-between text-lg">
                     <div className="flex items-center gap-2">
                       <Database className="h-5 w-5" />
-                      Campos Disponíveis
+                      Champs Disponibles
                     </div>
                     {fieldsOpen ? (
                       <ChevronDown className="h-5 w-5 text-muted-foreground" />
@@ -387,7 +387,7 @@ const BusinessRules = () => {
                     )}
                   </CardTitle>
                   <CardDescription className="text-left text-xs">
-                    Clique para inserir na regra
+                    Cliquez pour insérer dans la règle
                   </CardDescription>
                 </CardHeader>
               </CollapsibleTrigger>
@@ -416,7 +416,7 @@ const BusinessRules = () => {
                   <div className="mt-3 p-2 bg-muted rounded-lg flex items-start gap-2">
                     <Info className="h-3 w-3 text-muted-foreground mt-0.5 flex-shrink-0" />
                     <p className="text-[10px] text-muted-foreground">
-                      Clique nos campos acima para inserir automaticamente no texto da regra
+                      Cliquez sur les champs ci-dessus pour les insérer automatiquement dans le texte de la règle
                     </p>
                   </div>
                 </CardContent>
@@ -429,61 +429,61 @@ const BusinessRules = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plus className="h-5 w-5" />
-                Nova Regra de Negócio
+                Nouvelle Règle Métier
               </CardTitle>
               <CardDescription>
-                Selecione campos à esquerda e descreva a regra em linguagem natural
+                Sélectionnez les champs à gauche et décrivez la règle en langage naturel
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="ruleName">Nome da Regra</Label>
+                  <Label htmlFor="ruleName">Nom de la Règle</Label>
                   <Input
                     id="ruleName"
-                    placeholder="Ex: Cálculo de EBITDA"
+                    placeholder="Ex: Calcul de l'EBITDA"
                     value={ruleName}
                     onChange={(e) => setRuleName(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ruleType">Tipo de Regra</Label>
+                  <Label htmlFor="ruleType">Type de Règle</Label>
                   <Select value={ruleType} onValueChange={setRuleType}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="calculation">Cálculo</SelectItem>
-                      <SelectItem value="classification">Classificação</SelectItem>
-                      <SelectItem value="filter">Filtro</SelectItem>
-                      <SelectItem value="aggregation">Agregação</SelectItem>
+                      <SelectItem value="calculation">Calcul</SelectItem>
+                      <SelectItem value="classification">Classification</SelectItem>
+                      <SelectItem value="filter">Filtre</SelectItem>
+                      <SelectItem value="aggregation">Agrégation</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="ruleDescription">Descrição (opcional)</Label>
+                <Label htmlFor="ruleDescription">Description (optionnel)</Label>
                 <Input
                   id="ruleDescription"
-                  placeholder="Breve descrição do objetivo da regra"
+                  placeholder="Brève description de l'objectif de la règle"
                   value={ruleDescription}
                   onChange={(e) => setRuleDescription(e.target.value)}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="ruleText">Regra em Linguagem Natural</Label>
+                <Label htmlFor="ruleText">Règle en Langage Naturel</Label>
                 <Textarea
                   id="ruleText"
-                  placeholder="Ex: EBITDA = margin - stPersonal - stOpex (clique nos campos à esquerda para inserir)"
+                  placeholder="Ex: EBITDA = margin - stPersonal - stOpex (cliquez sur les champs à gauche pour les insérer)"
                   value={ruleText}
                   onChange={(e) => setRuleText(e.target.value)}
                   rows={4}
                   className="font-mono text-sm"
                 />
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <span className="text-xs text-muted-foreground">Exemplos rápidos:</span>
+                  <span className="text-xs text-muted-foreground">Exemples rapides:</span>
                   {exampleRules.map((example, idx) => (
                     <Badge 
                       key={idx} 
@@ -506,12 +506,12 @@ const BusinessRules = () => {
                 {isInterpreting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Interpretando com IA...
+                    Interprétation avec IA...
                   </>
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-4 w-4" />
-                    Interpretar Regra com IA
+                    Interpréter la Règle avec IA
                   </>
                 )}
               </Button>
@@ -525,10 +525,10 @@ const BusinessRules = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-primary">
                 <Sparkles className="h-5 w-5" />
-                Resposta da IA - Lógica Interpretada
+                Réponse de l'IA - Logique Interprétée
               </CardTitle>
               <CardDescription>
-                Revise a interpretação abaixo antes de salvar a regra
+                Vérifiez l'interprétation ci-dessous avant de sauvegarder la règle
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -536,7 +536,7 @@ const BusinessRules = () => {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    <span className="font-medium">Operação Identificada</span>
+                    <span className="font-medium">Opération Identifiée</span>
                   </div>
                   
                   <div className="p-3 bg-background rounded-lg border space-y-2">
@@ -544,7 +544,7 @@ const BusinessRules = () => {
                       <Badge>{generatedLogic.operation}</Badge>
                       {generatedLogic.outputField && (
                         <span className="text-sm">
-                          → Novo campo: <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-primary">{generatedLogic.outputField}</code>
+                          → Nouveau champ: <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-primary">{generatedLogic.outputField}</code>
                         </span>
                       )}
                     </div>
@@ -556,7 +556,7 @@ const BusinessRules = () => {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Code className="h-5 w-5 text-blue-500" />
-                    <span className="font-medium">Lógica Gerada</span>
+                    <span className="font-medium">Logique Générée</span>
                   </div>
                   
                   <div className="p-3 bg-background rounded-lg border space-y-2">
@@ -564,7 +564,7 @@ const BusinessRules = () => {
                       <div className="flex items-start gap-2">
                         <FileText className="h-4 w-4 mt-0.5 text-muted-foreground" />
                         <div>
-                          <span className="text-xs text-muted-foreground">Fórmula:</span>
+                          <span className="text-xs text-muted-foreground">Formule:</span>
                           <p className="font-mono text-sm">{generatedLogic.formula}</p>
                         </div>
                       </div>
@@ -574,7 +574,7 @@ const BusinessRules = () => {
                       <div className="flex items-start gap-2">
                         <Code className="h-4 w-4 mt-0.5 text-muted-foreground" />
                         <div>
-                          <span className="text-xs text-muted-foreground">Expressão JS:</span>
+                          <span className="text-xs text-muted-foreground">Expression JS:</span>
                           <code className="block bg-muted px-2 py-1 rounded text-xs font-mono mt-1 break-all">
                             {generatedLogic.jsExpression}
                           </code>
@@ -603,12 +603,12 @@ const BusinessRules = () => {
                 {isSaving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Salvando Regra...
+                    Sauvegarde en cours...
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Confirmar e Salvar Regra
+                    Confirmer et Sauvegarder la Règle
                   </>
                 )}
               </Button>
@@ -616,22 +616,22 @@ const BusinessRules = () => {
           </Card>
         )}
 
-        {/* Existing Rules List */}
+        {/* Liste des Règles Existantes */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <History className="h-5 w-5" />
-                  Regras Cadastradas
+                  Règles Enregistrées
                 </CardTitle>
                 <CardDescription>
-                  {rules.length} regra(s) cadastrada(s) • {rules.filter(r => r.is_active).length} ativa(s)
+                  {rules.length} règle(s) enregistrée(s) • {rules.filter(r => r.is_active).length} active(s)
                 </CardDescription>
               </div>
               <Button variant="outline" size="sm" onClick={loadRules} disabled={isLoading}>
                 <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                Atualizar
+                Actualiser
               </Button>
             </div>
           </CardHeader>
@@ -643,8 +643,8 @@ const BusinessRules = () => {
             ) : rules.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Nenhuma regra cadastrada ainda</p>
-                <p className="text-sm">Crie sua primeira regra acima</p>
+                <p>Aucune règle enregistrée</p>
+                <p className="text-sm">Créez votre première règle ci-dessus</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -674,7 +674,7 @@ const BusinessRules = () => {
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
                           <Label htmlFor={`active-${rule.id}`} className="text-sm">
-                            {rule.is_active ? 'Ativa' : 'Inativa'}
+                            {rule.is_active ? 'Active' : 'Inactive'}
                           </Label>
                           <Switch
                             id={`active-${rule.id}`}
