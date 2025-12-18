@@ -6,12 +6,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Download, FileSpreadsheet, FileText, Loader2 } from "lucide-react";
+import { Download, FileSpreadsheet, FileText, Loader2, Presentation } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ExcelJS from 'exceljs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import html2canvas from 'html2canvas';
+import pptxgen from 'pptxgenjs';
 
 type ColumnDef = { key: string; label: string };
 
@@ -331,6 +332,147 @@ export const ExportButtons = ({
     }
   };
 
+  const exportToPPTX = async () => {
+    if (!data || data.length === 0) {
+      toast({
+        title: "Sem dados",
+        description: "Não há dados para exportar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const pptx = new pptxgen();
+      pptx.author = 'Dashboard';
+      pptx.title = title;
+      pptx.subject = title;
+
+      // Title slide
+      const titleSlide = pptx.addSlide();
+      titleSlide.addText(title, {
+        x: 0.5,
+        y: 2,
+        w: '90%',
+        h: 1.5,
+        fontSize: 36,
+        bold: true,
+        color: '1E40AF',
+        align: 'center',
+      });
+      titleSlide.addText(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, {
+        x: 0.5,
+        y: 3.5,
+        w: '90%',
+        h: 0.5,
+        fontSize: 14,
+        color: '666666',
+        align: 'center',
+      });
+
+      // Chart slide (if chart is available)
+      const chartImage = await captureChart();
+      if (chartImage) {
+        const chartSlide = pptx.addSlide();
+        chartSlide.addText(title, {
+          x: 0.5,
+          y: 0.3,
+          w: '90%',
+          h: 0.5,
+          fontSize: 24,
+          bold: true,
+          color: '1E40AF',
+        });
+        chartSlide.addImage({
+          data: chartImage,
+          x: 0.5,
+          y: 1,
+          w: 9,
+          h: 4.5,
+        });
+      }
+
+      // Data table slide(s)
+      const cols = columns || Object.keys(data[0] || {}).map(key => ({ key, label: key }));
+      const maxRowsPerSlide = 12;
+      const dataChunks: Record<string, unknown>[][] = [];
+      
+      for (let i = 0; i < Math.min(data.length, 60); i += maxRowsPerSlide) {
+        dataChunks.push(data.slice(i, i + maxRowsPerSlide));
+      }
+
+      dataChunks.forEach((chunk, chunkIndex) => {
+        const tableSlide = pptx.addSlide();
+        tableSlide.addText(`${title} - Dados ${dataChunks.length > 1 ? `(${chunkIndex + 1}/${dataChunks.length})` : ''}`, {
+          x: 0.5,
+          y: 0.3,
+          w: '90%',
+          h: 0.5,
+          fontSize: 18,
+          bold: true,
+          color: '1E40AF',
+        });
+
+        const tableData: pptxgen.TableRow[] = [
+          cols.map(c => ({
+            text: c.label,
+            options: {
+              bold: true,
+              fill: { color: '1E40AF' },
+              color: 'FFFFFF',
+              align: 'center' as const,
+            },
+          })),
+          ...chunk.map((row, rowIndex) =>
+            cols.map(c => {
+              const val = row[c.key];
+              let displayVal = '';
+              if (typeof val === 'number') {
+                displayVal = c.key.toLowerCase().includes('margin') || c.key.toLowerCase().includes('percent')
+                  ? `${val.toFixed(1)}%`
+                  : val.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+              } else {
+                displayVal = val != null ? String(val) : '';
+              }
+              return {
+                text: displayVal,
+                options: {
+                  fill: { color: rowIndex % 2 === 0 ? 'F3F4F6' : 'FFFFFF' },
+                  align: 'center' as const,
+                },
+              };
+            })
+          ),
+        ];
+
+        tableSlide.addTable(tableData, {
+          x: 0.5,
+          y: 1,
+          w: 9,
+          fontSize: 10,
+          border: { type: 'solid', pt: 0.5, color: 'CCCCCC' },
+        });
+      });
+
+      await pptx.writeFile({ fileName: `${fileName}.pptx` });
+
+      toast({
+        title: "PowerPoint exportado",
+        description: chartImage ? "Apresentação com gráfico baixada com sucesso" : "Apresentação baixada com sucesso",
+      });
+    } catch (error) {
+      console.error('PPTX export error:', error);
+      toast({
+        title: "Erro ao exportar",
+        description: "Ocorreu um erro ao gerar o arquivo",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -351,6 +493,10 @@ export const ExportButtons = ({
         <DropdownMenuItem onClick={exportToPDF}>
           <FileText className="h-4 w-4 mr-2" />
           PDF
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={exportToPPTX}>
+          <Presentation className="h-4 w-4 mr-2" />
+          PowerPoint
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
