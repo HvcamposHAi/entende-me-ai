@@ -4,7 +4,7 @@ import { Store } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useTracking } from "@/hooks/useTracking";
 import { ExportButtons } from "@/components/ExportButtons";
-import AIAnalysisPanel from "@/components/AIAnalysisPanel";
+
 import { useData } from "@/contexts/DataContext";
 import { useMemo, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -277,17 +277,6 @@ const ByBranch = () => {
           </CardContent>
         </Card>
 
-        <AIAnalysisPanel
-          data={storesData.map(s => ({
-            nom: s.name,
-            netSales: s.revenue,
-            margin: s.margin,
-            growth: s.growth,
-          }))}
-          context="branch"
-          title="Analyse IA - Par Boutique"
-          filters={{ product: selectedMacroFamily }}
-        />
       </div>
     </Layout>
   );
