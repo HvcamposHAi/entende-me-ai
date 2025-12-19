@@ -2,18 +2,41 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Layout from "@/components/Layout";
 import { useData } from "@/contexts/DataContext";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from "recharts";
 import { ChartContainer } from "@/components/ui/chart";
 import { useTracking } from "@/hooks/useTracking";
 import { ExportButtons } from "@/components/ExportButtons";
 import AIAnalysisPanel from "@/components/AIAnalysisPanel";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PL = () => {
   const chartRef = useRef<HTMLDivElement>(null);
   useTracking();
   const { data, isDataLoaded } = useData();
+
+  const [selectedStore, setSelectedStore] = useState("TOTAL");
+  const [selectedReport, setSelectedReport] = useState("YTD");
+  const [selectedMonth, setSelectedMonth] = useState("06");
+
+  // Extract filter options
+  const filterOptions = useMemo(() => {
+    const stores = ["TOTAL", ...Array.from(new Set(data.map(d => d.nom))).filter(Boolean).sort()];
+    const months = Array.from(new Set(data.map(d => d.month))).filter(Boolean).sort();
+    return { stores, months };
+  }, [data]);
+
+  // Filter data based on store selection
+  const filteredData = useMemo(() => {
+    return data.filter(row => {
+      const storeMatch = selectedStore === "TOTAL" || row.nom === selectedStore;
+      return storeMatch;
+    });
+  }, [data, selectedStore]);
+
+  // Get month number for YTD filtering
+  const selectedMonthNum = parseInt(selectedMonth, 10);
 
   const plCalculations = useMemo(() => {
     if (!isDataLoaded) return null;
@@ -21,9 +44,18 @@ const PL = () => {
     const currentYear = 2025;
     const previousYear = 2024;
 
-    const sumByYear = (year: number, field: keyof typeof data[0]) => {
-      return data
-        .filter(row => row.calendarYear === year)
+    // Apply period filter (YTD or MTD)
+    const getFilteredByPeriod = (baseData: typeof filteredData, year: number) => {
+      if (selectedReport === "YTD") {
+        return baseData.filter(row => row.calendarYear === year && parseInt(row.month, 10) <= selectedMonthNum);
+      } else {
+        // MTD - only selected month
+        return baseData.filter(row => row.calendarYear === year && row.month === selectedMonth);
+      }
+    };
+
+    const sumByYear = (year: number, field: keyof typeof filteredData[0]) => {
+      return getFilteredByPeriod(filteredData, year)
         .reduce((sum, row) => sum + (Number(row[field]) || 0), 0);
     };
 
@@ -68,8 +100,16 @@ const PL = () => {
     };
 
     // Get ST-PERSONAL and ST-OPEX from PL field
-    const stPersonalCurrent = data.filter(r => r.calendarYear === currentYear && r.pl === 'ST-PERSONAL').reduce((s, r) => s + r.netSales, 0);
-    const stPersonalPrevious = data.filter(r => r.calendarYear === previousYear && r.pl === 'ST-PERSONAL').reduce((s, r) => s + r.netSales, 0);
+    const getFilteredByPeriodPL = (year: number, plValue: string) => {
+      if (selectedReport === "YTD") {
+        return filteredData.filter(r => r.calendarYear === year && r.pl === plValue && parseInt(r.month, 10) <= selectedMonthNum);
+      } else {
+        return filteredData.filter(r => r.calendarYear === year && r.pl === plValue && r.month === selectedMonth);
+      }
+    };
+
+    const stPersonalCurrent = getFilteredByPeriodPL(currentYear, 'ST-PERSONAL').reduce((s, r) => s + r.netSales, 0);
+    const stPersonalPrevious = getFilteredByPeriodPL(previousYear, 'ST-PERSONAL').reduce((s, r) => s + r.netSales, 0);
     const stPersonal = {
       current: stPersonalCurrent,
       previous: stPersonalPrevious,
@@ -84,8 +124,8 @@ const PL = () => {
       change: stPersonalPercentCurrent - stPersonalPercentPrevious,
     };
 
-    const stOpexCurrent = data.filter(r => r.calendarYear === currentYear && r.pl === 'ST-OPEX').reduce((s, r) => s + r.netSales, 0);
-    const stOpexPrevious = data.filter(r => r.calendarYear === previousYear && r.pl === 'ST-OPEX').reduce((s, r) => s + r.netSales, 0);
+    const stOpexCurrent = getFilteredByPeriodPL(currentYear, 'ST-OPEX').reduce((s, r) => s + r.netSales, 0);
+    const stOpexPrevious = getFilteredByPeriodPL(previousYear, 'ST-OPEX').reduce((s, r) => s + r.netSales, 0);
     const stOpex = {
       current: stOpexCurrent,
       previous: stOpexPrevious,
@@ -131,31 +171,32 @@ const PL = () => {
       commercialMargin,
       commercialMarginPercent,
     };
-  }, [data, isDataLoaded]);
+  }, [filteredData, isDataLoaded, selectedReport, selectedMonth, selectedMonthNum]);
 
   const monthlyChartData = useMemo(() => {
     if (!isDataLoaded) return [];
 
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const maxMonth = selectedReport === "YTD" ? selectedMonthNum : 12;
     
-    return months.map((month, idx) => {
+    return months.slice(0, maxMonth).map((month, idx) => {
       const monthNum = idx + 1;
       
       const monthKey = monthNum.toString().padStart(2, '0');
-      const revenue2024 = data
+      const revenue2024 = filteredData
         .filter(r => r.calendarYear === 2024 && r.month === monthKey)
         .reduce((sum, r) => sum + r.netSales, 0) / 1000;
       
-      const revenue2025 = data
+      const revenue2025 = filteredData
         .filter(r => r.calendarYear === 2025 && r.month === monthKey)
         .reduce((sum, r) => sum + r.netSales, 0) / 1000;
 
-      const margin2024Data = data.filter(r => r.calendarYear === 2024 && r.month === monthKey);
+      const margin2024Data = filteredData.filter(r => r.calendarYear === 2024 && r.month === monthKey);
       const totalRevenue2024 = margin2024Data.reduce((sum, r) => sum + r.netSales, 0);
       const totalMargin2024 = margin2024Data.reduce((sum, r) => sum + r.margin, 0);
       const marginPercent2024 = totalRevenue2024 !== 0 ? (totalMargin2024 / totalRevenue2024) * 100 : 0;
 
-      const margin2025Data = data.filter(r => r.calendarYear === 2025 && r.month === monthKey);
+      const margin2025Data = filteredData.filter(r => r.calendarYear === 2025 && r.month === monthKey);
       const totalRevenue2025 = margin2025Data.reduce((sum, r) => sum + r.netSales, 0);
       const totalMargin2025 = margin2025Data.reduce((sum, r) => sum + r.margin, 0);
       const marginPercent2025 = totalRevenue2025 !== 0 ? (totalMargin2025 / totalRevenue2025) * 100 : 0;
@@ -168,7 +209,7 @@ const PL = () => {
         margin2025: marginPercent2025,
       };
     });
-  }, [data, isDataLoaded]);
+  }, [filteredData, isDataLoaded, selectedReport, selectedMonthNum]);
 
   if (!isDataLoaded || !plCalculations) {
     return (
@@ -198,14 +239,20 @@ const PL = () => {
     );
   };
 
+  const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const periodLabel = selectedReport === "YTD" 
+    ? `YTD ${selectedMonth}.${monthNames[selectedMonthNum - 1]}`
+    : `MTD ${selectedMonth}.${monthNames[selectedMonthNum - 1]}`;
+  const storeLabel = selectedStore === "TOTAL" ? "" : ` - ${selectedStore}`;
+
   return (
     <Layout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">P&L YTD 06.Jun</h2>
+            <h2 className="text-3xl font-bold tracking-tight">P&L {periodLabel}{storeLabel}</h2>
             <p className="text-muted-foreground">
-              Compte de Résultat Year-to-Date
+              Compte de Résultat {selectedReport === "YTD" ? "Year-to-Date" : "Month-to-Date"}
             </p>
           </div>
           <ExportButtons
@@ -225,13 +272,13 @@ const PL = () => {
               { Linha: "COMMERCIAL MARGIN %", ACT2025: plCalculations.commercialMarginPercent.current, ACT2024: plCalculations.commercialMarginPercent.previous, Variacao: plCalculations.commercialMarginPercent.change },
             ]}
             columns={[
-              { key: 'Linha', label: 'P&L YTD 06.Jun' },
+              { key: 'Linha', label: `P&L ${periodLabel}` },
               { key: 'ACT2025', label: 'ACT 2025' },
               { key: 'ACT2024', label: 'ACT 2024' },
               { key: 'Variacao', label: '% vs LY' },
             ]}
-            title="P&L Statement"
-            fileName="PL_Statement"
+            title={`P&L ${periodLabel}${storeLabel}`}
+            fileName={`PL_${selectedReport}_${selectedMonth}`}
             chartRef={chartRef}
             chartConfigs={[
               {
@@ -257,16 +304,66 @@ const PL = () => {
           />
         </div>
 
+        {/* Filters */}
+        <div className="bg-card border rounded-lg p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Loja:</label>
+              <Select value={selectedStore} onValueChange={setSelectedStore}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar loja" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filterOptions.stores.map((store) => (
+                    <SelectItem key={store} value={store}>
+                      {store}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Período:</label>
+              <Select value={selectedReport} onValueChange={setSelectedReport}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar período" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="YTD">YTD (Year-to-Date)</SelectItem>
+                  <SelectItem value="MTD">MTD (Month-to-Date)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Mês:</label>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filterOptions.months.map((month) => (
+                    <SelectItem key={month} value={month}>
+                      {month} - {monthNames[parseInt(month, 10) - 1]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
         <div className="grid gap-6 grid-cols-1">
           <Card>
             <CardHeader>
-              <CardTitle>P&L YTD 06.Jun</CardTitle>
+              <CardTitle>P&L {periodLabel}{storeLabel}</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="font-bold">P&L YTD 06.Jun</TableHead>
+                    <TableHead className="font-bold">P&L {periodLabel}</TableHead>
                     <TableHead className="text-right font-bold">ACT 2025</TableHead>
                     <TableHead className="text-right font-bold">ACT 2024</TableHead>
                     <TableHead className="text-right font-bold">% vs LY</TableHead>
