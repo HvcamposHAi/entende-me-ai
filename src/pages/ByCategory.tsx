@@ -4,7 +4,7 @@ import { Package } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useTracking } from "@/hooks/useTracking";
 import { ExportButtons } from "@/components/ExportButtons";
-import AIAnalysisPanel from "@/components/AIAnalysisPanel";
+
 import { useData } from "@/contexts/DataContext";
 import { useMemo, useState, useRef } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -362,17 +362,6 @@ const ByCategory = () => {
           </CardContent>
         </Card>
 
-        <AIAnalysisPanel
-          data={categoriesData.map(c => ({
-            nom: c.name,
-            netSales: c.revenue,
-            margin: c.margin,
-            growth: c.growth,
-          }))}
-          context="category"
-          title="Analyse IA - Par Catégorie"
-          filters={{ store: selectedStore }}
-        />
       </div>
     </Layout>
   );

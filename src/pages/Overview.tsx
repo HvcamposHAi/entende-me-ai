@@ -8,7 +8,7 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { AlertCircle } from "lucide-react";
 import { useTracking } from "@/hooks/useTracking";
 import { ExportButtons } from "@/components/ExportButtons";
-import AIAnalysisPanel from "@/components/AIAnalysisPanel";
+
 
 const Overview = () => {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -323,12 +323,6 @@ const Overview = () => {
           </Card>
         </div>
 
-        <AIAnalysisPanel
-          data={filteredData}
-          context="overview"
-          title="Analyse IA - Vue d'ensemble"
-          filters={{ store: selectedStore, product: selectedMacroFamily }}
-        />
       </div>
     </Layout>
   );
