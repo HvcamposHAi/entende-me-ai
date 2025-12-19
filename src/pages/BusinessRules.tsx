@@ -33,10 +33,12 @@ import {
   ChevronDown,
   ChevronRight,
   Info,
-  ListOrdered
+  ListOrdered,
+  BarChart3
 } from "lucide-react";
 import { useTracking } from "@/hooks/useTracking";
 import PLBuilder from "@/components/PLBuilder";
+import EVARulesManager from "@/components/EVARulesManager";
 
 // Champs disponibles depuis Layer 1 (import Excel)
 const AVAILABLE_FIELDS = [
@@ -356,10 +358,14 @@ const BusinessRules = () => {
         </div>
 
         <Tabs defaultValue="rules" className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="rules" className="flex items-center gap-2">
               <Sparkles className="h-4 w-4" />
               Créer des Règles
+            </TabsTrigger>
+            <TabsTrigger value="eva" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Règles EVA
             </TabsTrigger>
             <TabsTrigger value="order" className="flex items-center gap-2">
               <ListOrdered className="h-4 w-4" />
@@ -697,6 +703,10 @@ const BusinessRules = () => {
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="eva" className="mt-6">
+            <EVARulesManager />
           </TabsContent>
 
           <TabsContent value="order" className="mt-6">
