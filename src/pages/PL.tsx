@@ -8,7 +8,7 @@ import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 import { ChartContainer } from "@/components/ui/chart";
 import { useTracking } from "@/hooks/useTracking";
 import { ExportButtons } from "@/components/ExportButtons";
-import AIAnalysisPanel from "@/components/AIAnalysisPanel";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PL = () => {
@@ -644,11 +644,6 @@ const PL = () => {
           </div>
         </div>
 
-        <AIAnalysisPanel
-          data={data}
-          context="pl"
-          title="Analyse IA - P&L"
-        />
       </div>
     </Layout>
   );
