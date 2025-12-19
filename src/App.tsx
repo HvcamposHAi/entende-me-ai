@@ -15,7 +15,6 @@ import EVAReport from "./pages/EVAReport";
 import Expenses from "./pages/Expenses";
 import Evolution from "./pages/Evolution";
 import Reports from "./pages/Reports";
-import Forecast from "./pages/Forecast";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -41,7 +40,6 @@ const App = () => (
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/evolution" element={<Evolution />} />
             <Route path="/reports" element={<Reports />} />
-            <Route path="/forecast" element={<Forecast />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

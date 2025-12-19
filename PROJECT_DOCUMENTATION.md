@@ -105,8 +105,7 @@ O projeto é estruturado em 4 camadas arquiteturais distintas:
 - **Objetivo**: Empoderar time financeiro/operacional sem dependência de TI
 
 #### Layer 3 - Interface Layer
-- **Dashboards**: Overview, P&L, Por Loja, EVA, Despesas, Evolução, Projeção
-- **IA Insights**: Disponível exclusivamente na página Forecast (`/forecast`) para geração de planos de ação
+- **Dashboards**: Overview, P&L, Por Loja, EVA, Despesas, Evolução
 - **Interatividade**: Filtros por ano, mês, loja, linha de produto
 - **Exportação inline**: `ExportButtons` em cada dashboard
 
@@ -127,7 +126,6 @@ dengo-analytics/
 │   │   ├── FilterBar.tsx       # Barra de filtros
 │   │   ├── KPICard.tsx         # Cartões de indicadores
 │   │   ├── PLBuilder.tsx       # ⭐ Construtor de P&L customizável
-│   │   ├── AIAnalysisPanel.tsx # Painel de insights IA (usado apenas em Forecast)
 │   │   └── ExportButtons.tsx   # Botões de exportação (Excel/PDF)
 │   ├── contexts/               # Contextos React
 │   │   └── DataContext.tsx     # Gerenciamento de dados globais
@@ -145,7 +143,6 @@ dengo-analytics/
 │   │   ├── EVA.tsx             # Análise EVA
 │   │   ├── Expenses.tsx        # Despesas operacionais
 │   │   ├── Evolution.tsx       # Evolução temporal
-│   │   ├── Forecast.tsx        # Projeções e IA
 │   │   ├── Reports.tsx         # Relatório Contábil Mensal
 │   │   └── BusinessRules.tsx   # ⭐ Gestão de regras + PLBuilder
 │   ├── App.tsx                 # Componente raiz
