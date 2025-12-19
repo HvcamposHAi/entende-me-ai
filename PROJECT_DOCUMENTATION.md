@@ -794,6 +794,94 @@ O PLBuilder está integrado na página `BusinessRules.tsx` em uma tab separada "
 
 ---
 
+## ⭐ EVA Rules Manager - Regras de Cálculo EVA
+
+### Visão Geral
+
+O componente `EVARulesManager` permite configurar as fórmulas de cálculo do Rapport EVA por categoria. Cada macro-família pode ter fórmulas personalizadas para os 4 indicadores do EVA.
+
+### Funcionalidades
+
+| Funcionalidade | Descrição |
+|----------------|-----------|
+| **Seleção de Categoria** | Dropdown para selecionar a macro-família a configurar |
+| **Inclusão/Exclusão** | Switch para incluir ou excluir categoria da análise EVA |
+| **Fórmulas Customizáveis** | Campos de texto para cada indicador (Vol, Mix, Revenue, COGS) |
+| **Reset para Default** | Botão para restaurar fórmulas padrão |
+| **Persistência** | Salvamento automático no banco de dados |
+
+### Fórmulas Padrão
+
+```javascript
+// Volume Effect (vsVol)
+variacaoVolume * marginPorKg2024
+
+// Mix Effect
+variacaoVolume * diferencaMargemUnitaria
+
+// Revenue Effect (vsRevenue)
+volumeKg2025 * diferencaPreco
+
+// COGS Effect (vsCOGS)
+-(volumeKg2025 * diferencaCusto)
+```
+
+### Variáveis Disponíveis nas Fórmulas
+
+| Variável | Descrição |
+|----------|-----------|
+| `volumeKg2024` | Volume em Kg do ano anterior |
+| `volumeKg2025` | Volume em Kg do ano atual |
+| `variacaoVolume` | `volumeKg2025 - volumeKg2024` |
+| `margin2024` | Margem do ano anterior |
+| `margin2025` | Margem do ano atual |
+| `marginPorKg2024` | `margin2024 / volumeKg2024` |
+| `marginPorKg2025` | `margin2025 / volumeKg2025` |
+| `diferencaMargemUnitaria` | `marginPorKg2025 - marginPorKg2024` |
+| `netSales2024` | Receita do ano anterior |
+| `netSales2025` | Receita do ano atual |
+| `precoPorKg2024` | `netSales2024 / volumeKg2024` |
+| `precoPorKg2025` | `netSales2025 / volumeKg2025` |
+| `diferencaPreco` | `precoPorKg2025 - precoPorKg2024` |
+| `cogs2024` | COGS do ano anterior |
+| `cogs2025` | COGS do ano atual |
+| `custoPorKg2024` | `cogs2024 / volumeKg2024` |
+| `custoPorKg2025` | `cogs2025 / volumeKg2025` |
+| `diferencaCusto` | `custoPorKg2025 - custoPorKg2024` |
+
+### Tabela: `eva_rules`
+
+```sql
+CREATE TABLE eva_rules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  category_name TEXT NOT NULL,           -- Nome da macro-família
+  is_included BOOLEAN DEFAULT true,      -- Incluir na análise
+  vol_formula TEXT DEFAULT 'variacaoVolume * marginPorKg2024',
+  mix_formula TEXT DEFAULT 'variacaoVolume * diferencaMargemUnitaria',
+  revenue_formula TEXT DEFAULT 'volumeKg2025 * diferencaPreco',
+  cogs_formula TEXT DEFAULT '-(volumeKg2025 * diferencaCusto)',
+  display_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+### Configuração Padrão
+
+Por padrão, a categoria **"Barista"** está excluída (`is_included = false`) da análise EVA.
+
+### Interface do Usuário
+
+O EVARulesManager está integrado na página `BusinessRules.tsx` em uma tab "Règles EVA", permitindo:
+
+1. **Dropdown de Categoria**: Selecionar qual macro-família configurar
+2. **Switch de Inclusão**: Ativar/desativar categoria na análise
+3. **Campos de Fórmula**: Editar cada uma das 4 fórmulas (Vol, Mix, Revenue, COGS)
+4. **Botão Salvar**: Persistir alterações no banco de dados
+5. **Botão Reset**: Restaurar fórmulas padrão
+
+---
+
 ## 🧩 Componentes
 
 ### Layout (`Layout.tsx`)
