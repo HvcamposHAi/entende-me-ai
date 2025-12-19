@@ -19,21 +19,24 @@ const PL = () => {
   const [selectedStore, setSelectedStore] = useState("TOTAL");
   const [selectedReport, setSelectedReport] = useState("YTD");
   const [selectedMonth, setSelectedMonth] = useState("06");
+  const [selectedMacroFamily, setSelectedMacroFamily] = useState("TOTAL");
 
   // Extract filter options
   const filterOptions = useMemo(() => {
     const stores = ["TOTAL", ...Array.from(new Set(data.map(d => d.nom))).filter(Boolean).sort()];
     const months = Array.from(new Set(data.map(d => d.month))).filter(Boolean).sort();
-    return { stores, months };
+    const macroFamilies = ["TOTAL", ...Array.from(new Set(data.map(d => d.macroFamilyName))).filter(Boolean).sort()];
+    return { stores, months, macroFamilies };
   }, [data]);
 
-  // Filter data based on store selection
+  // Filter data based on store and category selection
   const filteredData = useMemo(() => {
     return data.filter(row => {
       const storeMatch = selectedStore === "TOTAL" || row.nom === selectedStore;
-      return storeMatch;
+      const macroFamilyMatch = selectedMacroFamily === "TOTAL" || row.macroFamilyName === selectedMacroFamily;
+      return storeMatch && macroFamilyMatch;
     });
-  }, [data, selectedStore]);
+  }, [data, selectedStore, selectedMacroFamily]);
 
   // Get month number for YTD filtering
   const selectedMonthNum = parseInt(selectedMonth, 10);
@@ -306,7 +309,7 @@ const PL = () => {
 
         {/* Filters */}
         <div className="bg-card border rounded-lg p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Loja:</label>
               <Select value={selectedStore} onValueChange={setSelectedStore}>
@@ -317,6 +320,22 @@ const PL = () => {
                   {filterOptions.stores.map((store) => (
                     <SelectItem key={store} value={store}>
                       {store}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Categoria:</label>
+              <Select value={selectedMacroFamily} onValueChange={setSelectedMacroFamily}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecionar categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filterOptions.macroFamilies.map((family) => (
+                    <SelectItem key={family} value={family}>
+                      {family}
                     </SelectItem>
                   ))}
                 </SelectContent>
