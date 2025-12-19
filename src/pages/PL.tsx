@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Layout from "@/components/Layout";
 import { useData } from "@/contexts/DataContext";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from "recharts";
 import { ChartContainer } from "@/components/ui/chart";
@@ -11,6 +11,7 @@ import { ExportButtons } from "@/components/ExportButtons";
 import AIAnalysisPanel from "@/components/AIAnalysisPanel";
 
 const PL = () => {
+  const chartRef = useRef<HTMLDivElement>(null);
   useTracking();
   const { data, isDataLoaded } = useData();
 
@@ -213,11 +214,46 @@ const PL = () => {
               { Linha: "VOLUME Kg", ACT2025: plCalculations.volumeKg.current, ACT2024: plCalculations.volumeKg.previous, Variacao: plCalculations.volumeKg.change },
               { Linha: "REVENUE", ACT2025: plCalculations.revenue.current, ACT2024: plCalculations.revenue.previous, Variacao: plCalculations.revenue.change },
               { Linha: "COGS", ACT2025: plCalculations.cogs.current, ACT2024: plCalculations.cogs.previous, Variacao: plCalculations.cogs.change },
+              { Linha: "COGS % of REV", ACT2025: plCalculations.cogsPercent.current, ACT2024: plCalculations.cogsPercent.previous, Variacao: plCalculations.cogsPercent.change },
               { Linha: "MARGIN", ACT2025: plCalculations.margin.current, ACT2024: plCalculations.margin.previous, Variacao: plCalculations.margin.change },
               { Linha: "MARGIN %", ACT2025: plCalculations.marginPercent.current, ACT2024: plCalculations.marginPercent.previous, Variacao: plCalculations.marginPercent.change },
+              { Linha: "ST-PERSONAL", ACT2025: plCalculations.stPersonal.current, ACT2024: plCalculations.stPersonal.previous, Variacao: plCalculations.stPersonal.change },
+              { Linha: "ST-PERSONAL %", ACT2025: plCalculations.stPersonalPercent.current, ACT2024: plCalculations.stPersonalPercent.previous, Variacao: plCalculations.stPersonalPercent.change },
+              { Linha: "ST-OPEX", ACT2025: plCalculations.stOpex.current, ACT2024: plCalculations.stOpex.previous, Variacao: plCalculations.stOpex.change },
+              { Linha: "ST-OPEX %", ACT2025: plCalculations.stOpexPercent.current, ACT2024: plCalculations.stOpexPercent.previous, Variacao: plCalculations.stOpexPercent.change },
+              { Linha: "COMMERCIAL MARGIN", ACT2025: plCalculations.commercialMargin.current, ACT2024: plCalculations.commercialMargin.previous, Variacao: plCalculations.commercialMargin.change },
+              { Linha: "COMMERCIAL MARGIN %", ACT2025: plCalculations.commercialMarginPercent.current, ACT2024: plCalculations.commercialMarginPercent.previous, Variacao: plCalculations.commercialMarginPercent.change },
+            ]}
+            columns={[
+              { key: 'Linha', label: 'P&L YTD 06.Jun' },
+              { key: 'ACT2025', label: 'ACT 2025' },
+              { key: 'ACT2024', label: 'ACT 2024' },
+              { key: 'Variacao', label: '% vs LY' },
             ]}
             title="P&L Statement"
             fileName="PL_Statement"
+            chartRef={chartRef}
+            chartConfigs={[
+              {
+                type: 'column',
+                title: 'REVENUE vs. MARGIN',
+                categoryKey: 'month',
+                data: monthlyChartData.map(d => ({
+                  label: d.month,
+                  month: d.month,
+                  revenue2024: d.revenue2024,
+                  revenue2025: d.revenue2025,
+                  margin2024: d.margin2024,
+                  margin2025: d.margin2025,
+                })),
+                series: [
+                  { key: 'revenue2024', name: 'Revenue 2024' },
+                  { key: 'revenue2025', name: 'Revenue 2025' },
+                  { key: 'margin2024', name: 'Margin % 2024' },
+                  { key: 'margin2025', name: 'Margin % 2025' },
+                ]
+              }
+            ]}
           />
         </div>
 
@@ -344,6 +380,7 @@ const PL = () => {
             </CardContent>
           </Card>
 
+          <div ref={chartRef}>
           <Card>
             <CardHeader>
               <CardTitle>REVENUE vs. MARGIN</CardTitle>
@@ -488,6 +525,7 @@ const PL = () => {
               </ChartContainer>
             </CardContent>
           </Card>
+          </div>
         </div>
 
         <AIAnalysisPanel
