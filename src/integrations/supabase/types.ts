@@ -103,6 +103,45 @@ export type Database = {
           },
         ]
       }
+      eva_rules: {
+        Row: {
+          category_name: string
+          cogs_formula: string
+          created_at: string
+          display_order: number
+          id: string
+          is_included: boolean
+          mix_formula: string
+          revenue_formula: string
+          updated_at: string
+          vol_formula: string
+        }
+        Insert: {
+          category_name: string
+          cogs_formula?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_included?: boolean
+          mix_formula?: string
+          revenue_formula?: string
+          updated_at?: string
+          vol_formula?: string
+        }
+        Update: {
+          category_name?: string
+          cogs_formula?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_included?: boolean
+          mix_formula?: string
+          revenue_formula?: string
+          updated_at?: string
+          vol_formula?: string
+        }
+        Relationships: []
+      }
       pl_field_order: {
         Row: {
           calculation_formula: string | null
