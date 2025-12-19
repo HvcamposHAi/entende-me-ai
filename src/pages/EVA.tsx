@@ -10,7 +10,7 @@ import { useTracking } from "@/hooks/useTracking";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ExportButtons } from "@/components/ExportButtons";
-import AIAnalysisPanel from "@/components/AIAnalysisPanel";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -634,12 +634,6 @@ const EVA = () => {
               </Alert>
             )}
 
-            <AIAnalysisPanel
-              data={filteredData}
-              context="eva"
-              title="Analyse IA - EVA"
-              filters={{ store: selectedStore, product: selectedCategories.join(', ') }}
-            />
           </div>
         )}
       </div>
