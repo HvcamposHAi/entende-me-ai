@@ -11,6 +11,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ExportButtons } from "@/components/ExportButtons";
 import AIAnalysisPanel from "@/components/AIAnalysisPanel";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 interface RuleChange {
   id: string;
@@ -24,6 +28,46 @@ const EVA = () => {
   useTracking();
   const { data, isDataLoaded } = useData();
   const [ruleChanges, setRuleChanges] = useState<RuleChange[]>([]);
+
+  // Filter states
+  const [selectedReport, setSelectedReport] = useState("YTD");
+  const [selectedMonth, setSelectedMonth] = useState("06");
+  const [selectedStore, setSelectedStore] = useState("TOTAL");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+  const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+  const selectedMonthNum = parseInt(selectedMonth, 10);
+
+  // Extract filter options
+  const filterOptions = useMemo(() => {
+    const months = Array.from(new Set(data.map(d => d.month))).filter(Boolean).sort();
+    const stores = ["TOTAL", ...Array.from(new Set(data.map(d => d.nom))).filter(Boolean).sort()];
+    const categories = Array.from(new Set(data.map(d => d.macroFamilyName))).filter(Boolean).sort();
+    return { months, stores, categories };
+  }, [data]);
+
+  // Initialize selected categories with all categories (except Barista by default)
+  useEffect(() => {
+    if (filterOptions.categories.length > 0 && selectedCategories.length === 0) {
+      setSelectedCategories(filterOptions.categories.filter(c => c !== 'Barista'));
+    }
+  }, [filterOptions.categories]);
+
+  const handleCategoryToggle = (category: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(category) 
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
+
+  const handleSelectAll = () => {
+    setSelectedCategories(filterOptions.categories);
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedCategories([]);
+  };
 
   // Fetch business rule changes for the compared period
   useEffect(() => {
@@ -46,17 +90,27 @@ const EVA = () => {
     fetchRuleChanges();
   }, []);
 
+  // Filter data based on selections
+  const filteredData = useMemo(() => {
+    return data.filter(row => {
+      const storeMatch = selectedStore === "TOTAL" || row.nom === selectedStore;
+      const categoryMatch = selectedCategories.includes(row.macroFamilyName);
+      const monthNum = parseInt(row.month, 10);
+      const periodMatch = selectedReport === "YTD" 
+        ? monthNum <= selectedMonthNum 
+        : row.month === selectedMonth;
+      return storeMatch && categoryMatch && periodMatch;
+    });
+  }, [data, selectedStore, selectedCategories, selectedReport, selectedMonth, selectedMonthNum]);
+
   const evaData = useMemo(() => {
-    if (!isDataLoaded) return null;
+    if (!isDataLoaded || selectedCategories.length === 0) return null;
 
     const currentYear = 2025;
     const previousYear = 2024;
 
     const sumByYear = (year: number) => {
-      const yearData = data.filter(row => 
-        row.calendarYear === year && 
-        row.macroFamilyName !== 'Barista'
-      );
+      const yearData = filteredData.filter(row => row.calendarYear === year);
       return {
         volumeKg: yearData.reduce((sum, r) => sum + (r.volumeKg || 0), 0),
         revenue: yearData.reduce((sum, r) => sum + (r.netSales || 0), 0),
@@ -69,16 +123,14 @@ const EVA = () => {
     const previous = sumByYear(previousYear);
 
     return { current, previous, currentYear, previousYear };
-  }, [data, isDataLoaded]);
+  }, [filteredData, isDataLoaded, selectedCategories]);
 
   const macroFamilyData = useMemo(() => {
     if (!isDataLoaded || !evaData) return [];
 
     const familyMap = new Map();
 
-    data.forEach(row => {
-      if (row.macroFamilyName === 'Barista') return; // Exclude Barista
-      
+    filteredData.forEach(row => {
       if (row.calendarYear === evaData.currentYear) {
         const family = row.macroFamilyName;
         if (!familyMap.has(family)) {
@@ -131,7 +183,7 @@ const EVA = () => {
         marginChange: f.marginPrev !== 0 ? ((f.margin - f.marginPrev) / f.marginPrev) * 100 : 0,
       }))
       .sort((a, b) => b.revenue - a.revenue);
-  }, [data, isDataLoaded, evaData]);
+  }, [filteredData, isDataLoaded, evaData]);
 
   const volumeWaterfallData = useMemo(() => {
     if (!evaData || macroFamilyData.length === 0) return [];
@@ -150,7 +202,6 @@ const EVA = () => {
     const result = [];
     let cumulative = evaData.previous.volumeKg;
 
-    // Starting bar (2024)
     result.push({
       name: '2024',
       base: 0,
@@ -160,7 +211,6 @@ const EVA = () => {
       isStart: true,
     });
 
-    // Intermediate changes
     contributions.forEach((item) => {
       const base = item.change >= 0 ? cumulative : cumulative + item.change;
       result.push({
@@ -175,7 +225,6 @@ const EVA = () => {
       cumulative += item.change;
     });
 
-    // Ending bar (2025)
     result.push({
       name: '2025',
       base: 0,
@@ -205,7 +254,6 @@ const EVA = () => {
     const result = [];
     let cumulative = evaData.previous.revenue;
 
-    // Starting bar (2024)
     result.push({
       name: '2024',
       base: 0,
@@ -215,7 +263,6 @@ const EVA = () => {
       isStart: true,
     });
 
-    // Intermediate changes
     contributions.forEach((item) => {
       const base = item.change >= 0 ? cumulative : cumulative + item.change;
       result.push({
@@ -230,7 +277,6 @@ const EVA = () => {
       cumulative += item.change;
     });
 
-    // Ending bar (2025)
     result.push({
       name: '2025',
       base: 0,
@@ -243,7 +289,13 @@ const EVA = () => {
     return result;
   }, [evaData, macroFamilyData]);
 
-  if (!isDataLoaded || !evaData) {
+  const periodLabel = selectedReport === "YTD" 
+    ? `YTD ${selectedMonth}.${monthNames[selectedMonthNum - 1]}`
+    : `MTD ${selectedMonth}.${monthNames[selectedMonthNum - 1]}`;
+
+  const storeLabel = selectedStore === "TOTAL" ? "Total" : selectedStore;
+
+  if (!isDataLoaded) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-96">
@@ -276,9 +328,9 @@ const EVA = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Analyse de Variance</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Analyse de Variance - {periodLabel}</h2>
             <p className="text-muted-foreground">
-              Variance Marge - Total - YTD 06.Jun
+              Variance Marge - {storeLabel} - {selectedCategories.length} catégorie(s) sélectionnée(s)
             </p>
           </div>
           <ExportButtons
@@ -293,209 +345,303 @@ const EVA = () => {
               Margem2025: f.margin,
               MargemVariacao: f.marginChange,
             }))}
-            title="Análise de Variação"
-            fileName="Analise_Variacao"
+            title={`Analyse de Variance - ${periodLabel}`}
+            fileName={`Analyse_Variance_${selectedReport}_${selectedMonth}`}
           />
         </div>
 
-        <div className="grid gap-6">
-          <div className="grid gap-6 md:grid-cols-1 xl:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm md:text-base">VARIAÇÃO VOLUME (Kg) BY MACRO-FAMILY (w/o Barista)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="w-full h-[300px] md:h-[400px]">
-                  <ChartContainer
-                    config={{
-                      value: { label: "Volume Kg", color: "hsl(var(--chart-1))" },
-                    }}
-                    className="h-full w-full"
-                  >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={volumeWaterfallData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                        <XAxis 
-                          dataKey="name" 
-                          tick={{ fontSize: 11 }}
-                          angle={-45}
-                          textAnchor="end"
-                          height={60}
-                        />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip 
-                          formatter={(value) => formatNumber(Number(value))}
-                          content={({ active, payload }) => {
-                            if (active && payload && payload.length) {
-                              const data = payload[0].payload;
-                              return (
-                                <div className="bg-background border border-border p-2 rounded shadow-lg">
-                                  <p className="font-semibold">{data.name}</p>
-                                  <p className="text-sm">Total: {formatNumber(data.total)}</p>
-                                </div>
-                              );
-                            }
-                            return null;
-                          }}
-                        />
-                        <Bar dataKey="base" stackId="a" fill="transparent" />
-                        <Bar dataKey="value" stackId="a" label={{ position: 'top', fontSize: 10, formatter: (val: number) => formatNumber(val, 0) }}>
-                          {volumeWaterfallData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Filters */}
+        <div className="bg-card border rounded-lg p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Boutique :</label>
+              <Select value={selectedStore} onValueChange={setSelectedStore}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner boutique" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filterOptions.stores.map((store) => (
+                    <SelectItem key={store} value={store}>
+                      {store}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm md:text-base">VARIAÇÃO REVENUE BY MACRO-FAMILY</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="w-full h-[300px] md:h-[400px]">
-                  <ChartContainer
-                    config={{
-                      value: { label: "Revenue", color: "hsl(var(--chart-1))" },
-                    }}
-                    className="h-full w-full"
-                  >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={revenueWaterfallData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                        <XAxis 
-                          dataKey="name" 
-                          tick={{ fontSize: 11 }}
-                          angle={-45}
-                          textAnchor="end"
-                          height={60}
-                        />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip 
-                          formatter={(value) => formatNumber(Number(value))}
-                          content={({ active, payload }) => {
-                            if (active && payload && payload.length) {
-                              const data = payload[0].payload;
-                              return (
-                                <div className="bg-background border border-border p-2 rounded shadow-lg">
-                                  <p className="font-semibold">{data.name}</p>
-                                  <p className="text-sm">Total: {formatNumber(data.total)}</p>
-                                </div>
-                              );
-                            }
-                            return null;
-                          }}
-                        />
-                        <Bar dataKey="base" stackId="a" fill="transparent" />
-                        <Bar dataKey="value" stackId="a" label={{ position: 'top', fontSize: 10, formatter: (val: number) => formatNumber(val, 0) }}>
-                          {revenueWaterfallData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Période :</label>
+              <Select value={selectedReport} onValueChange={setSelectedReport}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner période" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="YTD">YTD (Year-to-Date)</SelectItem>
+                  <SelectItem value="MTD">MTD (Month-to-Date)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Mois :</label>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner mois" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filterOptions.months.map((month) => (
+                    <SelectItem key={month} value={month}>
+                      {month} - {monthNames[parseInt(month, 10) - 1]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
+          {/* Category checkboxes */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">Catégories à analyser :</label>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleSelectAll}>
+                  Tout sélectionner
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleDeselectAll}>
+                  Tout désélectionner
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {filterOptions.categories.map((category) => (
+                <div key={category} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`cat-${category}`}
+                    checked={selectedCategories.includes(category)}
+                    onCheckedChange={() => handleCategoryToggle(category)}
+                  />
+                  <Label 
+                    htmlFor={`cat-${category}`} 
+                    className="text-sm cursor-pointer truncate"
+                    title={category}
+                  >
+                    {category}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {selectedCategories.length === 0 ? (
           <Card>
-            <CardHeader>
-              <CardTitle>MACRO-FAMILY</CardTitle>
-            </CardHeader>
-            <CardContent className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="font-bold">MACRO-FAMILY</TableHead>
-                    <TableHead colSpan={2} className="text-center font-bold border-l">VOLUME Kg</TableHead>
-                    <TableHead colSpan={2} className="text-center font-bold border-l">REVENUE</TableHead>
-                    <TableHead colSpan={2} className="text-center font-bold border-l">COGS</TableHead>
-                    <TableHead colSpan={2} className="text-center font-bold border-l">MARGIN</TableHead>
-                  </TableRow>
-                  <TableRow className="bg-muted/30">
-                    <TableHead></TableHead>
-                    <TableHead className="text-right text-xs border-l">ACT 2025</TableHead>
-                    <TableHead className="text-center text-xs">% vs LY</TableHead>
-                    <TableHead className="text-right text-xs border-l">ACT 2025</TableHead>
-                    <TableHead className="text-center text-xs">% vs LY</TableHead>
-                    <TableHead className="text-right text-xs border-l">ACT 2025</TableHead>
-                    <TableHead className="text-center text-xs">% vs LY</TableHead>
-                    <TableHead className="text-right text-xs border-l">ACT 2025</TableHead>
-                    <TableHead className="text-center text-xs">% vs LY</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {macroFamilyData.map((row) => (
-                    <TableRow key={row.family} className="text-sm">
-                      <TableCell className="font-medium">{row.family}</TableCell>
-                      <TableCell className="text-right border-l">{formatNumber(row.volumeKg)}</TableCell>
-                      <TableCell className="text-center">
-                        <ChangeIndicator value={row.volumeChange} />
-                      </TableCell>
-                      <TableCell className="text-right border-l">{formatNumber(row.revenue)}</TableCell>
-                      <TableCell className="text-center">
-                        <ChangeIndicator value={row.revenueChange} />
-                      </TableCell>
-                      <TableCell className="text-right border-l">{formatNumber(row.cogs)}</TableCell>
-                      <TableCell className="text-center">
-                        <ChangeIndicator value={row.cogsChange} />
-                      </TableCell>
-                      <TableCell className="text-right border-l">{formatNumber(row.margin)}</TableCell>
-                      <TableCell className="text-center">
-                        <ChangeIndicator value={row.marginChange} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <CardContent className="py-12">
+              <p className="text-center text-muted-foreground">
+                Veuillez sélectionner au moins une catégorie pour afficher l'analyse
+              </p>
             </CardContent>
           </Card>
+        ) : (
+          <div className="grid gap-6">
+            <div className="grid gap-6 md:grid-cols-1 xl:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm md:text-base">VARIAÇÃO VOLUME (Kg) BY MACRO-FAMILY</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="w-full h-[300px] md:h-[400px]">
+                    <ChartContainer
+                      config={{
+                        value: { label: "Volume Kg", color: "hsl(var(--chart-1))" },
+                      }}
+                      className="h-full w-full"
+                    >
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={volumeWaterfallData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                          <XAxis 
+                            dataKey="name" 
+                            tick={{ fontSize: 11 }}
+                            angle={-45}
+                            textAnchor="end"
+                            height={60}
+                          />
+                          <YAxis tick={{ fontSize: 11 }} />
+                          <Tooltip 
+                            formatter={(value) => formatNumber(Number(value))}
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length) {
+                                const data = payload[0].payload;
+                                return (
+                                  <div className="bg-background border border-border p-2 rounded shadow-lg">
+                                    <p className="font-semibold">{data.name}</p>
+                                    <p className="text-sm">Total: {formatNumber(data.total)}</p>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                          <Bar dataKey="base" stackId="a" fill="transparent" />
+                          <Bar dataKey="value" stackId="a" label={{ position: 'top', fontSize: 10, formatter: (val: number) => formatNumber(val, 0) }}>
+                            {volumeWaterfallData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Business Rules Changes Footnote */}
-          {ruleChanges.length > 0 && (
-            <Alert className="border-amber-500/50 bg-amber-500/10">
-              <History className="h-4 w-4 text-amber-600" />
-              <AlertTitle className="text-amber-700 dark:text-amber-400">
-                Modifications des Règles Métier sur la Période
-              </AlertTitle>
-              <AlertDescription className="mt-2">
-                <p className="text-sm text-muted-foreground mb-2">
-                  Durant la période comparée (2024-2025), les règles métier suivantes ont été modifiées, ce qui peut impacter la comparaison des données :
-                </p>
-                <ul className="space-y-1">
-                  {ruleChanges.map((change) => (
-                    <li key={change.id} className="text-sm flex items-start gap-2">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200">
-                        {change.change_type === 'created' ? 'Nouvelle' : 
-                         change.change_type === 'updated' ? 'Mise à jour' : 
-                         change.change_type === 'activated' ? 'Activée' : 
-                         change.change_type === 'deactivated' ? 'Désactivée' : change.change_type}
-                      </span>
-                      <span className="font-medium">{change.rule_name}</span>
-                      <span className="text-muted-foreground">
-                        — {change.rule_text}
-                      </span>
-                      <span className="text-xs text-muted-foreground ml-auto whitespace-nowrap">
-                        {new Date(change.changed_at).toLocaleDateString('fr-FR')}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </AlertDescription>
-            </Alert>
-          )}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm md:text-base">VARIAÇÃO REVENUE BY MACRO-FAMILY</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="w-full h-[300px] md:h-[400px]">
+                    <ChartContainer
+                      config={{
+                        value: { label: "Revenue", color: "hsl(var(--chart-1))" },
+                      }}
+                      className="h-full w-full"
+                    >
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={revenueWaterfallData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                          <XAxis 
+                            dataKey="name" 
+                            tick={{ fontSize: 11 }}
+                            angle={-45}
+                            textAnchor="end"
+                            height={60}
+                          />
+                          <YAxis tick={{ fontSize: 11 }} />
+                          <Tooltip 
+                            formatter={(value) => formatNumber(Number(value))}
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length) {
+                                const data = payload[0].payload;
+                                return (
+                                  <div className="bg-background border border-border p-2 rounded shadow-lg">
+                                    <p className="font-semibold">{data.name}</p>
+                                    <p className="text-sm">Total: {formatNumber(data.total)}</p>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                          <Bar dataKey="base" stackId="a" fill="transparent" />
+                          <Bar dataKey="value" stackId="a" label={{ position: 'top', fontSize: 10, formatter: (val: number) => formatNumber(val, 0) }}>
+                            {revenueWaterfallData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-          <AIAnalysisPanel
-            data={data.filter(r => r.macroFamilyName !== 'Barista')}
-            context="eva"
-            title="Analyse IA - EVA"
-          />
-        </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>MACRO-FAMILY</CardTitle>
+              </CardHeader>
+              <CardContent className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="font-bold">MACRO-FAMILY</TableHead>
+                      <TableHead colSpan={2} className="text-center font-bold border-l">VOLUME Kg</TableHead>
+                      <TableHead colSpan={2} className="text-center font-bold border-l">REVENUE</TableHead>
+                      <TableHead colSpan={2} className="text-center font-bold border-l">COGS</TableHead>
+                      <TableHead colSpan={2} className="text-center font-bold border-l">MARGIN</TableHead>
+                    </TableRow>
+                    <TableRow className="bg-muted/30">
+                      <TableHead></TableHead>
+                      <TableHead className="text-right text-xs border-l">ACT 2025</TableHead>
+                      <TableHead className="text-center text-xs">% vs LY</TableHead>
+                      <TableHead className="text-right text-xs border-l">ACT 2025</TableHead>
+                      <TableHead className="text-center text-xs">% vs LY</TableHead>
+                      <TableHead className="text-right text-xs border-l">ACT 2025</TableHead>
+                      <TableHead className="text-center text-xs">% vs LY</TableHead>
+                      <TableHead className="text-right text-xs border-l">ACT 2025</TableHead>
+                      <TableHead className="text-center text-xs">% vs LY</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {macroFamilyData.map((row) => (
+                      <TableRow key={row.family} className="text-sm">
+                        <TableCell className="font-medium">{row.family}</TableCell>
+                        <TableCell className="text-right border-l">{formatNumber(row.volumeKg)}</TableCell>
+                        <TableCell className="text-center">
+                          <ChangeIndicator value={row.volumeChange} />
+                        </TableCell>
+                        <TableCell className="text-right border-l">{formatNumber(row.revenue)}</TableCell>
+                        <TableCell className="text-center">
+                          <ChangeIndicator value={row.revenueChange} />
+                        </TableCell>
+                        <TableCell className="text-right border-l">{formatNumber(row.cogs)}</TableCell>
+                        <TableCell className="text-center">
+                          <ChangeIndicator value={row.cogsChange} />
+                        </TableCell>
+                        <TableCell className="text-right border-l">{formatNumber(row.margin)}</TableCell>
+                        <TableCell className="text-center">
+                          <ChangeIndicator value={row.marginChange} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            {/* Business Rules Changes Footnote */}
+            {ruleChanges.length > 0 && (
+              <Alert className="border-amber-500/50 bg-amber-500/10">
+                <History className="h-4 w-4 text-amber-600" />
+                <AlertTitle className="text-amber-700 dark:text-amber-400">
+                  Modifications des Règles Métier sur la Période
+                </AlertTitle>
+                <AlertDescription className="mt-2">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Durant la période comparée (2024-2025), les règles métier suivantes ont été modifiées, ce qui peut impacter la comparaison des données :
+                  </p>
+                  <ul className="space-y-1">
+                    {ruleChanges.map((change) => (
+                      <li key={change.id} className="text-sm flex items-start gap-2">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200">
+                          {change.change_type === 'created' ? 'Nouvelle' : 
+                           change.change_type === 'updated' ? 'Mise à jour' : 
+                           change.change_type === 'activated' ? 'Activée' : 
+                           change.change_type === 'deactivated' ? 'Désactivée' : change.change_type}
+                        </span>
+                        <span className="font-medium">{change.rule_name}</span>
+                        <span className="text-muted-foreground">
+                          — {change.rule_text}
+                        </span>
+                        <span className="text-xs text-muted-foreground ml-auto whitespace-nowrap">
+                          {new Date(change.changed_at).toLocaleDateString('fr-FR')}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <AIAnalysisPanel
+              data={filteredData}
+              context="eva"
+              title="Analyse IA - EVA"
+              filters={{ store: selectedStore, product: selectedCategories.join(', ') }}
+            />
+          </div>
+        )}
       </div>
     </Layout>
   );
