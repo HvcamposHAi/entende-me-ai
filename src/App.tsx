@@ -9,6 +9,7 @@ import Upload from "./pages/Upload";
 import BusinessRules from "./pages/BusinessRules";
 import PL from "./pages/PL";
 import ByBranch from "./pages/ByBranch";
+import ByCategory from "./pages/ByCategory";
 import EVA from "./pages/EVA";
 import EVAReport from "./pages/EVAReport";
 import Expenses from "./pages/Expenses";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/business-rules" element={<BusinessRules />} />
             <Route path="/pl" element={<PL />} />
             <Route path="/by-branch" element={<ByBranch />} />
+            <Route path="/by-category" element={<ByCategory />} />
             <Route path="/eva" element={<EVA />} />
             <Route path="/eva-report" element={<EVAReport />} />
             <Route path="/expenses" element={<Expenses />} />
