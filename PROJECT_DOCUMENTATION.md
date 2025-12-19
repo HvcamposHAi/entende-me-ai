@@ -106,7 +106,7 @@ O projeto é estruturado em 4 camadas arquiteturais distintas:
 
 #### Layer 3 - Interface Layer
 - **Dashboards**: Overview, P&L, Por Loja, EVA, Despesas, Evolução, Projeção
-- **IA Insights**: Detecção de desvios, alertas de risco, planos de ação (`AIAnalysisPanel`)
+- **IA Insights**: Disponível exclusivamente na página Forecast (`/forecast`) para geração de planos de ação
 - **Interatividade**: Filtros por ano, mês, loja, linha de produto
 - **Exportação inline**: `ExportButtons` em cada dashboard
 
@@ -127,7 +127,7 @@ dengo-analytics/
 │   │   ├── FilterBar.tsx       # Barra de filtros
 │   │   ├── KPICard.tsx         # Cartões de indicadores
 │   │   ├── PLBuilder.tsx       # ⭐ Construtor de P&L customizável
-│   │   ├── AIAnalysisPanel.tsx # Painel de insights IA
+│   │   ├── AIAnalysisPanel.tsx # Painel de insights IA (usado apenas em Forecast)
 │   │   └── ExportButtons.tsx   # Botões de exportação (Excel/PDF)
 │   ├── contexts/               # Contextos React
 │   │   └── DataContext.tsx     # Gerenciamento de dados globais
