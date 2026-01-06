@@ -10,7 +10,7 @@ import {
   Receipt,
   LineChart,
   FileText,
-  Settings2,
+  
 } from "lucide-react";
 
 import {
@@ -30,7 +30,7 @@ import {
 const menuItems = [
   { title: "Vue d'ensemble", url: "/overview", icon: LayoutDashboard },
   { title: "Téléchargement", url: "/upload", icon: Upload },
-  { title: "Règles Métier", url: "/business-rules", icon: Settings2 },
+  
   { title: "P&L", url: "/pl", icon: TrendingUp },
   { title: "Par Boutique", url: "/by-branch", icon: Store },
   { title: "Par Catégorie", url: "/by-category", icon: Package },
