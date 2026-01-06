@@ -71,21 +71,17 @@
 
 ## 🏗 Arquitetura do Projeto
 
-### Arquitetura de 4 Camadas
+### Arquitetura de 3 Camadas
 
-O projeto é estruturado em 4 camadas arquiteturais distintas:
+O projeto é estruturado em 3 camadas arquiteturais distintas:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    LAYER 4 - OUTPUT LAYER                       │
-│  Exportação (Excel, PDF), Relatórios Contábeis, Auditoria      │
+│                    LAYER 3 - OUTPUT LAYER                       │
+│  Exportação (Excel, PDF), Relatórios Contábeis                 │
 ├─────────────────────────────────────────────────────────────────┤
-│                    LAYER 3 - INTERFACE LAYER                    │
-│  Dashboards Interativos + IA Insights (Gemini 2.5 Flash)       │
-├─────────────────────────────────────────────────────────────────┤
-│                 LAYER 2 - BUSINESS RULES LAYER                  │
-│  Regras em Linguagem Natural → LLM → Lógica de Cálculo         │
-│  ⭐ DIFERENCIAL ESTRATÉGICO DA PLATAFORMA                       │
+│                    LAYER 2 - INTERFACE LAYER                    │
+│  Dashboards Interativos com Filtros                            │
 ├─────────────────────────────────────────────────────────────────┤
 │                    LAYER 1 - DATA LAYER                         │
 │  Importação Excel (sheet 'New_DB') → Campos Estruturais DRE    │
@@ -97,23 +93,14 @@ O projeto é estruturado em 4 camadas arquiteturais distintas:
 - **Campos disponíveis**: `nom`, `macroFamilyName`, `calendarYear`, `month`, `netSales`, `cogs`, `margin`, `volumeKg`, `quantitySoldTotal`
 - **Processamento**: Normalização robusta de headers Excel
 
-#### Layer 2 - Business Rules Layer (Diferencial Estratégico)
-- **Entrada**: Regras em linguagem natural (ex: "Margem bruta = Receita – COGS")
-- **Processamento**: LLM (Gemini 2.5 Flash via `interpret-rule`) interpreta e gera lógica estruturada
-- **Saída**: Campos calculados aplicados ao P&L via `pl_field_order`
-- **Componentes**: `BusinessRules.tsx` para criação, `PLBuilder.tsx` para ordenação
-- **Objetivo**: Empoderar time financeiro/operacional sem dependência de TI
-
-#### Layer 3 - Interface Layer
+#### Layer 2 - Interface Layer
 - **Dashboards**: Overview, P&L, Por Loja, EVA, Despesas, Evolução
 - **Interatividade**: Filtros por ano, mês, loja, linha de produto
 - **Exportação inline**: `ExportButtons` em cada dashboard
 
-#### Layer 4 - Output Layer
+#### Layer 3 - Output Layer
 - **Exportação**: Excel (gráficos nativos editáveis), PDF (gráficos embarcados)
 - **Relatórios**: Relatório Contábil Mensal consolidado
-- **Auditoria**: Rastreabilidade de regras aplicadas via `business_rules_history`
-- **Nota de rodapé EVA**: Exibe alterações de regras no período analisado
 
 ### Estrutura de Diretórios
 
@@ -125,7 +112,6 @@ dengo-analytics/
 │   │   ├── Layout.tsx          # Layout principal com sidebar
 │   │   ├── FilterBar.tsx       # Barra de filtros
 │   │   ├── KPICard.tsx         # Cartões de indicadores
-│   │   ├── PLBuilder.tsx       # ⭐ Construtor de P&L customizável
 │   │   └── ExportButtons.tsx   # Botões de exportação (Excel/PDF)
 │   ├── contexts/               # Contextos React
 │   │   └── DataContext.tsx     # Gerenciamento de dados globais
@@ -143,15 +129,11 @@ dengo-analytics/
 │   │   ├── EVA.tsx             # Análise EVA
 │   │   ├── Expenses.tsx        # Despesas operacionais
 │   │   ├── Evolution.tsx       # Evolução temporal
-│   │   ├── Reports.tsx         # Relatório Contábil Mensal
-│   │   └── BusinessRules.tsx   # ⭐ Gestão de regras + PLBuilder
+│   │   └── Reports.tsx         # Relatório Contábil Mensal
 │   ├── App.tsx                 # Componente raiz
 │   ├── index.css               # Estilos globais e design system
 │   └── main.tsx                # Ponto de entrada
 ├── supabase/
-│   ├── functions/              # Edge Functions
-│   │   ├── ai-insights/        # Função de insights com IA
-│   │   └── interpret-rule/     # ⭐ Função para interpretar regras via LLM
 │   └── config.toml             # Configuração Supabase
 ├── public/                     # Arquivos estáticos
 ├── package.json                # Dependências do projeto
@@ -165,9 +147,8 @@ dengo-analytics/
 1. **Separation of Concerns**: Separação clara entre componentes, lógica de negócio e dados
 2. **Component-Based Architecture**: Componentes modulares e reutilizáveis
 3. **Context API Pattern**: Estado global gerenciado via contextos React
-4. **Server-Side Processing**: Lógica pesada executada em Edge Functions
-5. **Type Safety**: TypeScript para tipagem forte em toda a aplicação
-6. **4-Layer Model**: Separação entre dados, regras, interface e saída
+4. **Type Safety**: TypeScript para tipagem forte em toda a aplicação
+5. **3-Layer Model**: Separação entre dados, interface e saída
 
 ---
 
@@ -473,94 +454,8 @@ contribution = current_value - previous_value
 
 ---
 
-### 9. Projeção & IA (`/forecast`)
 
-**Objetivo**: Previsões algorítmicas e insights de IA
-
-**Algoritmos de Projeção Disponíveis**:
-
-1. **Regressão Linear** (`linearRegression`):
-   - Ajusta linha de tendência linear aos dados históricos
-   - Projeta valores futuros baseado na inclinação
-   - Bom para tendências consistentes
-
-2. **Média Móvel** (`movingAverage`):
-   - Calcula média dos últimos N períodos
-   - Suaviza variações de curto prazo
-   - Projeta baseado na média recente
-
-3. **Suavização Exponencial** (`exponentialSmoothing`):
-   - Aplica maior peso aos dados mais recentes
-   - Alpha = 0.3 (parâmetro de suavização)
-   - Bom para capturar mudanças de tendência
-
-**Funcionalidades**:
-
-1. **Filtros**:
-   - Store (Loja específica)
-   - Product (Macro-família de produto)
-   - Algorithm (Algoritmo de projeção)
-
-2. **Visualizações por Loja**:
-   - Gráfico de linha comparando Real vs Projeção
-   - Múltiplas lojas em gráficos separados
-   - Dados mensais de 2024 e 2025
-   - Projeções para meses futuros
-
-3. **Tabela de Projeções**:
-   - Mês, Ano
-   - Valor Real (quando disponível)
-   - Valor Projetado
-   - Diferença absoluta e percentual (Real - Projeção)
-
-4. **Insights de IA**:
-   - Botão "Gerar Insights com IA"
-   - Envia dados para Edge Function `ai-insights`
-   - Utiliza Lovable AI (modelo Gemini 2.5 Flash)
-   - Retorna plano de ação estruturado
-
-**Formato de Insights de IA**:
-```markdown
-## PLANO DE AÇÃO EXECUTÁVEL
-
-### 📊 NÚMEROS-CHAVE
-- Métrica 1: valor + tendência (↑↗→↘↓)
-- Métrica 2: valor + tendência
-- ...
-
-### 🎯 AÇÕES IMEDIATAS (Esta Semana)
-- [ ] Ação 1: descrição + resultado esperado
-- [ ] Ação 2: descrição + resultado esperado
-- [ ] Ação 3: descrição + resultado esperado
-
-### 📅 PRÓXIMOS 30 DIAS
-- [ ] Semana 1-2: ação + meta quantificada
-- [ ] Semana 3-4: ação + meta quantificada
-
-### 🚀 OPORTUNIDADES (60-90 dias)
-- Oportunidade 1: descrição + impacto estimado (R$ ou %)
-- Oportunidade 2: descrição + impacto estimado
-
-### ⚠️ ALERTAS CRÍTICOS
-- Alerta 1: risco + ação preventiva
-- Alerta 2: risco + ação preventiva
-
-### 💡 RECOMENDAÇÃO PRINCIPAL
-Frase direta com a ação mais importante a tomar.
-```
-
-**Fluxo de Geração de Insights**:
-1. Usuário clica em "Gerar Insights com IA"
-2. Frontend prepara dados e projeções atuais
-3. Envia para Edge Function `/ai-insights`
-4. Edge Function processa e chama Lovable AI Gateway
-5. Modelo de IA analisa os dados e gera plano de ação
-6. Retorna insights estruturados em Markdown
-7. Frontend renderiza insights na interface
-
----
-
-### 10. Relatórios (`/reports`)
+### 9. Relatórios (`/reports`)
 
 **Objetivo**: Exportação e compartilhamento de análises financeiras
 
@@ -630,254 +525,6 @@ generatePDFReport(reportTitle: string)
 
 ---
 
-## ⭐ Business Rules - Regras Interpretadas por LLM
-
-### Visão Geral
-
-O sistema de Business Rules permite que usuários definam regras financeiras em linguagem natural, que são interpretadas por um LLM (Gemini 2.5 Flash) e convertidas em lógica de cálculo estruturada.
-
-### Fluxo de Criação de Regras
-
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Usuário clica  │     │   Usuário       │     │   Edge Function │
-│  nos campos     │ ──► │   descreve a    │ ──► │   interpret-rule│
-│  disponíveis    │     │   regra em PT   │     │   (Gemini LLM)  │
-└─────────────────┘     └─────────────────┘     └────────┬────────┘
-                                                         │
-┌─────────────────┐     ┌─────────────────┐     ┌────────▼────────┐
-│  Campo aparece  │     │   Usuário       │     │   Retorna       │
-│  no PLBuilder   │ ◄── │   salva a       │ ◄── │   lógica        │
-│  para ordenação │     │   regra         │     │   estruturada   │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-```
-
-### Campos Disponíveis (Layer 1)
-
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `nom` | texto | Nome da loja |
-| `macroFamilyName` | texto | Linha de produto |
-| `calendarYear` | número | Ano calendário |
-| `month` | número | Mês (1-12) |
-| `netSales` | número | Receita líquida |
-| `cogs` | número | Custo de produtos |
-| `margin` | número | Margem |
-| `volumeKg` | número | Volume em kg |
-| `quantitySoldTotal` | número | Quantidade vendida |
-
-### Exemplo de Regra
-
-```
-Entrada (linguagem natural):
-"Margem bruta = netSales - cogs"
-
-Saída (lógica gerada pelo LLM):
-{
-  "field_key": "gross_margin",
-  "field_label": "Margem Bruta",
-  "calculation": "netSales - cogs",
-  "type": "calculation"
-}
-```
-
-### Tabela: `business_rules`
-
-```sql
-CREATE TABLE business_rules (
-  id UUID PRIMARY KEY,
-  rule_name TEXT NOT NULL,
-  rule_description TEXT,
-  rule_text TEXT NOT NULL,           -- Regra em linguagem natural
-  rule_type TEXT DEFAULT 'calculation',
-  generated_logic JSONB,             -- Lógica gerada pelo LLM
-  is_active BOOLEAN DEFAULT true,
-  applies_to TEXT[],                 -- Campos afetados
-  version INTEGER DEFAULT 1,
-  created_by UUID,
-  created_at TIMESTAMPTZ,
-  updated_at TIMESTAMPTZ
-);
-```
-
-### Histórico e Auditoria: `business_rules_history`
-
-```sql
-CREATE TABLE business_rules_history (
-  id UUID PRIMARY KEY,
-  rule_id UUID REFERENCES business_rules(id),
-  rule_name TEXT,
-  rule_text TEXT,
-  generated_logic JSONB,
-  version INTEGER,
-  change_type TEXT,                  -- created/updated/activated/deactivated
-  changed_by UUID,
-  changed_at TIMESTAMPTZ
-);
-```
-
-**Uso**: A página EVA exibe uma nota de rodapé com alterações de regras ocorridas no período analisado para garantir transparência e rastreabilidade.
-
----
-
-## ⭐ PLBuilder - Construtor de P&L Customizável
-
-### Visão Geral
-
-O componente `PLBuilder` permite controle total sobre a estrutura do P&L, integrando campos do sistema com campos gerados por regras de negócio.
-
-### Funcionalidades
-
-| Funcionalidade | Descrição |
-|----------------|-----------|
-| **Ordenar campos** | Mover qualquer campo (sistema + regras LLM) para cima/baixo |
-| **Visibilidade** | Ocultar/exibir campos específicos |
-| **Estilos** | `normal`, `header`, `subitem`, `total`, `subtotal` |
-| **Indentação** | Níveis 0-3 para hierarquia visual |
-| **Campos customizados** | Adicionar/remover campos personalizados |
-| **RPU** | Toggle para exibir Revenue Per Unit |
-| **% Receita** | Toggle para exibir percentual sobre receita |
-| **Preview em tempo real** | Visualização do P&L com dados reais |
-
-### Preview do P&L
-
-O preview exibe três colunas:
-- **ACT 2025**: Valores do ano atual
-- **ACT 2024**: Valores do ano anterior
-- **% vs LY**: Variação percentual
-
-### Tabela: `pl_field_order`
-
-```sql
-CREATE TABLE pl_field_order (
-  id UUID PRIMARY KEY,
-  field_key TEXT NOT NULL,           -- Chave técnica do campo
-  field_label TEXT NOT NULL,         -- Label exibido
-  display_order INTEGER,             -- Ordem de exibição
-  is_visible BOOLEAN DEFAULT true,   -- Visibilidade
-  is_system_field BOOLEAN,           -- Campo do sistema (não deletável)
-  field_style TEXT,                  -- normal/header/subitem/total/subtotal
-  indent_level INTEGER DEFAULT 0,    -- Nível de indentação (0-3)
-  show_rpu BOOLEAN DEFAULT false,    -- Exibir RPU
-  show_percent_of_revenue BOOLEAN,   -- Exibir % da receita
-  is_calculated BOOLEAN,             -- Campo calculado
-  calculation_formula TEXT,          -- Fórmula de cálculo
-  rule_id UUID REFERENCES business_rules(id),  -- Vínculo com regra LLM
-  created_at TIMESTAMPTZ,
-  updated_at TIMESTAMPTZ
-);
-```
-
-### Campos do Sistema (Pré-configurados)
-
-| Campo | Label | Estilo | Calculado |
-|-------|-------|--------|-----------|
-| `volume` | VOLUME | header | Não |
-| `volumeKg` | VOLUME Kg | normal | Não |
-| `revenue` | REVENUE | header | Não |
-| `cogs` | COGS | normal | Não |
-| `margin` | MARGIN | total | Sim |
-| `stPersonal` | ST-PERSONAL | normal | Não |
-| `stOpex` | ST-OPEX | normal | Não |
-| `commercialMargin` | COMMERCIAL MARGIN | total | Sim |
-
-### Interface do Usuário
-
-O PLBuilder está integrado na página `BusinessRules.tsx` em uma tab separada "Ordenar P&L", permitindo:
-
-1. **Painel esquerdo**: Configuração de campos (ordem, visibilidade, estilo, indentação)
-2. **Painel direito**: Preview em tempo real com dados calculados
-3. **Botão Salvar**: Persiste todas as alterações no banco de dados
-
----
-
-## ⭐ EVA Rules Manager - Regras de Cálculo EVA
-
-### Visão Geral
-
-O componente `EVARulesManager` permite configurar as fórmulas de cálculo do Rapport EVA por categoria. Cada macro-família pode ter fórmulas personalizadas para os 4 indicadores do EVA.
-
-### Funcionalidades
-
-| Funcionalidade | Descrição |
-|----------------|-----------|
-| **Seleção de Categoria** | Dropdown para selecionar a macro-família a configurar |
-| **Inclusão/Exclusão** | Switch para incluir ou excluir categoria da análise EVA |
-| **Fórmulas Customizáveis** | Campos de texto para cada indicador (Vol, Mix, Revenue, COGS) |
-| **Reset para Default** | Botão para restaurar fórmulas padrão |
-| **Persistência** | Salvamento automático no banco de dados |
-
-### Fórmulas Padrão
-
-```javascript
-// Volume Effect (vsVol)
-variacaoVolume * marginPorKg2024
-
-// Mix Effect
-variacaoVolume * diferencaMargemUnitaria
-
-// Revenue Effect (vsRevenue)
-volumeKg2025 * diferencaPreco
-
-// COGS Effect (vsCOGS)
--(volumeKg2025 * diferencaCusto)
-```
-
-### Variáveis Disponíveis nas Fórmulas
-
-| Variável | Descrição |
-|----------|-----------|
-| `volumeKg2024` | Volume em Kg do ano anterior |
-| `volumeKg2025` | Volume em Kg do ano atual |
-| `variacaoVolume` | `volumeKg2025 - volumeKg2024` |
-| `margin2024` | Margem do ano anterior |
-| `margin2025` | Margem do ano atual |
-| `marginPorKg2024` | `margin2024 / volumeKg2024` |
-| `marginPorKg2025` | `margin2025 / volumeKg2025` |
-| `diferencaMargemUnitaria` | `marginPorKg2025 - marginPorKg2024` |
-| `netSales2024` | Receita do ano anterior |
-| `netSales2025` | Receita do ano atual |
-| `precoPorKg2024` | `netSales2024 / volumeKg2024` |
-| `precoPorKg2025` | `netSales2025 / volumeKg2025` |
-| `diferencaPreco` | `precoPorKg2025 - precoPorKg2024` |
-| `cogs2024` | COGS do ano anterior |
-| `cogs2025` | COGS do ano atual |
-| `custoPorKg2024` | `cogs2024 / volumeKg2024` |
-| `custoPorKg2025` | `cogs2025 / volumeKg2025` |
-| `diferencaCusto` | `custoPorKg2025 - custoPorKg2024` |
-
-### Tabela: `eva_rules`
-
-```sql
-CREATE TABLE eva_rules (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  category_name TEXT NOT NULL,           -- Nome da macro-família
-  is_included BOOLEAN DEFAULT true,      -- Incluir na análise
-  vol_formula TEXT DEFAULT 'variacaoVolume * marginPorKg2024',
-  mix_formula TEXT DEFAULT 'variacaoVolume * diferencaMargemUnitaria',
-  revenue_formula TEXT DEFAULT 'volumeKg2025 * diferencaPreco',
-  cogs_formula TEXT DEFAULT '-(volumeKg2025 * diferencaCusto)',
-  display_order INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-```
-
-### Configuração Padrão
-
-Por padrão, a categoria **"Barista"** está excluída (`is_included = false`) da análise EVA.
-
-### Interface do Usuário
-
-O EVARulesManager está integrado na página `BusinessRules.tsx` em uma tab "Règles EVA", permitindo:
-
-1. **Dropdown de Categoria**: Selecionar qual macro-família configurar
-2. **Switch de Inclusão**: Ativar/desativar categoria na análise
-3. **Campos de Fórmula**: Editar cada uma das 4 fórmulas (Vol, Mix, Revenue, COGS)
-4. **Botão Salvar**: Persistir alterações no banco de dados
-5. **Botão Reset**: Restaurar fórmulas padrão
-
----
 
 ## 🧩 Componentes
 
@@ -901,8 +548,6 @@ O EVARulesManager está integrado na página `BusinessRules.tsx` em uma tab "Rè
 - Despesas
 - Evolução
 - Relatórios
-- Projeção & IA
-- Business Rules
 - Admin
 
 ---
@@ -977,71 +622,16 @@ Todos os componentes seguem princípios de:
 
 ---
 
-## 🔧 Backend e Edge Functions
+## 🔧 Backend
 
-### Lovable Cloud (Supabase)
+### Lovable Cloud
 
 **Configuração**: Integrado via Lovable Cloud
 
 **Recursos Utilizados**:
-- Edge Functions para processamento serverless
-- Secrets para API keys (LOVABLE_API_KEY)
-- Deploy automático de funções
-
----
-
-### Edge Function: `ai-insights`
-
-**Localização**: `supabase/functions/ai-insights/index.ts`
-
-**Objetivo**: Gerar insights e planos de ação com IA
-
-**Entrada** (POST JSON):
-```typescript
-{
-  data: DengoDataRow[],     // Dados históricos
-  projections: any[],       // Projeções calculadas
-  algorithm: string,        // Algoritmo usado
-  store: string,            // Loja selecionada
-  product: string           // Produto selecionado
-}
-```
-
-**Processamento**:
-1. Recebe dados e projeções
-2. Prepara sumário dos dados principais
-3. Constrói prompt estruturado para IA
-4. Chama Lovable AI Gateway (modelo: google/gemini-2.5-flash)
-5. Processa resposta da IA
-6. Retorna insights estruturados
-
-**Saída** (JSON):
-```typescript
-{
-  insights: string  // Markdown com plano de ação
-}
-```
-
-**Prompt System**:
-```markdown
-Você é um consultor prático especializado em ações comerciais.
-Analise ${store} e ${product}.
-
-## PLANO DE AÇÃO EXECUTÁVEL
-
-[Estrutura detalhada do plano]
-
-**IMPORTANTE**: Seja direto, use números reais dos dados, sem jargões.
-Cada ação deve ter resultado mensurável.
-```
-
-**Tratamento de Erros**:
-- 429: Rate limit excedido
-- 402: Pagamento necessário (créditos esgotados)
-- 500: Erro genérico da IA
-- Todos os erros retornam JSON com mensagem descritiva
-
-**CORS**: Habilitado para acesso do frontend
+- Armazenamento de dados
+- Autenticação de usuários
+- Deploy automático
 
 ---
 

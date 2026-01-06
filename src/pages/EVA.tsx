@@ -3,12 +3,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import Layout from "@/components/Layout";
 import { useData } from "@/contexts/DataContext";
 import { useMemo, useState, useEffect } from "react";
-import { ArrowUp, ArrowDown, History } from "lucide-react";
+import { ArrowUp, ArrowDown } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { ChartContainer } from "@/components/ui/chart";
 import { useTracking } from "@/hooks/useTracking";
-import { supabase } from "@/integrations/supabase/client";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ExportButtons } from "@/components/ExportButtons";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -16,18 +14,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
-interface RuleChange {
-  id: string;
-  rule_name: string;
-  change_type: string;
-  changed_at: string;
-  rule_text: string;
-}
-
 const EVA = () => {
   useTracking();
   const { data, isDataLoaded } = useData();
-  const [ruleChanges, setRuleChanges] = useState<RuleChange[]>([]);
 
   // Filter states
   const [selectedReport, setSelectedReport] = useState("YTD");
@@ -69,26 +58,6 @@ const EVA = () => {
     setSelectedCategories([]);
   };
 
-  // Fetch business rule changes for the compared period
-  useEffect(() => {
-    const fetchRuleChanges = async () => {
-      const startDate = new Date('2024-01-01');
-      const endDate = new Date();
-      
-      const { data: changes, error } = await supabase
-        .from('business_rules_history')
-        .select('id, rule_name, change_type, changed_at, rule_text')
-        .gte('changed_at', startDate.toISOString())
-        .lte('changed_at', endDate.toISOString())
-        .order('changed_at', { ascending: false });
-
-      if (!error && changes) {
-        setRuleChanges(changes);
-      }
-    };
-
-    fetchRuleChanges();
-  }, []);
 
   // Filter data based on selections
   const filteredData = useMemo(() => {
@@ -600,39 +569,6 @@ const EVA = () => {
               </CardContent>
             </Card>
 
-            {/* Business Rules Changes Footnote */}
-            {ruleChanges.length > 0 && (
-              <Alert className="border-amber-500/50 bg-amber-500/10">
-                <History className="h-4 w-4 text-amber-600" />
-                <AlertTitle className="text-amber-700 dark:text-amber-400">
-                  Modifications des Règles Métier sur la Période
-                </AlertTitle>
-                <AlertDescription className="mt-2">
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Durant la période comparée (2024-2025), les règles métier suivantes ont été modifiées, ce qui peut impacter la comparaison des données :
-                  </p>
-                  <ul className="space-y-1">
-                    {ruleChanges.map((change) => (
-                      <li key={change.id} className="text-sm flex items-start gap-2">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200">
-                          {change.change_type === 'created' ? 'Nouvelle' : 
-                           change.change_type === 'updated' ? 'Mise à jour' : 
-                           change.change_type === 'activated' ? 'Activée' : 
-                           change.change_type === 'deactivated' ? 'Désactivée' : change.change_type}
-                        </span>
-                        <span className="font-medium">{change.rule_name}</span>
-                        <span className="text-muted-foreground">
-                          — {change.rule_text}
-                        </span>
-                        <span className="text-xs text-muted-foreground ml-auto whitespace-nowrap">
-                          {new Date(change.changed_at).toLocaleDateString('fr-FR')}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </AlertDescription>
-              </Alert>
-            )}
 
           </div>
         )}
