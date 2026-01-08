@@ -8,25 +8,23 @@
 - [Estrutura de Dados](#estrutura-de-dados)
 - [Páginas e Funcionalidades](#páginas-e-funcionalidades)
 - [Componentes](#componentes)
-- [Backend e Edge Functions](#backend-e-edge-functions)
+- [Backend](#backend)
 - [Instalação e Configuração](#instalação-e-configuração)
 - [Como Usar](#como-usar)
 - [Fluxo de Dados](#fluxo-de-dados)
-- [Recursos Avançados](#recursos-avançados)
 
 ---
 
 ## 🎯 Visão Geral
 
-**Dengo Analytics** é uma plataforma de análise de dados financeiros e operacionais desenvolvida para Dengo Chocolates France. A aplicação permite o upload de dados de vendas via Excel, processamento automatizado, visualização interativa através de dashboards, e geração de insights com Inteligência Artificial.
+**Dengo Analytics** é uma plataforma de análise de dados financeiros e operacionais desenvolvida para Dengo Chocolates France. A aplicação permite o upload de dados de vendas via Excel, processamento automatizado, visualização interativa através de dashboards e geração de relatórios profissionais.
 
 ### Principais Objetivos
 
 - **Centralização de Dados**: Consolidar dados financeiros de múltiplas lojas e produtos
 - **Análise em Tempo Real**: Visualizar KPIs, métricas e tendências instantaneamente
-- **Projeções Inteligentes**: Utilizar algoritmos de previsão e IA para insights preditivos
 - **Exportação de Relatórios**: Gerar relatórios profissionais em Excel e PDF
-- **Tomada de Decisão**: Fornecer planos de ação práticos baseados em dados
+- **Tomada de Decisão**: Fornecer informações práticas baseadas em dados
 
 ---
 
@@ -45,15 +43,14 @@
 ### Processamento de Dados
 
 - **XLSX 0.18.5**: Leitura e escrita de arquivos Excel
+- **ExcelJS 4.4.0**: Manipulação avançada de arquivos Excel
 - **jsPDF 3.0.3 + jsPDF-AutoTable 5.0.2**: Geração de relatórios PDF com tabelas
 - **Chart.js 4.5.1**: Criação de gráficos para exportação em PDF
 - **date-fns 3.6.0**: Manipulação e formatação de datas
 
 ### Backend
 
-- **Supabase (Lovable Cloud)**: Backend-as-a-Service integrado
-- **Deno Edge Functions**: Funções serverless para processamento backend
-- **Lovable AI Gateway**: Integração com modelos de IA (Gemini 2.5)
+- **Lovable Cloud**: Backend-as-a-Service integrado
 
 ### Gerenciamento de Estado
 
@@ -94,7 +91,7 @@ O projeto é estruturado em 3 camadas arquiteturais distintas:
 - **Processamento**: Normalização robusta de headers Excel
 
 #### Layer 2 - Interface Layer
-- **Dashboards**: Overview, P&L, Por Loja, EVA, Despesas, Evolução
+- **Dashboards**: Overview, P&L, Por Loja, Por Categoria, EVA, Relatório EVA, Despesas, Evolução
 - **Interatividade**: Filtros por ano, mês, loja, linha de produto
 - **Exportação inline**: `ExportButtons` em cada dashboard
 
@@ -112,11 +109,15 @@ dengo-analytics/
 │   │   ├── Layout.tsx          # Layout principal com sidebar
 │   │   ├── FilterBar.tsx       # Barra de filtros
 │   │   ├── KPICard.tsx         # Cartões de indicadores
-│   │   └── ExportButtons.tsx   # Botões de exportação (Excel/PDF)
+│   │   ├── ExportButtons.tsx   # Botões de exportação (Excel/PDF)
+│   │   └── ProtectedRoute.tsx  # Proteção de rotas
 │   ├── contexts/               # Contextos React
-│   │   └── DataContext.tsx     # Gerenciamento de dados globais
+│   │   ├── DataContext.tsx     # Gerenciamento de dados globais
+│   │   └── AuthContext.tsx     # Contexto de autenticação
 │   ├── hooks/                  # Hooks customizados
-│   │   └── use-toast.ts        # Hook para notificações
+│   │   ├── use-toast.ts        # Hook para notificações
+│   │   ├── use-mobile.tsx      # Detecção de dispositivo móvel
+│   │   └── useTracking.tsx     # Rastreamento de uso
 │   ├── integrations/           # Integrações externas
 │   │   └── supabase/           # Cliente e tipos Supabase
 │   ├── lib/                    # Utilitários
@@ -126,10 +127,15 @@ dengo-analytics/
 │   │   ├── Upload.tsx          # Upload de dados Excel
 │   │   ├── PL.tsx              # Profit & Loss
 │   │   ├── ByBranch.tsx        # Análise por loja
+│   │   ├── ByCategory.tsx      # Análise por categoria
 │   │   ├── EVA.tsx             # Análise EVA
+│   │   ├── EVAReport.tsx       # Relatório EVA
 │   │   ├── Expenses.tsx        # Despesas operacionais
 │   │   ├── Evolution.tsx       # Evolução temporal
-│   │   └── Reports.tsx         # Relatório Contábil Mensal
+│   │   ├── Reports.tsx         # Relatório Contábil Mensal
+│   │   ├── Admin.tsx           # Painel administrativo
+│   │   ├── Login.tsx           # Página de login
+│   │   └── NotFound.tsx        # Página 404
 │   ├── App.tsx                 # Componente raiz
 │   ├── index.css               # Estilos globais e design system
 │   └── main.tsx                # Ponto de entrada
@@ -200,7 +206,7 @@ A aplicação é completamente pública, sem necessidade de autenticação ou lo
 
 ---
 
-### 2. Upload (`/upload`)
+### 1. Upload (`/upload`)
 
 **Objetivo**: Upload e processamento de arquivos Excel
 
@@ -233,7 +239,7 @@ processExcelFile(file: File): Promise<void>
 
 ---
 
-### 3. Overview (`/overview`)
+### 2. Overview (`/overview`)
 
 **Objetivo**: Dashboard principal com visão geral dos KPIs
 
@@ -288,7 +294,7 @@ change% = ((current - previous) / previous) * 100
 
 ---
 
-### 4. P&L - Profit & Loss (`/pl`)
+### 3. P&L - Profit & Loss (`/pl`)
 
 **Objetivo**: Demonstração de Resultados Year-to-Date
 
@@ -329,15 +335,9 @@ stPersonalPercent = (stPersonal / revenue) * 100
 stOpexPercent = (stOpex / revenue) * 100
 ```
 
-**Insights Fornecidos**:
-- Eficiência operacional (COGS % da receita)
-- Lucratividade (Margin % da receita)
-- Custos de estrutura (ST-PERSONAL e ST-OPEX)
-- Tendências mensais de receita e margem
-
 ---
 
-### 5. Análise por Loja (`/by-branch`)
+### 4. Análise por Loja (`/by-branch`)
 
 **Objetivo**: Performance individual de cada ponto de venda
 
@@ -352,11 +352,16 @@ stOpexPercent = (stOpex / revenue) * 100
 - Tabela comparativa consolidada
 - Barras de progresso mostrando % de contribuição de cada loja
 
-**Dados Exibidos** (exemplo mockado atualmente):
-- Paris Centre: €185K, 64.2% margem, +15.3% crescimento
-- Lyon: €132K, 61.8% margem, +8.7% crescimento
-- Marseille: €98K, 59.5% margem, +12.1% crescimento
-- Bordeaux: €76K, 62.1% margem, +6.4% crescimento
+---
+
+### 5. Análise por Categoria (`/by-category`)
+
+**Objetivo**: Performance por categoria de produtos
+
+**Funcionalidades**:
+- Análise detalhada por macro-família
+- Comparação entre categorias
+- Métricas de volume, receita e margem
 
 ---
 
@@ -380,17 +385,6 @@ stOpexPercent = (stOpex / revenue) * 100
    - COGS (ACT 2025, % vs LY)
    - MARGIN (ACT 2025, % vs LY)
 
-**Cálculo Waterfall**:
-```typescript
-// Para cada macro-família
-contribution = current_value - previous_value
-
-// Barras empilhadas:
-// - Base transparente até o ponto de início
-// - Barra colorida com a contribuição (positiva ou negativa)
-// - Barras inicial (2024) e final (2025) mostram valores totais
-```
-
 **Use Cases**:
 - Identificar categorias com maior crescimento
 - Detectar categorias em declínio
@@ -399,40 +393,49 @@ contribution = current_value - previous_value
 
 ---
 
-### 7. Despesas Operacionais (`/expenses`)
+### 7. Relatório EVA (`/eva-report`)
+
+**Objetivo**: Relatório detalhado da análise EVA
+
+**Funcionalidades**:
+- Gráficos waterfall expandidos
+- Análise detalhada por categoria
+- Exportação de relatório
+
+---
+
+### 8. Despesas Operacionais (`/expenses`)
 
 **Objetivo**: Análise detalhada de custos operacionais
 
 **Categorias de Despesas**:
-- Pessoal (44.2%)
-- Aluguel (17.3%)
-- Marketing (14.4%)
-- Utilidades (8.0%)
-- Manutenção (6.7%)
-- Outros (9.6%)
+- Pessoal
+- Aluguel
+- Marketing
+- Utilidades
+- Manutenção
+- Outros
 
 **KPI Cards**:
-- Total de Despesas: €313K
-- Maior Categoria: Pessoal
-- % da Receita: 38.6%
+- Total de Despesas
+- Maior Categoria
+- % da Receita
 
 **Visualizações**:
-- Tabela mensal por categoria (Jan, Fev, Mar)
+- Tabela mensal por categoria
 - Barras de progresso com % de cada categoria
 - Código de cores por categoria
 
-**Dados Exibidos**: Atualmente mockados (hardcoded)
-
 ---
 
-### 8. Evolução Temporal (`/evolution`)
+### 9. Evolução Temporal (`/evolution`)
 
 **Objetivo**: Análise de tendências e crescimento ao longo do tempo
 
 **Métricas Principais**:
-- Crescimento Acumulado: +35.7% vs ano anterior
-- Crescimento Médio Mensal: +5.2%
-- Melhor Mês: Junho (€152K)
+- Crescimento Acumulado vs ano anterior
+- Crescimento Médio Mensal
+- Melhor Mês
 
 **Gráficos**:
 
@@ -445,17 +448,9 @@ contribution = current_value - previous_value
    - Cards por mês mostrando %
    - Cores: verde (positivo), vermelho (negativo)
 
-3. **Projeção Linear**:
-   - Próximo mês (Julho): €158K
-   - Fim do ano: €1.95M
-   - Baseado em tendência linear dos últimos 6 meses
-
-**Dados Exibidos**: Atualmente mockados
-
 ---
 
-
-### 9. Relatórios (`/reports`)
+### 10. Relatórios (`/reports`)
 
 **Objetivo**: Exportação e compartilhamento de análises financeiras
 
@@ -517,14 +512,18 @@ generatePDFReport(reportTitle: string)
 // - Exporta arquivo .pdf
 ```
 
-**Bibliotecas Utilizadas**:
-- `xlsx`: Manipulação de arquivos Excel
-- `jsPDF`: Geração de PDFs
-- `jspdf-autotable`: Tabelas em PDF
-- `chart.js`: Gráficos para exportação
-
 ---
 
+### 11. Admin (`/admin`)
+
+**Objetivo**: Painel administrativo para gerenciamento do sistema
+
+**Funcionalidades**:
+- Gerenciamento de usuários
+- Configurações do sistema
+- Logs de atividade
+
+---
 
 ## 🧩 Componentes
 
@@ -539,16 +538,16 @@ generatePDFReport(reportTitle: string)
 - Integração com shadcn Sidebar
 
 **Menu de Navegação**:
-- Overview
-- Upload
+- Vue d'ensemble (Overview)
+- Téléchargement (Upload)
 - P&L
-- Por Loja
-- Análise EVA
-- Relatório EVA
-- Despesas
-- Evolução
-- Relatórios
-- Admin
+- Par Boutique (Por Loja)
+- Par Catégorie (Por Categoria)
+- Analyse de Variance (EVA)
+- Rapport EVA
+- Dépenses (Despesas)
+- Évolution (Evolução)
+- Rapports (Relatórios)
 
 ---
 
@@ -574,8 +573,6 @@ interface FilterBarProps {
 }
 ```
 
-**Uso**: Páginas Overview e Forecast
-
 ---
 
 ### KPICard (`KPICard.tsx`)
@@ -598,6 +595,18 @@ interface KPICardProps {
 - Valor atual destacado
 - Comparação com período anterior
 - Indicador visual de crescimento/declínio
+
+---
+
+### ExportButtons (`ExportButtons.tsx`)
+
+**Responsabilidade**: Botões de exportação para Excel e PDF
+
+**Funcionalidades**:
+- Exportação em Excel (.xlsx)
+- Exportação em PDF
+- Formatação automática de dados
+- Geração de gráficos para PDF
 
 ---
 
@@ -630,7 +639,6 @@ Todos os componentes seguem princípios de:
 
 **Recursos Utilizados**:
 - Armazenamento de dados
-- Autenticação de usuários
 - Deploy automático
 
 ---
@@ -695,19 +703,13 @@ VITE_SUPABASE_PROJECT_ID=<ID_DO_PROJETO>
    - **Overview**: Visão geral dos KPIs
    - **P&L**: Análise detalhada de lucratividade
    - **Por Loja**: Compare performance entre lojas
+   - **Por Categoria**: Análise por categorias de produtos
    - **EVA**: Analise contribuição por categoria
    - **Relatório EVA**: Gráficos waterfall detalhados
    - **Despesas**: Entenda custos operacionais
    - **Evolução**: Veja tendências temporais
 
-4. **Projeções e IA**:
-   - Navegue para "Projeção & IA" (`/forecast`)
-   - Selecione loja e produto
-   - Escolha algoritmo de projeção
-   - Visualize projeções em gráficos e tabelas
-   - Clique em "Gerar Insights com IA" para plano de ação
-
-5. **Exportação**:
+4. **Exportação**:
    - Use os botões de exportação (Excel/PDF) em cada dashboard
    - Ou navegue para Relatórios (`/reports`) para o Relatório Contábil Mensal
    - Arquivo será baixado automaticamente
@@ -738,21 +740,7 @@ C -->|Calcula| D[KPIs/Charts]
 D -->|Renderiza| E[UI Components]
 ```
 
-### 3. Projeções e IA
-
-```mermaid
-graph LR
-A[Forecast.tsx] -->|Histórico| B[Algoritmos]
-B -->|linearRegression| C[Projeções]
-B -->|movingAverage| C
-B -->|exponentialSmoothing| C
-C -->|Visualiza| D[Charts]
-A -->|Dados + Projeções| E[Edge Function]
-E -->|API Call| F[Lovable AI]
-F -->|Insights| G[Markdown Display]
-```
-
-### 4. Exportação de Relatórios
+### 3. Exportação de Relatórios
 
 ```mermaid
 graph LR
@@ -797,94 +785,6 @@ O projeto utiliza um design system baseado em variáveis CSS HSL:
 
 ---
 
-## 📊 Recursos Avançados
-
-### 1. Projeções Algorítmicas
-
-**Regressão Linear**:
-```typescript
-function linearRegression(data: number[]): number[] {
-  const n = data.length;
-  const sumX = (n * (n - 1)) / 2;
-  const sumY = data.reduce((a, b) => a + b, 0);
-  const sumXY = data.reduce((sum, y, x) => sum + x * y, 0);
-  const sumX2 = (n * (n - 1) * (2 * n - 1)) / 6;
-  
-  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-  const intercept = (sumY - slope * sumX) / n;
-  
-  return data.map((_, i) => slope * (n + i) + intercept);
-}
-```
-
-**Média Móvel**:
-```typescript
-function movingAverage(data: number[], window: number = 3): number[] {
-  const avg = data.slice(-window).reduce((a, b) => a + b, 0) / window;
-  return Array(6).fill(avg);
-}
-```
-
-**Suavização Exponencial**:
-```typescript
-function exponentialSmoothing(data: number[], alpha: number = 0.3): number[] {
-  let last = data[data.length - 1];
-  return Array(6).fill(0).map(() => {
-    last = alpha * last + (1 - alpha) * data[data.length - 1];
-    return last;
-  });
-}
-```
-
-### 2. Geração de PDFs com Gráficos
-
-```typescript
-async function createChartImage(
-  type: 'bar' | 'pie' | 'line',
-  labels: string[],
-  datasets: any[],
-  title: string
-): Promise<string> {
-  const canvas = document.createElement('canvas');
-  canvas.width = 800;
-  canvas.height = 400;
-  
-  new ChartJS(canvas.getContext('2d')!, {
-    type,
-    data: { labels, datasets },
-    options: { responsive: false, /* ... */ }
-  });
-  
-  return canvas.toDataURL('image/png');
-}
-```
-
-### 3. Integração com IA
-
-**Fluxo Completo**:
-1. Preparação de dados no frontend
-2. Chamada à Edge Function
-3. Edge Function chama Lovable AI Gateway
-4. IA processa e retorna insights
-5. Frontend renderiza markdown
-
-**Exemplo de Chamada**:
-```typescript
-const response = await supabase.functions.invoke('ai-insights', {
-  body: {
-    data: filteredData,
-    projections: projectionValues,
-    algorithm: selectedAlgorithm,
-    store: selectedStore,
-    product: selectedProduct
-  }
-});
-
-const { insights } = response.data;
-```
-
----
-
 ## 🔐 Segurança
 
 ### Modelo de Acesso
@@ -893,18 +793,14 @@ A aplicação utiliza **acesso público** sem autenticação. Todos os usuários
 
 ### Boas Práticas Implementadas
 
-1. **API Keys em Secrets**: Nunca expor chaves no código
-2. **CORS Configurado**: Apenas origens permitidas
-3. **Validação de Dados**: Parsing robusto de Excel
-4. **Error Handling**: Tratamento de erros em todas as operações
-5. **TypeScript**: Tipagem forte previne erros
-6. **RLS Policies**: Políticas de acesso público configuradas no banco de dados
+1. **CORS Configurado**: Apenas origens permitidas
+2. **Validação de Dados**: Parsing robusto de Excel
+3. **Error Handling**: Tratamento de erros em todas as operações
+4. **TypeScript**: Tipagem forte previne erros
 
 ### Dados Sensíveis
 
 - Dados financeiros processados apenas no cliente
-- Edge Functions não armazenam dados permanentemente
-- Lovable AI não retém dados após processamento
 
 ---
 
@@ -914,7 +810,6 @@ A aplicação utiliza **acesso público** sem autenticação. Todos os usuários
 
 O projeto implementa logging em pontos-chave:
 - Upload: status de parsing
-- Edge Functions: requests e responses
 - Erros: stack traces completos
 
 ### Ferramentas de Debug
@@ -942,22 +837,6 @@ O projeto implementa logging em pontos-chave:
 
 ---
 
-## 🧪 Testes
-
-### Estratégia de Testes (Recomendado)
-
-1. **Unit Tests**: Funções de cálculo e parsing
-2. **Integration Tests**: Fluxo de upload e processamento
-3. **E2E Tests**: Jornada completa do usuário
-
-### Ferramentas Sugeridas
-
-- **Vitest**: Unit testing
-- **React Testing Library**: Component testing
-- **Playwright**: E2E testing
-
----
-
 ## 🚀 Deploy
 
 ### Deploy no Lovable
@@ -972,8 +851,7 @@ git push origin main
 # Lovable automaticamente:
 # 1. Detecta mudanças
 # 2. Executa build
-# 3. Deploya Edge Functions
-# 4. Atualiza aplicação
+# 3. Atualiza aplicação
 ```
 
 ### Deploy Manual
@@ -994,7 +872,7 @@ npm run build
 
 - **Components**: PascalCase (Ex: `Layout.tsx`)
 - **Functions**: camelCase (Ex: `parseNumber`)
-- **Constants**: UPPER_SNAKE_CASE (Ex: `LOVABLE_API_KEY`)
+- **Constants**: UPPER_SNAKE_CASE
 - **Interfaces**: PascalCase com sufixo (Ex: `DengoDataRow`)
 
 ### Estrutura de Commits
@@ -1037,7 +915,6 @@ tipo(escopo): descrição
 ### Recursos de Ajuda
 
 - **Documentação Lovable**: https://docs.lovable.dev/
-- **Supabase Docs**: https://supabase.com/docs
 - **React Docs**: https://react.dev/
 - **Tailwind CSS**: https://tailwindcss.com/docs
 
@@ -1066,8 +943,6 @@ Este projeto é propriedade de Dengo Chocolates France.
 - [ ] Notificações push
 - [ ] Integração com ERP
 - [ ] Mobile app (React Native)
-- [ ] Análise preditiva avançada com ML
-- [ ] Alertas automáticos baseados em regras
 - [ ] Comparação entre múltiplos períodos
 - [ ] Exportação para Google Sheets
 - [ ] API pública para integrações
@@ -1076,9 +951,9 @@ Este projeto é propriedade de Dengo Chocolates France.
 
 ## 📊 Status do Projeto
 
-**Versão Atual**: 1.1.0
+**Versão Atual**: 1.2.0
 **Status**: Em Produção
-**Última Atualização**: Dezembro 2025
+**Última Atualização**: Janeiro 2026
 **Modelo de Acesso**: Público (sem autenticação)
 
 ---
@@ -1092,7 +967,6 @@ Desenvolvido com ❤️ pela equipe Dengo Analytics
 ## 🙏 Agradecimentos
 
 - **Lovable**: Plataforma de desenvolvimento
-- **Supabase**: Backend e infraestrutura
 - **shadcn/ui**: Componentes UI
 - **Recharts**: Visualização de dados
 - **Tailwind CSS**: Framework de estilização
