@@ -23,7 +23,7 @@
 
 - **Centralização de Dados**: Consolidar dados financeiros de múltiplas lojas e produtos
 - **Análise em Tempo Real**: Visualizar KPIs, métricas e tendências instantaneamente
-- **Exportação de Relatórios**: Gerar relatórios profissionais em Excel e PDF
+- **Exportação de Relatórios**: Gerar relatórios profissionais em Excel, PDF e PowerPoint
 - **Tomada de Decisão**: Fornecer informações práticas baseadas em dados
 
 ---
@@ -45,6 +45,7 @@
 - **XLSX 0.18.5**: Leitura e escrita de arquivos Excel
 - **ExcelJS 4.4.0**: Manipulação avançada de arquivos Excel
 - **jsPDF 3.0.3 + jsPDF-AutoTable 5.0.2**: Geração de relatórios PDF com tabelas
+- **PptxGenJS 4.0.1**: Geração de apresentações PowerPoint profissionais
 - **Chart.js 4.5.1**: Criação de gráficos para exportação em PDF
 - **date-fns 3.6.0**: Manipulação e formatação de datas
 
@@ -96,7 +97,7 @@ O projeto é estruturado em 3 camadas arquiteturais distintas:
 - **Exportação inline**: `ExportButtons` em cada dashboard
 
 #### Layer 3 - Output Layer
-- **Exportação**: Excel (gráficos nativos editáveis), PDF (gráficos embarcados)
+- **Exportação**: Excel (gráficos nativos editáveis), PDF (gráficos embarcados), PowerPoint (slides profissionais)
 - **Relatórios**: Relatório Contábil Mensal consolidado
 
 ### Estrutura de Diretórios
@@ -109,7 +110,7 @@ dengo-analytics/
 │   │   ├── Layout.tsx          # Layout principal com sidebar
 │   │   ├── FilterBar.tsx       # Barra de filtros
 │   │   ├── KPICard.tsx         # Cartões de indicadores
-│   │   ├── ExportButtons.tsx   # Botões de exportação (Excel/PDF)
+│   │   ├── ExportButtons.tsx   # Botões de exportação (Excel/PDF/PPTX)
 │   │   └── ProtectedRoute.tsx  # Proteção de rotas
 │   ├── contexts/               # Contextos React
 │   │   ├── DataContext.tsx     # Gerenciamento de dados globais
@@ -493,7 +494,13 @@ stOpexPercent = (stOpex / revenue) * 100
    - Gráficos visualizados (Chart.js)
    - Tabelas formatadas (jsPDF-AutoTable)
    - Layout profissional
-   - Ideal para apresentações
+   - Ideal para impressão e arquivamento
+
+3. **PowerPoint (.pptx)**:
+   - Slides profissionais com gráficos
+   - Tabelas paginadas automaticamente
+   - Layout executivo para apresentações
+   - Gerado via PptxGenJS
 
 **Funcionalidade de Geração**:
 
@@ -510,6 +517,14 @@ generatePDFReport(reportTitle: string)
 // - Converte gráficos para imagens
 // - Adiciona tabelas com autoTable
 // - Exporta arquivo .pdf
+
+// PowerPoint
+exportToPPTX()
+// - Cria slide de título
+// - Captura gráficos via html2canvas
+// - Adiciona gráficos como imagens
+// - Pagina tabelas de dados automaticamente
+// - Exporta arquivo .pptx
 ```
 
 ---
