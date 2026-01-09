@@ -10,7 +10,8 @@ import {
   Receipt,
   LineChart,
   FileText,
-  
+  Users,
+  LogIn,
 } from "lucide-react";
 
 import {
@@ -30,7 +31,6 @@ import {
 const menuItems = [
   { title: "Vue d'ensemble", url: "/overview", icon: LayoutDashboard },
   { title: "Téléchargement", url: "/upload", icon: Upload },
-  
   { title: "P&L", url: "/pl", icon: TrendingUp },
   { title: "Par Boutique", url: "/by-branch", icon: Store },
   { title: "Par Catégorie", url: "/by-category", icon: Package },
@@ -39,6 +39,8 @@ const menuItems = [
   { title: "Dépenses", url: "/expenses", icon: Receipt },
   { title: "Évolution", url: "/evolution", icon: LineChart },
   { title: "Rapports", url: "/reports", icon: FileText },
+  { title: "Admin Usuários", url: "/admin", icon: Users },
+  { title: "Login / Cadastro", url: "/login", icon: LogIn },
 ];
 
 function AppSidebar() {
