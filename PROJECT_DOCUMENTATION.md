@@ -201,9 +201,15 @@ interface DataContextType {
 
 ## 📱 Páginas e Funcionalidades
 
-### Acesso Público
+### Sistema de Autenticação
 
-A aplicação é completamente pública, sem necessidade de autenticação ou login. Todos os usuários acessam diretamente as funcionalidades sem credenciais.
+A aplicação utiliza autenticação via Lovable Cloud (Supabase Auth) para controlar o acesso:
+
+- **Cadastro de Usuários**: Novos usuários podem se registrar com email e senha
+- **Login**: Usuários autenticados têm acesso completo aos dashboards
+- **Recuperação de Senha**: Funcionalidade de "esqueci minha senha" via email
+- **Controle de Acesso**: Administradores podem gerenciar usuários e definir períodos de acesso
+- **Roles**: Sistema de papéis (admin/user) para controle de permissões
 
 ---
 
@@ -529,14 +535,80 @@ exportToPPTX()
 
 ---
 
-### 11. Admin (`/admin`)
+### 11. Admin - Gerenciamento de Usuários (`/admin`)
 
-**Objetivo**: Painel administrativo para gerenciamento do sistema
+**Objetivo**: Painel administrativo para gerenciamento completo de usuários do sistema
 
 **Funcionalidades**:
-- Gerenciamento de usuários
-- Configurações do sistema
-- Logs de atividade
+
+1. **Dashboard de Estatísticas**:
+   - Total de usuários cadastrados
+   - Usuários ativos (com acesso válido)
+   - Usuários expirados (acesso vencido)
+
+2. **Tabela de Usuários**:
+   - Nome completo e email
+   - Empresa associada
+   - Status (Ativo/Expirado)
+   - Data de expiração do acesso
+   - Última atividade (last seen)
+   - Quantidade de eventos rastreados
+   - Role (admin/user)
+
+3. **Ações de Gerenciamento**:
+   - **Estender Acesso**: Prolongar período de acesso (7, 30 ou 90 dias)
+   - **Revogar Acesso**: Desativar imediatamente o acesso do usuário
+
+4. **Busca e Filtro**:
+   - Pesquisa por nome, email ou empresa
+
+**Tabelas do Banco de Dados Utilizadas**:
+- `profiles`: Informações do usuário (nome, email, empresa)
+- `user_access`: Controle de período de acesso
+- `user_roles`: Papéis e permissões
+- `usage_tracking`: Rastreamento de atividade
+
+**Acesso**: Restrito a usuários com role `admin`
+
+---
+
+### 12. Login / Cadastro (`/login`)
+
+**Objetivo**: Autenticação e registro de novos usuários
+
+**Funcionalidades**:
+
+1. **Login**:
+   - Autenticação com email e senha
+   - Validação de campos com Zod
+   - Feedback visual de erros
+   - Redirecionamento automático após login
+
+2. **Cadastro (Sign Up)**:
+   - Registro de novos usuários
+   - Validação de email e senha mínima (6 caracteres)
+   - Criação automática de perfil
+
+3. **Recuperação de Senha**:
+   - Formulário "Esqueci minha senha"
+   - Envio de email com link de recuperação
+   - Feedback de confirmação
+
+**Validação (Zod Schema)**:
+```typescript
+const authSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
+});
+```
+
+**Fluxo de Autenticação**:
+1. Usuário acessa `/login`
+2. Escolhe entre Login ou Cadastro
+3. Preenche credenciais
+4. Sistema valida via Supabase Auth
+5. Sucesso → Redireciona para `/overview`
+6. Erro → Exibe mensagem de feedback
 
 ---
 
@@ -563,6 +635,8 @@ exportToPPTX()
 - Dépenses (Despesas)
 - Évolution (Evolução)
 - Rapports (Relatórios)
+- Admin Usuários (Gerenciamento)
+- Login / Cadastro (Autenticação)
 
 ---
 
