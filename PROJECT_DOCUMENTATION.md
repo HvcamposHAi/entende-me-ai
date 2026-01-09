@@ -555,11 +555,22 @@ exportToPPTX()
    - Quantidade de eventos rastreados
    - Role (admin/user)
 
-3. **Ações de Gerenciamento**:
-   - **Estender Acesso**: Prolongar período de acesso (7, 30 ou 90 dias)
+3. **Cadastro de Novo Usuário** (Dialog):
+   - Botão "Novo Usuário" no header do painel
+   - Formulário completo com campos:
+     - Nome Completo (obrigatório)
+     - Email (obrigatório)
+     - Senha (obrigatório, mínimo 6 caracteres)
+     - Empresa (opcional)
+     - Perfil (Usuário ou Administrador)
+     - Dias de Acesso (5, 7, 15, 30 ou 90 dias)
+   - Criação automática de: perfil, acesso e role
+
+4. **Ações de Gerenciamento**:
+   - **Estender Acesso**: Prolongar período de acesso (+5 dias)
    - **Revogar Acesso**: Desativar imediatamente o acesso do usuário
 
-4. **Busca e Filtro**:
+5. **Busca e Filtro**:
    - Pesquisa por nome, email ou empresa
 
 **Tabelas do Banco de Dados Utilizadas**:
