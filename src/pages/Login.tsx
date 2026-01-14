@@ -37,7 +37,7 @@ const Login = () => {
     const emailValidation = z.string().email("Email inválido").safeParse(email);
     if (!emailValidation.success) {
       toast({
-        title: "Erro de validação",
+        title: "Erreur de validation",
         description: emailValidation.error.errors[0].message,
         variant: "destructive",
       });
@@ -52,21 +52,21 @@ const Login = () => {
 
       if (error) {
         toast({
-          title: "Erro ao enviar email",
+          title: "Erreur lors de l'envoi de l'email",
           description: error.message,
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Email enviado!",
-          description: "Verifique sua caixa de entrada para redefinir sua senha.",
+          title: "Email envoyé !",
+          description: "Vérifiez votre boîte de réception pour réinitialiser votre mot de passe.",
         });
         setIsForgotPassword(false);
       }
     } catch (err) {
       toast({
-        title: "Erro",
-        description: "Ocorreu um erro inesperado. Tente novamente.",
+        title: "Erreur",
+        description: "Une erreur inattendue s'est produite. Veuillez réessayer.",
         variant: "destructive",
       });
     } finally {
@@ -82,7 +82,7 @@ const Login = () => {
     const validation = authSchema.safeParse({ email, password });
     if (!validation.success) {
       toast({
-        title: "Erro de validação",
+        title: "Erreur de validation",
         description: validation.error.errors[0].message,
         variant: "destructive",
       });
@@ -96,17 +96,17 @@ const Login = () => {
         if (error) {
           let message = error.message;
           if (error.message.includes("already registered")) {
-            message = "Este email já está cadastrado. Tente fazer login.";
+            message = "Cet email est déjà enregistré. Essayez de vous connecter.";
           }
           toast({
-            title: "Erro no cadastro",
+            title: "Erreur d'inscription",
             description: message,
             variant: "destructive",
           });
         } else {
           toast({
-            title: "Cadastro realizado!",
-            description: "Verifique seu email para confirmar o cadastro.",
+            title: "Inscription réussie !",
+            description: "Vérifiez votre email pour confirmer l'inscription.",
           });
         }
       } else {
@@ -114,25 +114,25 @@ const Login = () => {
         if (error) {
           let message = error.message;
           if (error.message.includes("Invalid login credentials")) {
-            message = "Email ou senha incorretos.";
+            message = "Email ou mot de passe incorrect.";
           }
           toast({
-            title: "Erro no login",
+            title: "Erreur de connexion",
             description: message,
             variant: "destructive",
           });
         } else {
           toast({
-            title: "Login realizado com sucesso",
-            description: "Bem-vindo ao Dengo Analytics",
+            title: "Connexion réussie",
+            description: "Bienvenue sur Dengo Analytics",
           });
           navigate("/overview");
         }
       }
     } catch (err) {
       toast({
-        title: "Erro",
-        description: "Ocorreu um erro inesperado. Tente novamente.",
+        title: "Erreur",
+        description: "Une erreur inattendue s'est produite. Veuillez réessayer.",
         variant: "destructive",
       });
     } finally {
@@ -165,7 +165,7 @@ const Login = () => {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Enviando..." : "Enviar link de redefinição"}
+                {isLoading ? "Envoi en cours..." : "Envoyer le lien de réinitialisation"}
               </Button>
               <div className="text-center text-sm">
                 <button
@@ -174,7 +174,7 @@ const Login = () => {
                   className="text-primary hover:underline"
                   disabled={isLoading}
                 >
-                  Voltar ao login
+                  Retour à la connexion
                 </button>
               </div>
             </form>
@@ -193,7 +193,7 @@ const Login = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password">Mot de passe</Label>
                 <Input
                   id="password"
                   type="password"
@@ -205,7 +205,7 @@ const Login = () => {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Carregando..." : isSignUp ? "Cadastrar" : "Entrar"}
+                {isLoading ? "Chargement..." : isSignUp ? "S'inscrire" : "Se connecter"}
               </Button>
               <div className="flex flex-col items-center gap-2 text-sm">
                 <button
@@ -214,7 +214,7 @@ const Login = () => {
                   className="text-muted-foreground hover:underline"
                   disabled={isLoading}
                 >
-                  Esqueci minha senha
+                  Mot de passe oublié
                 </button>
                 <button
                   type="button"
@@ -222,7 +222,7 @@ const Login = () => {
                   className="text-primary hover:underline"
                   disabled={isLoading}
                 >
-                  {isSignUp ? "Já tem conta? Faça login" : "Não tem conta? Cadastre-se"}
+                  {isSignUp ? "Déjà un compte ? Connectez-vous" : "Pas de compte ? Inscrivez-vous"}
                 </button>
               </div>
             </form>
