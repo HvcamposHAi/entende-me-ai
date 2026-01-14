@@ -39,8 +39,8 @@ const menuItems = [
   { title: "Dépenses", url: "/expenses", icon: Receipt },
   { title: "Évolution", url: "/evolution", icon: LineChart },
   { title: "Rapports", url: "/reports", icon: FileText },
-  { title: "Admin Usuários", url: "/admin", icon: Users },
-  { title: "Login / Cadastro", url: "/login", icon: LogIn },
+  { title: "Admin Utilisateurs", url: "/admin", icon: Users },
+  { title: "Connexion / Inscription", url: "/login", icon: LogIn },
 ];
 
 function AppSidebar() {
