@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { fr } from 'date-fns/locale';
 import { useTracking } from '@/hooks/useTracking';
 import { UserPlus } from 'lucide-react';
 import {
@@ -105,7 +105,7 @@ const Admin = () => {
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
-        title: "Erro ao carregar usuários",
+        title: "Erreur lors du chargement des utilisateurs",
         variant: "destructive"
       });
     } finally {
@@ -133,14 +133,14 @@ const Admin = () => {
       if (error) throw error;
 
       toast({
-        title: "Acesso estendido",
-        description: `Acesso estendido por ${days} dias`
+        title: "Accès prolongé",
+        description: `Accès prolongé de ${days} jours`
       });
 
       fetchUsers();
     } catch (error) {
       toast({
-        title: "Erro ao estender acesso",
+        title: "Erreur lors de la prolongation de l'accès",
         variant: "destructive"
       });
     }
@@ -156,14 +156,14 @@ const Admin = () => {
       if (error) throw error;
 
       toast({
-        title: "Acesso revogado",
-        description: "O usuário não poderá mais acessar o sistema"
+        title: "Accès révoqué",
+        description: "L'utilisateur ne pourra plus accéder au système"
       });
 
       fetchUsers();
     } catch (error) {
       toast({
-        title: "Erro ao revogar acesso",
+        title: "Erreur lors de la révocation de l'accès",
         variant: "destructive"
       });
     }
@@ -172,8 +172,8 @@ const Admin = () => {
   const createUser = async () => {
     if (!newUser.email || !newUser.password || !newUser.full_name) {
       toast({
-        title: "Campos obrigatórios",
-        description: "Preencha email, senha e nome completo",
+        title: "Champs obligatoires",
+        description: "Veuillez remplir l'email, le mot de passe et le nom complet",
         variant: "destructive"
       });
       return;
@@ -194,7 +194,7 @@ const Admin = () => {
       });
 
       if (authError) throw authError;
-      if (!authData.user) throw new Error("Usuário não criado");
+      if (!authData.user) throw new Error("Utilisateur non créé");
 
       const userId = authData.user.id;
 
@@ -235,8 +235,8 @@ const Admin = () => {
       if (roleError) console.error('Role error:', roleError);
 
       toast({
-        title: "Usuário criado com sucesso",
-        description: `${newUser.full_name} foi cadastrado com acesso de ${newUser.access_days} dias`
+        title: "Utilisateur créé avec succès",
+        description: `${newUser.full_name} a été enregistré avec un accès de ${newUser.access_days} jours`
       });
 
       // Reset form and close dialog
@@ -253,8 +253,8 @@ const Admin = () => {
     } catch (error: any) {
       console.error('Create user error:', error);
       toast({
-        title: "Erro ao criar usuário",
-        description: error.message || "Ocorreu um erro ao cadastrar o usuário",
+        title: "Erreur lors de la création de l'utilisateur",
+        description: error.message || "Une erreur s'est produite lors de l'enregistrement de l'utilisateur",
         variant: "destructive"
       });
     } finally {
@@ -276,27 +276,27 @@ const Admin = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Painel Administrativo</h1>
-            <p className="text-muted-foreground">Gerencie usuários e monitore uso do sistema</p>
+            <h1 className="text-3xl font-bold">Panneau Administratif</h1>
+            <p className="text-muted-foreground">Gérez les utilisateurs et surveillez l'utilisation du système</p>
           </div>
           
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <UserPlus className="mr-2 h-4 w-4" />
-                Novo Usuário
+                Nouvel Utilisateur
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>Cadastrar Novo Usuário</DialogTitle>
+                <DialogTitle>Enregistrer un Nouvel Utilisateur</DialogTitle>
                 <DialogDescription>
-                  Preencha os dados para criar um novo usuário no sistema.
+                  Remplissez les informations pour créer un nouvel utilisateur dans le système.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="full_name">Nome Completo *</Label>
+                  <Label htmlFor="full_name">Nom Complet *</Label>
                   <Input
                     id="full_name"
                     value={newUser.full_name}
@@ -315,27 +315,27 @@ const Admin = () => {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="password">Senha *</Label>
+                  <Label htmlFor="password">Mot de passe *</Label>
                   <Input
                     id="password"
                     type="password"
                     value={newUser.password}
                     onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder="Minimum 6 caractères"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="company">Empresa</Label>
+                  <Label htmlFor="company">Entreprise</Label>
                   <Input
                     id="company"
                     value={newUser.company}
                     onChange={(e) => setNewUser({ ...newUser, company: e.target.value })}
-                    placeholder="Nome da empresa"
+                    placeholder="Nom de l'entreprise"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="role">Perfil</Label>
+                    <Label htmlFor="role">Profil</Label>
                     <Select
                       value={newUser.role}
                       onValueChange={(value: 'admin' | 'user') => setNewUser({ ...newUser, role: value })}
@@ -344,13 +344,13 @@ const Admin = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="user">Usuário</SelectItem>
-                        <SelectItem value="admin">Administrador</SelectItem>
+                        <SelectItem value="user">Utilisateur</SelectItem>
+                        <SelectItem value="admin">Administrateur</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="access_days">Dias de Acesso</Label>
+                    <Label htmlFor="access_days">Jours d'Accès</Label>
                     <Select
                       value={newUser.access_days.toString()}
                       onValueChange={(value) => setNewUser({ ...newUser, access_days: parseInt(value) })}
@@ -359,11 +359,11 @@ const Admin = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="5">5 dias</SelectItem>
-                        <SelectItem value="7">7 dias</SelectItem>
-                        <SelectItem value="15">15 dias</SelectItem>
-                        <SelectItem value="30">30 dias</SelectItem>
-                        <SelectItem value="90">90 dias</SelectItem>
+                        <SelectItem value="5">5 jours</SelectItem>
+                        <SelectItem value="7">7 jours</SelectItem>
+                        <SelectItem value="15">15 jours</SelectItem>
+                        <SelectItem value="30">30 jours</SelectItem>
+                        <SelectItem value="90">90 jours</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -371,10 +371,10 @@ const Admin = () => {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancelar
+                  Annuler
                 </Button>
                 <Button onClick={createUser} disabled={isCreating}>
-                  {isCreating ? 'Criando...' : 'Criar Usuário'}
+                  {isCreating ? 'Création...' : 'Créer Utilisateur'}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -384,7 +384,7 @@ const Admin = () => {
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardHeader>
-              <CardTitle>Total de Usuários</CardTitle>
+              <CardTitle>Total d'Utilisateurs</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold">{users.length}</p>
@@ -392,7 +392,7 @@ const Admin = () => {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Usuários Ativos</CardTitle>
+              <CardTitle>Utilisateurs Actifs</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-green-600">{activeUsers.length}</p>
@@ -400,7 +400,7 @@ const Admin = () => {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Acessos Expirados</CardTitle>
+              <CardTitle>Accès Expirés</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-red-600">{expiredUsers.length}</p>
@@ -410,31 +410,31 @@ const Admin = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Gerenciar Usuários</CardTitle>
-            <CardDescription>Visualize e gerencie o acesso de todos os usuários</CardDescription>
+            <CardTitle>Gérer les Utilisateurs</CardTitle>
+            <CardDescription>Visualisez et gérez l'accès de tous les utilisateurs</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="mb-4">
               <Input
-                placeholder="Buscar por email, nome ou empresa..."
+                placeholder="Rechercher par email, nom ou entreprise..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 
             {isLoading ? (
-              <p>Carregando...</p>
+              <p>Chargement...</p>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Usuário</TableHead>
-                    <TableHead>Empresa</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Expira em</TableHead>
-                    <TableHead>Último acesso</TableHead>
-                    <TableHead>Eventos</TableHead>
-                    <TableHead>Ações</TableHead>
+                    <TableHead>Utilisateur</TableHead>
+                    <TableHead>Entreprise</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead>Expire dans</TableHead>
+                    <TableHead>Dernier accès</TableHead>
+                    <TableHead>Événements</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -454,18 +454,18 @@ const Admin = () => {
                         <TableCell>{user.company || '-'}</TableCell>
                         <TableCell>
                           <Badge variant={isExpired ? "destructive" : "default"}>
-                            {isExpired ? 'Expirado' : 'Ativo'}
+                            {isExpired ? 'Expiré' : 'Actif'}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           {user.access_expires_at
-                            ? formatDistanceToNow(new Date(user.access_expires_at), { locale: ptBR, addSuffix: true })
+                            ? formatDistanceToNow(new Date(user.access_expires_at), { locale: fr, addSuffix: true })
                             : '-'}
                         </TableCell>
                         <TableCell>
                           {user.last_seen
-                            ? formatDistanceToNow(new Date(user.last_seen), { locale: ptBR, addSuffix: true })
-                            : 'Nunca'}
+                            ? formatDistanceToNow(new Date(user.last_seen), { locale: fr, addSuffix: true })
+                            : 'Jamais'}
                         </TableCell>
                         <TableCell>{user.total_events}</TableCell>
                         <TableCell>
@@ -474,13 +474,13 @@ const Admin = () => {
                               size="sm"
                               onClick={() => extendAccess(user.id, 5)}
                             >
-                              +5 dias
+                              +5 jours
                             </Button>
                             <Button
                               size="sm"
                               variant="destructive"
-                              onClick={() => revokeAccess(user.id)}
-                            >
+                              onClick={() => revokeAccess(user.id)}>
+                              Révoquer
                               Revogar
                             </Button>
                           </div>
